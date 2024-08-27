@@ -1,0 +1,10 @@
+[package]
+name = "LoyaltyProgram"
+version = "0.0.1"
+
+[addresses]
+std = "0x1"
+loyaltyprogram_addr = "2bccc7a83568b5c391a293aad318da2d705091afd6ab499a8e8ba5f89cf80714"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework", rev = "mainnet" }
