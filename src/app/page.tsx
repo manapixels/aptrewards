@@ -1,10 +1,7 @@
-import LoyaltyForm from '../components/LoyaltyForm';
-
-export default function Loyalty() {
+export default function HomePage() {
   return (
     <div>
-      <h1>Loyalty Program</h1>
-      <LoyaltyForm />
+      lalala
     </div>
   );
 }

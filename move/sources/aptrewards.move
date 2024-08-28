@@ -1,4 +1,4 @@
-module loyaltyprogram_addr::LoyaltyProgram {
+module AptRewards::AptRewards {
     use aptos_framework::signer;
     use aptos_framework::randomness;
     use aptos_std::table::{Self, Table};
@@ -194,7 +194,7 @@ module loyaltyprogram_addr::LoyaltyProgram {
     }
 
     public fun get_customer_tier(program_id: u64, customer: address): u64 acquires LoyaltyProgramFactory {
-        let factory = borrow_global<LoyaltyProgramFactory>(@loyaltyprogram_addr);
+        let factory = borrow_global<LoyaltyProgramFactory>(@AptRewards);
         let program = table::borrow(&factory.programs, program_id);
         let merchant = vector::borrow(&program.merchants, 0);
         let lifetime_stamps = *table::borrow_with_default(&merchant.customer_lifetime_stamps, customer, &0);

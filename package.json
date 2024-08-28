@@ -1,6 +1,7 @@
 {
   "name": "aptrewards",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "license": "MIT",
   "keywords": [
@@ -15,9 +16,9 @@
     "lint": "eslint --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\"",
     "format": "prettier --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\" --write",
     "aptos:init": "aptos init",
-    "aptos:compile": "aptos move compile --package-dir src/contracts",
-    "aptos:publish": "aptos move publish --package-dir src/contracts --profile default",
-    "initialize-factory": "ts-node scripts/initialize_factory.ts"
+    "aptos:compile": "aptos move compile --package-dir move --profile default",
+    "aptos:publish": "tsx src/scripts/publish.ts",
+    "aptos:upgrade": "tsx src/scripts/upgrade.ts"
   },
   "lint-staged": {
     "./src/**/*.{ts,js,jsx,tsx}": [
@@ -26,6 +27,7 @@
     ]
   },
   "dependencies": {
+    "@aptos-labs/ts-sdk": "^1.27.1",
     "@aptos-labs/wallet-adapter-react": "^3.6.0",
     "@hookform/resolvers": "^3.9.0",
     "@martianwallet/aptos-wallet-adapter": "^0.0.5",
@@ -42,7 +44,9 @@
     "aptos": "^1.21.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.5",
     "fewcha-plugin-wallet-adapter": "^0.1.3",
+    "js-yaml": "^4.1.0",
     "lucide-react": "^0.436.0",
     "next": "14.2.6",
     "next-themes": "^0.3.0",
@@ -54,6 +58,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -61,6 +66,7 @@
     "eslint-config-next": "14.2.6",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.19.0",
     "typescript": "^5"
   }
 }

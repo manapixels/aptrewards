@@ -1,0 +1,12 @@
+[package]
+name = "AptRewards"
+version = "0.0.1"
+
+[addresses]
+std = "0x1"
+AptRewards = "_"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+rev = "mainnet"
+subdir = "aptos-move/framework/aptos-framework"
