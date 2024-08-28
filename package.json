@@ -17,8 +17,8 @@
     "format": "prettier --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\" --write",
     "aptos:init": "aptos init",
     "aptos:compile": "aptos move compile --package-dir move --profile default",
-    "aptos:publish": "tsx src/scripts/publish.ts",
-    "aptos:upgrade": "tsx src/scripts/upgrade.ts"
+    "aptos:publish": "tsx scripts/publish.ts",
+    "aptos:upgrade": "tsx scripts/upgrade.ts"
   },
   "lint-staged": {
     "./src/**/*.{ts,js,jsx,tsx}": [
@@ -68,5 +68,8 @@
     "tailwindcss": "^3.4.1",
     "tsx": "^4.19.0",
     "typescript": "^5"
+  },
+  "browser":{
+    "child_process": false
   }
 }

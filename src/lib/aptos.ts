@@ -1,4 +1,4 @@
-import { AccountAddress, Aptos, Network, NetworkToNetworkName } from "@aptos-labs/ts-sdk";
+import { AccountAddress, Aptos } from "@aptos-labs/ts-sdk";
 
 const COIN_STORE = "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>";
 

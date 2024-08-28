@@ -8,6 +8,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Checkbox } from '../ui/checkbox';
 import { FormControl, FormField, FormItem, FormLabel } from '../ui/form';
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
 
 const initializeFormSchema = z.object({
     name: z.string().min(2).max(50),
@@ -16,6 +17,7 @@ const initializeFormSchema = z.object({
 
 export default function CreateNewProgramForm() {
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
+    const { account, signAndSubmitTransaction } = useWallet();
 
     const methods = useForm<z.infer<typeof initializeFormSchema>>({
         resolver: zodResolver(initializeFormSchema),
@@ -28,15 +30,24 @@ export default function CreateNewProgramForm() {
     const handleSubmit = async (data: z.infer<typeof initializeFormSchema>) => {
         setTransactionInProgress(true);
         try {
-            const response = await fetch('/api/loyalty', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ action: 'initialize', ...data }),
+            if (!account) throw new Error("No account connected");
+            const moduleAddress = process.env.CONTRACT_ADDRESS;
+            const moduleName = process.env.CONTRACT_NAME;
+            if (!moduleAddress || !moduleName) throw new Error("No module address or name");
+            
+            await signAndSubmitTransaction({
+                sender: account.address,
+                data: {
+                    function: `${moduleAddress}::${moduleName}::create_loyalty_program`,
+                    typeArguments: [],
+                    functionArguments: [data.name, data.luckySpinEnabled]
+                }
             });
+            
+            // Handle successful transaction (e.g., show a success message)
         } catch (error) {
-            console.error('Error initializing:', error);
+            console.error('Error creating loyalty program:', error);
+            // Handle error (e.g., show an error message to the user)
         } finally {
             setTransactionInProgress(false);
         }
@@ -55,7 +66,7 @@ export default function CreateNewProgramForm() {
                             <FormItem>
                                 <FormLabel>Brand name</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="shadcn" {...field} />
+                                    <Input placeholder="" {...field} />
                                 </FormControl>
                             </FormItem>
                         )}
