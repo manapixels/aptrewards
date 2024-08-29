@@ -2,7 +2,7 @@ import { Account, Ed25519PrivateKey, Aptos, AptosConfig, Network, NetworkToNetwo
 import dotenv from "dotenv";
 import { compilePackage, getPackageBytesToPublish } from "./utils";
 
-const APTOS_NETWORK: Network = NetworkToNetworkName[process.env.APTOS_NETWORK ?? Network.DEVNET];
+const APTOS_NETWORK: Network = NetworkToNetworkName[process.env.APTOS_NETWORK ?? Network.TESTNET];
 
 const config = new AptosConfig({ network: APTOS_NETWORK });
 export const aptos = new Aptos(config);

@@ -31,8 +31,8 @@ export default function CreateNewProgramForm() {
         setTransactionInProgress(true);
         try {
             if (!account) throw new Error("No account connected");
-            const moduleAddress = process.env.CONTRACT_ADDRESS;
-            const moduleName = process.env.CONTRACT_NAME;
+            const moduleAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+            const moduleName = process.env.NEXT_PUBLIC_CONTRACT_NAME;
             if (!moduleAddress || !moduleName) throw new Error("No module address or name");
             
             await signAndSubmitTransaction({
@@ -41,7 +41,8 @@ export default function CreateNewProgramForm() {
                     function: `${moduleAddress}::${moduleName}::create_loyalty_program`,
                     typeArguments: [],
                     functionArguments: [data.name, data.luckySpinEnabled]
-                }
+                },
+
             });
             
             // Handle successful transaction (e.g., show a success message)

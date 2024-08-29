@@ -10,8 +10,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
+import dotenv from 'dotenv';
 
 const inter = Inter({ subsets: ['latin'] });
+
+dotenv.config();
 
 export const metadata: Metadata = {
   title: `AptRewards`,

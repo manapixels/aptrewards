@@ -15,7 +15,7 @@ import {
   WalletSortingOptions,
 } from '@aptos-labs/wallet-adapter-react';
 import { ArrowLeft, ArrowRight, ChevronDown, Copy, LogOut, User } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
@@ -24,7 +24,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from './ui/use-toast';
 
 export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
-  const { account, connected, disconnect, wallet } = useWallet();
+  const { account, connected, disconnect, wallet, network } = useWallet();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -46,6 +46,16 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
       });
     }
   }, [account?.address, toast]);
+
+  useEffect(() => {
+    if (network?.name !== process.env.NEXT_PUBLIC_NETWORK) {
+      toast({
+        title: 'Network not supported',
+        description: 'Please connect to the ' + process.env.NEXT_PUBLIC_NETWORK + ' network',
+      })
+      // changeNetwork(process.env.NEXT_PUBLIC_NETWORK as Network)
+    }
+  }, [network])
 
   return connected ? (
     <DropdownMenu>

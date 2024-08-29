@@ -1,2 +1,2 @@
-export const aptosNodeApi = 'https://fullnode.devnet.aptoslabs.com';
-export const faucetApi = 'https://faucet.devnet.aptoslabs.com';
+export const aptosNodeApi = 'https://fullnode.testnet.aptoslabs.com';
+export const faucetApi = 'https://faucet.testnet.aptoslabs.com';

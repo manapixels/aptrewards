@@ -15,8 +15,6 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\"",
     "format": "prettier --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\" --write",
-    "aptos:init": "aptos init",
-    "aptos:compile": "aptos move compile --package-dir move --profile default",
     "aptos:publish": "tsx scripts/publish.ts",
     "aptos:upgrade": "tsx scripts/upgrade.ts"
   },
