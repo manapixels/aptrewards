@@ -48,7 +48,7 @@ module AptRewards::AptRewards {
         move_to(account, factory);
     }
 
-    public fun create_loyalty_program(account: &signer, name: vector<u8>, lucky_spin_enabled: bool) acquires LoyaltyProgramFactory {
+    public entry fun create_loyalty_program(account: &signer, name: vector<u8>, lucky_spin_enabled: bool) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(signer::address_of(account));
         let program_id = factory.program_count + 1;
         let owner_address = signer::address_of(account);
@@ -71,7 +71,7 @@ module AptRewards::AptRewards {
         vector::push_back(user_programs, program_id);
     }
 
-    public fun transfer_ownership(account: &signer, program_id: u64, new_owner: address) acquires LoyaltyProgramFactory {
+    public entry fun transfer_ownership(account: &signer, program_id: u64, new_owner: address) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(signer::address_of(account));
         let program = table::borrow_mut(&mut factory.programs, program_id);
         assert!(program.owner == signer::address_of(account), E_NOT_OWNER);
@@ -92,17 +92,17 @@ module AptRewards::AptRewards {
         program.owner = new_owner;
     }
 
-    public fun get_user_programs(account: &signer): vector<u64> acquires LoyaltyProgramFactory {
-        let factory = borrow_global<LoyaltyProgramFactory>(signer::address_of(account));
-        let owner_address = signer::address_of(account);
-        if (table::contains(&factory.user_programs, owner_address)) {
-            *table::borrow(&factory.user_programs, owner_address)
+    #[view]
+    public fun get_user_programs(user_address: address): vector<u64> acquires LoyaltyProgramFactory {
+        let factory = borrow_global<LoyaltyProgramFactory>(@AptRewards);
+        if (table::contains(&factory.user_programs, user_address)) {
+            *table::borrow(&factory.user_programs, user_address)
         } else {
             vector::empty<u64>()
         }
     }
 
-    public fun set_spin_probabilities(account: &signer, program_id: u64, probabilities: vector<u64>, amounts: vector<u64>) acquires LoyaltyProgramFactory {
+    public entry fun set_spin_probabilities(account: &signer, program_id: u64, probabilities: vector<u64>, amounts: vector<u64>) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(signer::address_of(account));
         let program = table::borrow_mut(&mut factory.programs, program_id);
         assert!(program.owner == signer::address_of(account), E_NOT_OWNER);
@@ -111,7 +111,7 @@ module AptRewards::AptRewards {
         merchant.spin_amounts = amounts;
     }
 
-    public fun create_coupon(account: &signer, program_id: u64, id: u64, stamps_required: u64, description: vector<u8>, is_monetary: bool, value: u64) acquires LoyaltyProgramFactory {
+    public entry fun create_coupon(account: &signer, program_id: u64, id: u64, stamps_required: u64, description: vector<u8>, is_monetary: bool, value: u64) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(signer::address_of(account));
         let program = table::borrow_mut(&mut factory.programs, program_id);
         assert!(program.owner == signer::address_of(account), E_NOT_OWNER);
@@ -126,7 +126,7 @@ module AptRewards::AptRewards {
         vector::push_back(&mut merchant.coupons, coupon);
     }
 
-    public fun set_tier_thresholds(account: &signer, program_id: u64, thresholds: vector<u64>) acquires LoyaltyProgramFactory {
+    public entry fun set_tier_thresholds(account: &signer, program_id: u64, thresholds: vector<u64>) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(signer::address_of(account));
         let program = table::borrow_mut(&mut factory.programs, program_id);
         assert!(program.owner == signer::address_of(account), E_NOT_OWNER);
@@ -134,7 +134,7 @@ module AptRewards::AptRewards {
         merchant.tier_thresholds = thresholds;
     }
 
-    public fun earn_stamps(account: &signer, program_id: u64, customer: address, amount: u64) acquires LoyaltyProgramFactory {
+    public entry fun earn_stamps(account: &signer, program_id: u64, customer: address, amount: u64) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(signer::address_of(account));
         let program = table::borrow_mut(&mut factory.programs, program_id);
         let merchant = vector::borrow_mut(&mut program.merchants, 0);
@@ -143,7 +143,7 @@ module AptRewards::AptRewards {
         table::add(&mut merchant.customer_lifetime_stamps, customer, stamps);
     }
 
-    public fun redeem_coupon(account: &signer, program_id: u64, customer: address, coupon_id: u64) acquires LoyaltyProgramFactory {
+    public entry fun redeem_coupon(account: &signer, program_id: u64, customer: address, coupon_id: u64) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(signer::address_of(account));
         let program = table::borrow_mut(&mut factory.programs, program_id);
         let merchant = vector::borrow_mut(&mut program.merchants, 0);
@@ -154,7 +154,7 @@ module AptRewards::AptRewards {
     }
 
     #[lint::allow_unsafe_randomness]
-    public fun lucky_spin(account: &signer, program_id: u64, customer: address) acquires LoyaltyProgramFactory {
+    public entry fun lucky_spin(account: &signer, program_id: u64, customer: address) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(signer::address_of(account));
         let program = table::borrow_mut(&mut factory.programs, program_id);
         assert!(program.lucky_spin_enabled, 3);
@@ -192,6 +192,7 @@ module AptRewards::AptRewards {
             *current_stamps = *current_stamps + 1;
         }
     }
+
 
     public fun get_customer_tier(program_id: u64, customer: address): u64 acquires LoyaltyProgramFactory {
         let factory = borrow_global<LoyaltyProgramFactory>(@AptRewards);

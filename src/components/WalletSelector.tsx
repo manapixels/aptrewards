@@ -28,6 +28,8 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  console.log(account, connected, wallet, network)
+
   const closeDialog = useCallback(() => setIsDialogOpen(false), []);
 
   const copyAddress = useCallback(async () => {
