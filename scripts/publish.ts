@@ -1,6 +1,7 @@
 import { Account, Ed25519PrivateKey, Aptos, AptosConfig, Network, NetworkToNetworkName } from "@aptos-labs/ts-sdk";
 import dotenv from "dotenv";
-import { compilePackage, getPackageBytesToPublish } from "./utils";
+import { getPackageBytesToPublish } from "./utils";
+import { compile } from "./compile";
 
 const APTOS_NETWORK: Network = NetworkToNetworkName[process.env.APTOS_NETWORK ?? Network.TESTNET];
 
@@ -32,12 +33,7 @@ async function initializeFactory() {
         console.error('Error funding account', error);
     }
 
-    console.log("\n=== Compiling AptRewards package locally ===");
-
-    compilePackage(
-        "move", "move/aptrewards.json",
-        [{ name: "AptRewards", address: account.accountAddress }]
-    );
+    await compile();
 
     const { metadataBytes, byteCode } = getPackageBytesToPublish("move/aptrewards.json");
 

@@ -15,7 +15,8 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\"",
     "format": "prettier --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\" --write",
-    "aptos:publish": "tsx scripts/publish.ts",
+    "aptos:compile": "aptos move compile --package-dir move/ --named-addresses AptRewards=fdf10dc600959de16b94a042e523c6d91ce0a0c5039ddb06fa71c72e7bf0ba2e",
+    "aptos:deploy": "aptos move deploy-object --address-name AptRewards",
     "aptos:upgrade": "tsx scripts/upgrade.ts"
   },
   "lint-staged": {
@@ -67,7 +68,7 @@
     "tsx": "^4.19.0",
     "typescript": "^5"
   },
-  "browser":{
+  "browser": {
     "child_process": false
   }
 }

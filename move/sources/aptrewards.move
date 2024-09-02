@@ -1,9 +1,10 @@
-module AptRewards::AptRewards {
+module AptRewards::AptRewardsMain {
     use aptos_framework::signer;
     use aptos_framework::randomness;
     use aptos_std::table::{Self, Table};
     use std::vector;
-    use AptRewards::AptRewardsEvents;
+    use AptRewards::AptRewardsEvents::{Self, emit_create_loyalty_program};
+    use std::string;
 
     struct Merchant has store {
         balance: u64,
@@ -35,14 +36,6 @@ module AptRewards::AptRewards {
         programs: Table<u64, LoyaltyProgram>,
         program_count: u64,
         user_programs: Table<address, vector<u64>>,
-        event_handle: EventHandle<AptRewardsEvents::LoyaltyProgramCreated>,
-        ownership_event_handle: EventHandle<AptRewardsEvents::OwnershipTransferred>,
-        spin_probabilities_event_handle: EventHandle<AptRewardsEvents::SpinProbabilitiesSet>,
-        coupon_created_event_handle: EventHandle<AptRewardsEvents::CouponCreated>,
-        tier_thresholds_event_handle: EventHandle<AptRewardsEvents::TierThresholdsSet>,
-        stamps_earned_event_handle: EventHandle<AptRewardsEvents::StampsEarned>,
-        coupon_redeemed_event_handle: EventHandle<AptRewardsEvents::CouponRedeemed>,
-        lucky_spin_event_handle: EventHandle<AptRewardsEvents::LuckySpinResult>,
     }
 
     const E_NOT_OWNER: u64 = 1;
@@ -53,14 +46,6 @@ module AptRewards::AptRewards {
             programs: table::new(),
             program_count: 0,
             user_programs: table::new(),
-            event_handle: aptos_framework::event::new_event_handle<AptRewardsEvents::LoyaltyProgramCreated>(account),
-            ownership_event_handle: aptos_framework::event::new_event_handle<AptRewardsEvents::OwnershipTransferred>(account),
-            spin_probabilities_event_handle: aptos_framework::event::new_event_handle<AptRewardsEvents::SpinProbabilitiesSet>(account),
-            coupon_created_event_handle: aptos_framework::event::new_event_handle<AptRewardsEvents::CouponCreated>(account),
-            tier_thresholds_event_handle: aptos_framework::event::new_event_handle<AptRewardsEvents::TierThresholdsSet>(account),
-            stamps_earned_event_handle: aptos_framework::event::new_event_handle<AptRewardsEvents::StampsEarned>(account),
-            coupon_redeemed_event_handle: aptos_framework::event::new_event_handle<AptRewardsEvents::CouponRedeemed>(account),
-            lucky_spin_event_handle: aptos_framework::event::new_event_handle<AptRewardsEvents::LuckySpinResult>(account),
         };
         move_to(account, factory);
     }
@@ -87,7 +72,7 @@ module AptRewards::AptRewards {
         let user_programs = table::borrow_mut(&mut factory.user_programs, owner_address);
         vector::push_back(user_programs, program_id);
 
-        AptRewardsEvents::emit_loyalty_program_created(&factory.event_handle, program_id, owner_address);
+        emit_create_loyalty_program(program_id, owner_address);
     }
 
     public entry fun transfer_ownership(account: &signer, program_id: u64, new_owner: address) acquires LoyaltyProgramFactory {
@@ -111,7 +96,7 @@ module AptRewards::AptRewards {
         // Update program owner
         program.owner = new_owner;
 
-        AptRewardsEvents::emit_ownership_transferred(&factory.ownership_event_handle, program_id, old_owner, new_owner);
+        AptRewardsEvents::emit_transfer_ownership(program_id, old_owner, new_owner);
     }
 
     public entry fun set_spin_probabilities(account: &signer, program_id: u64, probabilities: vector<u64>, amounts: vector<u64>) acquires LoyaltyProgramFactory {
@@ -122,7 +107,7 @@ module AptRewards::AptRewards {
         merchant.spin_probabilities = probabilities;
         merchant.spin_amounts = amounts;
 
-        AptRewardsEvents::emit_spin_probabilities_set(&factory.spin_probabilities_event_handle, program_id);
+        AptRewardsEvents::emit_set_spin_probabilities(program_id, probabilities);
     }
 
     public entry fun create_coupon(account: &signer, program_id: u64, id: u64, stamps_required: u64, description: vector<u8>, is_monetary: bool, value: u64) acquires LoyaltyProgramFactory {
@@ -139,7 +124,10 @@ module AptRewards::AptRewards {
         };
         vector::push_back(&mut merchant.coupons, coupon);
 
-        AptRewardsEvents::emit_coupon_created(&factory.coupon_created_event_handle, program_id, id);
+        // Convert vector<u8> to String
+        let description_string = string::utf8(description);
+
+        AptRewardsEvents::emit_create_coupon(program_id, id, stamps_required, description_string, is_monetary, value);
     }
 
     public entry fun set_tier_thresholds(account: &signer, program_id: u64, thresholds: vector<u64>) acquires LoyaltyProgramFactory {
@@ -149,7 +137,7 @@ module AptRewards::AptRewards {
         let merchant = vector::borrow_mut(&mut program.merchants, 0);
         merchant.tier_thresholds = thresholds;
 
-        AptRewardsEvents::emit_tier_thresholds_set(&factory.tier_thresholds_event_handle, program_id);
+        AptRewardsEvents::emit_set_tier_thresholds(program_id, thresholds);
     }
 
     public entry fun earn_stamps(account: &signer, program_id: u64, customer: address, amount: u64) acquires LoyaltyProgramFactory {
@@ -160,7 +148,7 @@ module AptRewards::AptRewards {
         table::add(&mut merchant.customer_stamps, customer, stamps);
         table::add(&mut merchant.customer_lifetime_stamps, customer, stamps);
 
-        AptRewardsEvents::emit_stamps_earned(&factory.stamps_earned_event_handle, program_id, customer, stamps);
+        AptRewardsEvents::emit_earn_stamps(program_id, customer, stamps);
     }
 
     public entry fun redeem_coupon(account: &signer, program_id: u64, customer: address, coupon_id: u64) acquires LoyaltyProgramFactory {
@@ -172,7 +160,7 @@ module AptRewards::AptRewards {
         assert!(*customer_stamps >= coupon.stamps_required, 1); // Dereference customer_stamps
         *customer_stamps = *customer_stamps - coupon.stamps_required; // Correct the operation to subtract stamps
 
-        AptRewardsEvents::emit_coupon_redeemed(&factory.coupon_redeemed_event_handle, program_id, customer, coupon_id);
+        AptRewardsEvents::emit_redeem_coupon(program_id, customer, coupon_id);
     }
 
     #[lint::allow_unsafe_randomness]
@@ -212,8 +200,8 @@ module AptRewards::AptRewards {
             // Add the coupon to the customer's stamps
             let current_stamps = table::borrow_mut_with_default(&mut merchant.customer_stamps, customer, 0);
             *current_stamps = *current_stamps + 1;
-        }
+        };
 
-        AptRewardsEvents::emit_lucky_spin_result(&factory.lucky_spin_event_handle, program_id, customer, winning_amount);
+        AptRewardsEvents::emit_spin_lucky_wheel(program_id, customer, winning_amount);
     }
 }
