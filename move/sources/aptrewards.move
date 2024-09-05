@@ -4,7 +4,7 @@ module AptRewards::AptRewardsMain {
     use aptos_std::table::{Self, Table};
     use std::vector;
     use AptRewards::AptRewardsEvents::{Self, emit_create_loyalty_program};
-    use std::string;
+    use std::string::{String,utf8};
 
     struct Merchant has store {
         balance: u64,
@@ -19,14 +19,14 @@ module AptRewards::AptRewardsMain {
     struct Coupon has store {
         id: u64,
         stamps_required: u64,
-        description: vector<u8>,
+        description: String,
         is_monetary: bool,
         value: u64,
     }
 
     struct LoyaltyProgram has store {
         id: u64,
-        name: vector<u8>,
+        name: String,
         merchants: vector<Merchant>,
         lucky_spin_enabled: bool,
         owner: address,
@@ -50,7 +50,7 @@ module AptRewards::AptRewardsMain {
         move_to(account, factory);
     }
 
-    public entry fun create_loyalty_program(account: &signer, name: vector<u8>, lucky_spin_enabled: bool) acquires LoyaltyProgramFactory {
+    public entry fun create_loyalty_program(account: &signer, name: String, lucky_spin_enabled: bool) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(signer::address_of(account));
         let program_id = factory.program_count + 1;
         let owner_address = signer::address_of(account);
@@ -110,7 +110,7 @@ module AptRewards::AptRewardsMain {
         AptRewardsEvents::emit_set_spin_probabilities(program_id, probabilities);
     }
 
-    public entry fun create_coupon(account: &signer, program_id: u64, id: u64, stamps_required: u64, description: vector<u8>, is_monetary: bool, value: u64) acquires LoyaltyProgramFactory {
+    public entry fun create_coupon(account: &signer, program_id: u64, id: u64, stamps_required: u64, description: String, is_monetary: bool, value: u64) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(signer::address_of(account));
         let program = table::borrow_mut(&mut factory.programs, program_id);
         assert!(program.owner == signer::address_of(account), E_NOT_OWNER);
@@ -124,10 +124,7 @@ module AptRewards::AptRewardsMain {
         };
         vector::push_back(&mut merchant.coupons, coupon);
 
-        // Convert vector<u8> to String
-        let description_string = string::utf8(description);
-
-        AptRewardsEvents::emit_create_coupon(program_id, id, stamps_required, description_string, is_monetary, value);
+        AptRewardsEvents::emit_create_coupon(program_id, id, stamps_required, description, is_monetary, value);
     }
 
     public entry fun set_tier_thresholds(account: &signer, program_id: u64, thresholds: vector<u64>) acquires LoyaltyProgramFactory {
@@ -192,7 +189,7 @@ module AptRewards::AptRewardsMain {
             let coupon = Coupon {
                 id: coupon_id,
                 stamps_required: 0,
-                description: b"Spin Win",
+                description: utf8(b"Spin Win"),
                 is_monetary: true,
                 value: winning_amount,
             };
