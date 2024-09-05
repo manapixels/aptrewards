@@ -17,7 +17,8 @@
     "format": "prettier --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\" --write",
     "aptos:compile": "aptos move compile --package-dir move/ --named-addresses AptRewards=fdf10dc600959de16b94a042e523c6d91ce0a0c5039ddb06fa71c72e7bf0ba2e",
     "aptos:deploy": "aptos move deploy-object --address-name AptRewards --package-dir move/",
-    "aptos:upgrade": "tsx scripts/upgrade.ts"
+    "aptos:upgrade": "tsx scripts/upgrade.ts",
+    "aptos:test": "aptos move test --package-dir move/  --named-addresses AptRewards=fdf10dc600959de16b94a042e523c6d91ce0a0c5039ddb06fa71c72e7bf0ba2e"
   },
   "lint-staged": {
     "./src/**/*.{ts,js,jsx,tsx}": [
