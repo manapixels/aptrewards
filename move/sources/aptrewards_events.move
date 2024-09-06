@@ -1,7 +1,7 @@
-module AptRewards::AptRewardsEvents {
+module aptrewards_addr::AptRewardsEvents {
     use aptos_framework::event;
     use std::string::String;
-    friend AptRewards::AptRewardsMain;
+    friend aptrewards_addr::AptRewardsMain;
 
     #[event]
     struct CreateLoyaltyProgram has store, drop {
