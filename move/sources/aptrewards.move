@@ -1,5 +1,4 @@
 module aptrewards_addr::AptRewardsMain {
-    use aptos_framework::signer;
     use aptos_framework::randomness;
     use aptos_std::table::{Self, Table};
     use std::vector;
@@ -227,56 +226,54 @@ module aptrewards_addr::AptRewardsMain {
     #[test_only]
     fun setup_test(
         fx: &signer,
-        account: &signer,
-        creator: &signer,
+        owner: &signer,
     ) {
         enable_cryptography_algebra_natives(fx);
         randomness::initialize_for_testing(fx);
         randomness::set_seed(x"0000000000000000000000000000000000000000000000000000000000000000");
 
         // create a fake account (only for testing purposes)
-        account::create_account_for_test(address_of(creator));
-        account::create_account_for_test(address_of(account));
+        account::create_account_for_test(address_of(owner));
 
-        initialize_factory(account);
+        initialize_factory(owner);
     }
 
-    #[test(fx = @aptos_framework, admin = @aptrewards_addr, creator = @0x234)]
-    public fun test_create_loyalty_program(fx: &signer, admin: &signer, creator: &signer) acquires LoyaltyProgramFactory {
-        setup_test(fx, admin, creator);
-        create_loyalty_program(admin, utf8(b"Test Program"), true);
+    #[test(fx = @aptos_framework, owner = @0x123)]
+    public fun test_create_loyalty_program(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
         
-        let factory = borrow_global<LoyaltyProgramFactory>(address_of(admin));
+        let factory = borrow_global<LoyaltyProgramFactory>(address_of(owner));
         // Checks if the program count in the factory is equal to 1, indicating a single program was created successfully.
         assert!(factory.program_count == 1, 0);
         // Checks if the program with ID 1 exists in the factory's programs table, indicating it was successfully created and stored.
         assert!(table::contains(&factory.programs, 1), 1);
     }
 
-    #[test(fx = @aptos_framework, admin = @aptrewards_addr, creator = @0x234, new_owner = @0x456)]
-    public fun test_transfer_ownership(fx: &signer, admin: &signer, creator: &signer, new_owner: &signer) acquires LoyaltyProgramFactory {
-        setup_test(fx, admin, creator);
-        create_loyalty_program(admin, utf8(b"Test Program"), true);
+    #[test(fx = @aptos_framework, owner = @0x123, new_owner = @0x456)]
+    public fun test_transfer_ownership(fx: &signer, owner: &signer, new_owner: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
         
         account::create_account_for_test(address_of(new_owner));
-        transfer_ownership(admin, 1, address_of(new_owner));
+        transfer_ownership(owner, 1, address_of(new_owner));
         
-        let factory = borrow_global<LoyaltyProgramFactory>(address_of(admin));
+        let factory = borrow_global<LoyaltyProgramFactory>(address_of(owner));
         let program = table::borrow(&factory.programs, 1);
         // Checks if the program owner has been successfully transferred to the new owner
         assert!(program.owner == address_of(new_owner), 0);
     }
 
-    #[test(fx = @aptos_framework, admin = @aptrewards_addr, creator = @0x234)]
-    public fun test_set_spin_probabilities(fx: &signer, admin: &signer, creator: &signer) acquires LoyaltyProgramFactory {
-        setup_test(fx, admin, creator);
-        create_loyalty_program(admin, utf8(b"Test Program"), true);
+    #[test(fx = @aptos_framework, owner = @0x123)]
+    public fun test_set_spin_probabilities(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
         
         let probabilities = vector<u64>[25, 25, 50];
         let amounts = vector<u64>[10, 20, 0];
-        set_spin_probabilities(admin, 1, probabilities, amounts);
+        set_spin_probabilities(owner, 1, probabilities, amounts);
         
-        let factory = borrow_global<LoyaltyProgramFactory>(address_of(admin));
+        let factory = borrow_global<LoyaltyProgramFactory>(address_of(owner));
         let program = table::borrow(&factory.programs, 1);
         // Checks if the spin probabilities set for the program match the expected probabilities
         assert!(program.merchant.spin_probabilities == probabilities, 0);
@@ -284,78 +281,78 @@ module aptrewards_addr::AptRewardsMain {
         assert!(program.merchant.spin_amounts == amounts, 1);
     }
 
-    #[test(fx = @aptos_framework, admin = @aptrewards_addr, creator = @0x234)]
-    public fun test_create_coupon(fx: &signer, admin: &signer, creator: &signer) acquires LoyaltyProgramFactory {
-        setup_test(fx, admin, creator);
-        create_loyalty_program(admin, utf8(b"Test Program"), true);
+    #[test(fx = @aptos_framework, owner = @0x123)]
+    public fun test_create_coupon(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
         
-        create_coupon(admin, 1, 1, 10, utf8(b"Test Coupon"), true, 100);
+        create_coupon(owner, 1, 1, 10, utf8(b"Test Coupon"), true, 100);
         
-        let factory = borrow_global<LoyaltyProgramFactory>(address_of(admin));
+        let factory = borrow_global<LoyaltyProgramFactory>(address_of(owner));
         let program = table::borrow(&factory.programs, 1);
         // Checks if the length of the merchant's coupons vector is equal to 1, indicating a single coupon was created successfully.
         assert!(vector::length(&program.merchant.coupons) == 1, 0);
     }
 
-    #[test(fx = @aptos_framework, admin = @aptrewards_addr, creator = @0x234)]
-    public fun test_set_tier_thresholds(fx: &signer, admin: &signer, creator: &signer) acquires LoyaltyProgramFactory {
-        setup_test(fx, admin, creator);
-        create_loyalty_program(admin, utf8(b"Test Program"), true);
+    #[test(fx = @aptos_framework, owner = @0x123)]
+    public fun test_set_tier_thresholds(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
         
         let thresholds = vector<u64>[100, 200, 300];
-        set_tier_thresholds(admin, 1, thresholds);
+        set_tier_thresholds(owner, 1, thresholds);
         
-        let factory = borrow_global<LoyaltyProgramFactory>(address_of(admin));
+        let factory = borrow_global<LoyaltyProgramFactory>(address_of(owner));
         let program = table::borrow(&factory.programs, 1);
         // Checks if the tier thresholds set for the program match the expected thresholds
         assert!(program.merchant.tier_thresholds == thresholds, 0);
     }
 
-    #[test(fx = @aptos_framework, admin = @aptrewards_addr, customer = @0x456)]
-    public fun test_earn_stamps(fx: &signer, admin: &signer, customer: &signer) acquires LoyaltyProgramFactory {
-        setup_test(fx, customer, admin);
-        create_loyalty_program(admin, utf8(b"Test Program"), true);
+    #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
+    public fun test_earn_stamps(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
         
         account::create_account_for_test(address_of(customer));
-        earn_stamps(admin, 1, address_of(customer), 100); // $100 spent
+        earn_stamps(owner, 1, address_of(customer), 100); // $100 spent
         
-        let factory = borrow_global<LoyaltyProgramFactory>(address_of(admin));
+        let factory = borrow_global<LoyaltyProgramFactory>(address_of(owner));
         let program = table::borrow(&factory.programs, 1);
         
         // Checks if the customer's stamp count is 10 after spending $100 (1 stamp per $10)
         assert!(*table::borrow(&program.merchant.customer_stamps, address_of(customer)) == 10, 0);
     }
 
-    #[test(fx = @aptos_framework, admin = @aptrewards_addr, creator = @0x234, customer = @0x456)]
-    public fun test_redeem_coupon(fx: &signer, admin: &signer, creator: &signer, customer: &signer) acquires LoyaltyProgramFactory {
-        setup_test(fx, admin, creator);
-        create_loyalty_program(admin, utf8(b"Test Program"), true);
-        create_coupon(admin, 1, 1, 10, utf8(b"Test Coupon"), true, 100);
+    #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
+    public fun test_redeem_coupon(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
+        create_coupon(owner, 1, 1, 10, utf8(b"Test Coupon"), true, 100);
         
         account::create_account_for_test(address_of(customer));
-        earn_stamps(admin, 1, address_of(customer), 100);
+        earn_stamps(owner, 1, address_of(customer), 100);
         
-        redeem_coupon(admin, 1, address_of(customer), 0);
+        redeem_coupon(owner, 1, address_of(customer), 0);
         
-        let factory = borrow_global<LoyaltyProgramFactory>(address_of(admin));
+        let factory = borrow_global<LoyaltyProgramFactory>(address_of(owner));
         let program = table::borrow(&factory.programs, 1);
         // Checks if the customer's stamp count is 0 after redeeming a coupon
         assert!(*table::borrow(&program.merchant.customer_stamps, address_of(customer)) == 0, 0);
     }
 
-    #[test(fx = @aptos_framework, admin = @aptrewards_addr, creator = @0x234, customer = @0x456)]
-    public fun test_lucky_spin(fx: &signer, admin: &signer, creator: &signer, customer: &signer) acquires LoyaltyProgramFactory {
-        setup_test(fx, admin, creator);
-        create_loyalty_program(admin, utf8(b"Test Program"), true);
+    #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
+    public fun test_lucky_spin(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
         
         let probabilities = vector<u64>[100];
         let amounts = vector<u64>[10];
-        set_spin_probabilities(admin, 1, probabilities, amounts);
+        set_spin_probabilities(owner, 1, probabilities, amounts);
         
         account::create_account_for_test(address_of(customer));
-        lucky_spin(admin, 1, address_of(customer));
+        lucky_spin(owner, 1, address_of(customer));
         
-        let factory = borrow_global<LoyaltyProgramFactory>(address_of(admin));
+        let factory = borrow_global<LoyaltyProgramFactory>(address_of(owner));
         let program = table::borrow(&factory.programs, 1);
         // Asserts that the customer has 1 stamp after the lucky spin
         assert!(*table::borrow(&program.merchant.customer_stamps, address_of(customer)) == 1, 0);
