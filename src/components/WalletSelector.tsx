@@ -28,8 +28,6 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  console.log(account, connected, wallet, network)
-
   const closeDialog = useCallback(() => setIsDialogOpen(false), []);
 
   const copyAddress = useCallback(async () => {
@@ -49,20 +47,25 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
     }
   }, [account?.address, toast]);
 
-  useEffect(() => {
-    if (network?.name !== process.env.NEXT_PUBLIC_NETWORK) {
-      toast({
-        title: 'Network not supported',
-        description: 'Please connect to the ' + process.env.NEXT_PUBLIC_NETWORK + ' network',
-      })
-      // changeNetwork(process.env.NEXT_PUBLIC_NETWORK as Network)
-    }
-  }, [network])
+  // useEffect(() => {
+  //   console.log(network?.name.toLowerCase(), process.env.NEXT_PUBLIC_NETWORK)
+  //   if (network?.name.toLowerCase() !== process.env.NEXT_PUBLIC_NETWORK) {
+  //     console.log('network not supported')
+  //     toast({
+  //       title: 'Network not supported',
+  //       description: 'Please connect to the ' + process.env.NEXT_PUBLIC_NETWORK + ' network',
+  //     })
+  //     // changeNetwork(process.env.NEXT_PUBLIC_NETWORK as Network)
+  //   }
+  // }, [network])
+
+  const networkSupported = network?.name.toLowerCase() === process.env.NEXT_PUBLIC_NETWORK
+  const displayText = networkSupported ? account?.ansName || truncateAddress(account?.address) || 'Unknown' : 'Network not supported. Change to ' + process.env.NEXT_PUBLIC_NETWORK
 
   return connected ? (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button>{account?.ansName || truncateAddress(account?.address) || 'Unknown'}</Button>
+        <Button>{displayText}</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onSelect={copyAddress} className="gap-2">

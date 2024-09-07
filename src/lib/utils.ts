@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 
 const APTOS_NETWORK: Network = NetworkToNetworkName[process.env.APTOS_NETWORK ?? Network.TESTNET];
 const config = new AptosConfig({ network: APTOS_NETWORK });
-export const aptos = new Aptos(config);
+export const getAptosClient = () => new Aptos(config);
 
 export const isSendableNetwork = (connected: boolean, networkName?: string): boolean => {
   return connected && !isMainnet(connected, networkName);
