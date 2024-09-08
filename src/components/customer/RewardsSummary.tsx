@@ -6,6 +6,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import { truncateAddress } from '@/utils/addressUtils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import RedemptionItem from './RedemptionItem';
 
 const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
     const { account } = useWallet();
@@ -26,11 +29,11 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 </div>
                 <QRCodeSVG value={account?.address || ''} size={150} />
             </div>
-            <hr className="my-4" />
+            <hr className="my-8" />
             <Tabs defaultValue="card">
                 <TabsList className="grid w-full grid-cols-2 p-0 h-auto">
-                    <TabsTrigger value="card" className="text-lg px-12 py-4 rounded-none border-b-4 border-transparent data-[state=active]:border-gray-800">Card</TabsTrigger>
-                    <TabsTrigger value="vouchers" className="text-lg px-12 py-4 rounded-none border-b-4 border-transparent data-[state=active]:border-gray-800"><span className="font-bold text-red-500 pr-1">3</span>Vouchers</TabsTrigger>
+                    <TabsTrigger value="card" className="text-md font-semibold px-12 py-4 rounded-none border-b-4 border-transparent data-[state=active]:border-gray-800">Rewards Card</TabsTrigger>
+                    <TabsTrigger value="vouchers" className="text-md font-semibold px-12 py-4 rounded-none border-b-4 border-transparent data-[state=active]:border-gray-800"><span className="font-bold text-red-500 pr-1">3</span>Vouchers</TabsTrigger>
                 </TabsList>
                 <TabsContent value="card">
                     <div className="text-center">
@@ -40,7 +43,28 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                         <div>to unlock next level</div>
                     </div>
                 </TabsContent>
-                <TabsContent value="vouchers">Change your password here.</TabsContent>
+                <TabsContent value="vouchers">
+                    <div className="space-y-4">
+                        <RedemptionItem
+                            name="10% off next purchase"
+                            description="Get 10% off your next purchase at our store."
+                            expiryDate="31 Dec 2023"
+                            termsAndConditions="Valid for one-time use only. Cannot be combined with other offers."
+                        />
+                        <RedemptionItem
+                            name="Free Coffee"
+                            description="Enjoy a free coffee of your choice."
+                            expiryDate="15 Jan 2024"
+                            termsAndConditions="Valid for one standard coffee. Upgrades may incur additional charges."
+                        />
+                        <RedemptionItem
+                            name="$5 off purchase over $50"
+                            description="Save $5 on your purchase when you spend $50 or more."
+                            expiryDate="28 Feb 2024"
+                            termsAndConditions="Minimum purchase of $50 required. Excludes gift cards and sale items."
+                        />
+                    </div>
+                </TabsContent>
             </Tabs>
         </div>
     );
