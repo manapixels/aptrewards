@@ -46,18 +46,21 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 <TabsContent value="vouchers">
                     <div className="space-y-4">
                         <RedemptionItem
+                            voucherId="1"
                             name="10% off next purchase"
                             description="Get 10% off your next purchase at our store."
                             expiryDate="31 Dec 2023"
                             termsAndConditions="Valid for one-time use only. Cannot be combined with other offers."
                         />
                         <RedemptionItem
+                            voucherId="2"
                             name="Free Coffee"
                             description="Enjoy a free coffee of your choice."
                             expiryDate="15 Jan 2024"
                             termsAndConditions="Valid for one standard coffee. Upgrades may incur additional charges."
                         />
                         <RedemptionItem
+                            voucherId="3"
                             name="$5 off purchase over $50"
                             description="Save $5 on your purchase when you spend $50 or more."
                             expiryDate="28 Feb 2024"
