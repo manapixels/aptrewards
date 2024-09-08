@@ -15,7 +15,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
     }, [loyaltyProgramId])
 
     return (
-        <div className="space-y-4 p-4">
+        <div className="space-y-4">
             <div className="flex items-center space-x-4 justify-between">
                 <div>
                     <img src="/path/to/rewards-card-image.jpg" alt="" className="w-24 h-24" />
@@ -28,9 +28,9 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
             </div>
             <hr className="my-4" />
             <Tabs defaultValue="card">
-                <TabsList className="p-2 h-14">
-                    <TabsTrigger value="card" className="text-lg">Card</TabsTrigger>
-                    <TabsTrigger value="vouchers" className="text-lg"><span className="font-bold text-red-500 pr-1">3</span>Vouchers</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 p-0 h-auto">
+                    <TabsTrigger value="card" className="text-lg px-12 py-4 rounded-none border-b-4 border-transparent data-[state=active]:border-gray-800">Card</TabsTrigger>
+                    <TabsTrigger value="vouchers" className="text-lg px-12 py-4 rounded-none border-b-4 border-transparent data-[state=active]:border-gray-800"><span className="font-bold text-red-500 pr-1">3</span>Vouchers</TabsTrigger>
                 </TabsList>
                 <TabsContent value="card">
                     <div className="text-center">

@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="custom-scrollbar">
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AutoConnectProvider>
@@ -40,10 +40,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <ThemeToggle />
                 </div>
               </div>
-
               <div>
                 <Card className="m-4">
-                  <CardContent className="pt-6">{children}</CardContent>
+                  <CardContent className="p-6">{children}</CardContent>
                 </Card>
               </div>
 
