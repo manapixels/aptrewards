@@ -4,10 +4,9 @@ import { AutoConnectProvider } from '@/components/AutoConnectProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { WalletProvider } from '@/components/WalletProvider';
 import { WalletSelector } from '@/components/WalletSelector';
-import { ThemeToggle } from '@/components/ThemeToggle';
+// import { ThemeToggle } from '@/components/ThemeToggle';
 import './globals.css';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
 import dotenv from 'dotenv';
@@ -37,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </Link>
                 <div className="flex flex-row gap-2">
                   <WalletSelector />
-                  <ThemeToggle />
+                  {/* <ThemeToggle /> */}
                 </div>
               </div>
               <div>
