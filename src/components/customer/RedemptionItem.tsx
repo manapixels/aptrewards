@@ -6,6 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Forward } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface RedemptionItemProps {
     name: string;
@@ -13,6 +14,7 @@ interface RedemptionItemProps {
     expiryDate: string;
     termsAndConditions: string;
     imageUrl?: string;
+    voucherId: string; // Add this prop for unique voucher identification
 }
 
 const RedemptionItem: React.FC<RedemptionItemProps> = ({
@@ -20,11 +22,13 @@ const RedemptionItem: React.FC<RedemptionItemProps> = ({
     description,
     expiryDate,
     termsAndConditions,
-    imageUrl
+    imageUrl,
+    voucherId
 }) => {
     const [isRedeemOpen, setIsRedeemOpen] = useState(false);
     const [isTransferOpen, setIsTransferOpen] = useState(false);
     const [transferAddress, setTransferAddress] = useState('');
+    const [showQRCode, setShowQRCode] = useState(false);
 
     const handleTransfer = (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,6 +37,16 @@ const RedemptionItem: React.FC<RedemptionItemProps> = ({
         setIsTransferOpen(false);
         setTransferAddress('');
     };
+
+    const handleRedeem = () => {
+        setShowQRCode(true);
+    };
+
+    const qrCodeData = JSON.stringify({
+        voucherId,
+        name,
+        expiryDate
+    });
 
     return (
         <Card className="overflow-hidden">
@@ -75,7 +89,10 @@ const RedemptionItem: React.FC<RedemptionItemProps> = ({
                                         </form>
                                     </DialogContent>
                                 </Dialog>
-                                <Dialog open={isRedeemOpen} onOpenChange={setIsRedeemOpen}>
+                                <Dialog open={isRedeemOpen} onOpenChange={(open) => {
+                                    setIsRedeemOpen(open);
+                                    if (!open) setShowQRCode(false);
+                                }}>
                                     <DialogTrigger asChild>
                                         <Button variant="outline" size="sm">Redeem</Button>
                                     </DialogTrigger>
@@ -84,23 +101,34 @@ const RedemptionItem: React.FC<RedemptionItemProps> = ({
                                             <DialogTitle>{name}</DialogTitle>
                                         </DialogHeader>
                                         <div className="space-y-4">
-                                            {imageUrl && (
-                                                <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-                                                    <img src={imageUrl} alt={name} className="max-w-full max-h-full object-contain" />
+                                            {!showQRCode && (
+                                                <>
+                                                    {imageUrl && (
+                                                        <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                                                            <img src={imageUrl} alt={name} className="max-w-full max-h-full object-contain" />
+                                                        </div>
+                                                    )}
+                                                    {!imageUrl && <div className="w-full h-48 bg-gray-200"></div>}
+                                                    <p>{description}</p>
+                                                    <p className="text-sm text-gray-500">Valid until {expiryDate}</p>
+                                                    <Accordion type="single" collapsible>
+                                                        <AccordionItem value="terms">
+                                                            <AccordionTrigger>Terms and Conditions</AccordionTrigger>
+                                                            <AccordionContent>
+                                                                {termsAndConditions}
+                                                            </AccordionContent>
+                                                        </AccordionItem>
+                                                    </Accordion>
+                                                    <Button onClick={handleRedeem} className="w-full py-6">Redeem</Button>
+                                                </>
+                                            )}
+                                            {showQRCode && (
+                                                <div className="flex flex-col items-center space-y-4">
+                                                    <QRCodeSVG value={qrCodeData} size={200} />
+                                                    <p className="text-center">Show this QR code to staff for redemption</p>
+                                                    <Button onClick={() => setShowQRCode(false)}>Back</Button>
                                                 </div>
                                             )}
-                                            {!imageUrl && <div className="w-full h-48 bg-gray-200"></div>}
-                                            <p>{description}</p>
-                                            <p className="text-sm text-gray-500">Valid until {expiryDate}</p>
-                                            <Accordion type="single" collapsible>
-                                                <AccordionItem value="terms">
-                                                    <AccordionTrigger>Terms and Conditions</AccordionTrigger>
-                                                    <AccordionContent>
-                                                        {termsAndConditions}
-                                                    </AccordionContent>
-                                                </AccordionItem>
-                                            </Accordion>
-                                            <Button onClick={() => console.log('Redeeming voucher')} className="w-full py-6">Redeem</Button>
                                         </div>
                                     </DialogContent>
                                 </Dialog>
