@@ -60,7 +60,10 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
   // }, [network])
 
   const networkSupported = network?.name.toLowerCase() === process.env.NEXT_PUBLIC_NETWORK
-  const displayText = networkSupported ? account?.ansName || truncateAddress(account?.address) || 'Unknown' : 'Network not supported. Change to ' + process.env.NEXT_PUBLIC_NETWORK
+  let displayText = 'Welcome, ' + (account?.ansName || truncateAddress(account?.address) || 'Unknown') + '!';
+  if (!networkSupported) {
+    displayText = 'Network not supported. Change to ' + process.env.NEXT_PUBLIC_NETWORK
+  }
 
   return connected ? (
     <DropdownMenu>

@@ -41,7 +41,12 @@ module aptrewards_addr::AptRewardsMain {
     const E_NOT_OWNER: u64 = 1;
     const E_PROGRAM_NOT_FOUND: u64 = 2;
 
-    public fun initialize_factory(account: &signer) {
+    #[view]
+    public fun is_factory_initialized(account: address): bool {
+        exists<LoyaltyProgramFactory>(account)
+    }
+
+    public entry fun initialize_factory(account: &signer) {
         let factory = LoyaltyProgramFactory {
             programs: table::new(),
             program_count: 0,
