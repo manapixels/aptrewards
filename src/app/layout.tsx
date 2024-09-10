@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import Image from 'next/image';
 import dotenv from 'dotenv';
+import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,8 +23,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="custom-scrollbar">
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} custom-scrollbar`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AutoConnectProvider>
             <WalletProvider>
@@ -44,7 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <CardContent className="p-6">{children}</CardContent>
                 </Card>
               </div>
-
+              <Toaster />
             </WalletProvider>
           </AutoConnectProvider>
         </ThemeProvider>
