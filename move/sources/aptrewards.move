@@ -305,13 +305,28 @@ module aptrewards_addr::AptRewardsMain {
  
     }
 
+    struct ProgramInfo has drop, copy {
+        id: u64,
+        name: String,
+    }
+
     #[view]
-    public fun get_owned_loyalty_programs(owner: address): vector<u64> acquires LoyaltyProgramFactory {
+    public fun get_owned_loyalty_programs(owner: address): vector<ProgramInfo> acquires LoyaltyProgramFactory {
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         if (table::contains(&factory.user_programs, owner)) {
-            *table::borrow(&factory.user_programs, owner)
+            let program_ids = table::borrow(&factory.user_programs, owner);
+            let result = vector::empty<ProgramInfo>();
+            let i = 0;
+            let len = vector::length(program_ids);
+            while (i < len) {
+                let program_id = *vector::borrow(program_ids, i);
+                let program = table::borrow(&factory.programs, program_id);
+                vector::push_back(&mut result, ProgramInfo { id: program_id, name: program.name });
+                i = i + 1;
+            };
+            result
         } else {
-            vector::empty<u64>()
+            vector::empty<ProgramInfo>()
         }
     }
 

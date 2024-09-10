@@ -37,7 +37,7 @@ async function main() {
     console.log("====== Account info ======\n");
     console.log(`Admin's address is: ${admin.accountAddress.toString()}\n`);
     // Fund Admin account
-    await aptos.fundAccount({ accountAddress: admin.accountAddress, amount: 100_000_000 });
+    // await aptos.fundAccount({ accountAddress: admin.accountAddress, amount: 100_000_000 });
 
     const move = new cli.Move();
 
