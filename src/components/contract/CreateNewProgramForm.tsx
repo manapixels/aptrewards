@@ -14,6 +14,7 @@ import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useProgramStore } from '@/store/programStore';
 
 const initializeFormSchema = z.object({
     name: z.string().min(2).max(50),
@@ -27,6 +28,7 @@ export default function CreateNewProgramForm() {
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
     const [success, setSuccess] = useState<boolean>(false);
+    const triggerRefetch = useProgramStore((state) => state.triggerRefetch);
 
     const methods = useForm<z.infer<typeof initializeFormSchema>>({
         resolver: zodResolver(initializeFormSchema),
@@ -55,12 +57,16 @@ export default function CreateNewProgramForm() {
             // if (!programId) throw new Error("Program ID not found in transaction result");
 
             await getAptosClient().waitForTransaction({ transactionHash: response.hash }).then((response) => {
-                // Wait for 2 seconds before redirecting
                 // @ts-ignore
                 const programId = response?.events?.find((event: any) => event?.data?.program_id)?.data?.program_id;
+                
+                // Trigger refetch in ProgramListSidebar
+                triggerRefetch();
+
                 setTimeout(() => {
                     router.push(`/admin/edit/${programId}`);
                 }, 2000);
+                
             });
 
             // Handle successful transaction
