@@ -8,6 +8,8 @@ import {
     NetworkToNetworkName,
 } from "@aptos-labs/ts-sdk";
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -53,8 +55,20 @@ async function main() {
         extraArguments: [],
     }).then(async (response) => {
         console.log("Package deployed successfully", response);
-        // Initialize the factory
         console.log(`Object address is: ${response?.objectAddress}`);
+
+        // Update .env file with new contract address
+        if (response?.objectAddress) {
+            const envPath = path.resolve(process.cwd(), '.env');
+            let envContent = fs.readFileSync(envPath, 'utf8');
+            
+            envContent = envContent.replace(/CONTRACT_ADDRESS=.*/, `CONTRACT_ADDRESS=${response.objectAddress}`);
+            envContent = envContent.replace(/NEXT_PUBLIC_CONTRACT_ADDRESS=.*/, `NEXT_PUBLIC_CONTRACT_ADDRESS=${response.objectAddress}`);
+            
+            fs.writeFileSync(envPath, envContent);
+            
+            console.log(`Updated .env file with new contract address: ${response.objectAddress}`);
+        }
 
         // console.log("====== Initializing Factory ======\n");
 
@@ -79,6 +93,8 @@ async function main() {
         // fs.writeFileSync(path.join(__dirname, "contract_address.json"), JSON.stringify(contractInfo, null, 2));
 
         // console.log(`Contract address written to contract_address.json: ${moduleAddress}`);
+
+        
     });
 
 
