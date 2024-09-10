@@ -49,11 +49,6 @@ module aptrewards_addr::AptRewardsMain {
     const E_LUCKY_SPIN_DISABLED: u64 = 9;
     const E_INSUFFICIENT_STAMPS_FOR_SPIN: u64 = 10;
 
-    #[view]
-    public fun is_factory_initialized(sender: address): bool {
-        exists<LoyaltyProgramFactory>(sender)
-    }
-
     fun init_module(aptrewards_addr: &signer) {
         let factory = LoyaltyProgramFactory {
             programs: table::new(),
@@ -276,6 +271,48 @@ module aptrewards_addr::AptRewardsMain {
         };
 
         AptRewardsEvents::emit_spin_lucky_wheel(program_id, customer, winning_amount);
+    }
+
+    // Updated struct to include all program details
+    struct ProgramDetails has drop, copy {
+        id: u64,
+        name: String,
+        balance: u64,
+        spin_probabilities: vector<u64>,
+        spin_amounts: vector<u64>,
+        tier_thresholds: vector<u64>,
+        lucky_spin_enabled: bool,
+        owner: address,
+    }
+
+    #[view]
+    public fun get_loyalty_program_details(program_id: u64): ProgramDetails acquires LoyaltyProgramFactory {
+        let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
+        assert!(table::contains(&factory.programs, program_id), E_PROGRAM_NOT_FOUND);
+        
+        let program = table::borrow(&factory.programs, program_id);
+        
+        ProgramDetails {
+            id: program.id,
+            name: program.name,
+            owner: program.owner,
+            balance: program.balance,
+            spin_probabilities: program.spin_probabilities,
+            spin_amounts: program.spin_amounts,
+            tier_thresholds: program.tier_thresholds,
+            lucky_spin_enabled: program.lucky_spin_enabled,
+        }
+ 
+    }
+
+    #[view]
+    public fun get_owned_loyalty_programs(owner: address): vector<u64> acquires LoyaltyProgramFactory {
+        let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
+        if (table::contains(&factory.user_programs, owner)) {
+            *table::borrow(&factory.user_programs, owner)
+        } else {
+            vector::empty<u64>()
+        }
     }
 
     /////////////////////////// Tests //////////////////////////////////
