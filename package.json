@@ -16,9 +16,10 @@
     "lint": "eslint --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\"",
     "format": "prettier --ignore-path .gitignore \"src/**/*.+(ts|js|tsx)\" --write",
     "aptos:compile": "aptos move compile --package-dir move/ --named-addresses aptrewards_addr=fdf10dc600959de16b94a042e523c6d91ce0a0c5039ddb06fa71c72e7bf0ba2e",
-    "aptos:deploy": "aptos move deploy-object --address-name aptrewards_addr --package-dir move/",
+    "aptos:deploy": "aptos move deploy-object --address-name aptrewards_addr --package-dir move/ --profile default",
+    "aptos:deploy_and_init": "tsx move/deploy_and_initialize.ts",
     "aptos:upgrade": "tsx scripts/upgrade.ts",
-    "aptos:test": "aptos move test --package-dir move/  --named-addresses aptrewards_addr=fdf10dc600959de16b94a042e523c6d91ce0a0c5039ddb06fa71c72e7bf0ba2e"
+    "aptos:test": "aptos move test --package-dir move/ --named-addresses aptrewards_addr=123"
   },
   "lint-staged": {
     "./src/**/*.{ts,js,jsx,tsx}": [
@@ -70,6 +71,7 @@
     "eslint-config-next": "14.2.6",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "tree-kill": "^1.2.2",
     "tsx": "^4.19.0",
     "typescript": "^5"
   },

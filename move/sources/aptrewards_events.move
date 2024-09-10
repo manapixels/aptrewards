@@ -30,6 +30,8 @@ module aptrewards_addr::AptRewardsEvents {
         description: String,
         is_monetary: bool,
         value: u64,
+        expiration_date: u64,
+        max_redemptions: u64,
     }
 
     #[event]
@@ -50,6 +52,9 @@ module aptrewards_addr::AptRewardsEvents {
         program_id: u64,
         customer: address,
         coupon_id: u64,
+        current_redemptions: u64,
+        description: String,
+        value: u64,
     }
 
     #[event]
@@ -97,7 +102,9 @@ module aptrewards_addr::AptRewardsEvents {
         stamps_required: u64,
         description: String,
         is_monetary: bool,
-        value: u64
+        value: u64,
+        expiration_date: u64,
+        max_redemptions: u64
     ) {
         event::emit(CreateCoupon { 
             program_id, 
@@ -105,7 +112,9 @@ module aptrewards_addr::AptRewardsEvents {
             stamps_required,
             description,
             is_monetary,
-            value
+            value,
+            expiration_date,
+            max_redemptions
         });
     }
 
@@ -134,12 +143,18 @@ module aptrewards_addr::AptRewardsEvents {
     public(friend) fun emit_redeem_coupon(
         program_id: u64, 
         customer: address, 
-        coupon_id: u64
+        coupon_id: u64,
+        current_redemptions: u64,
+        description: String,
+        value: u64
     ) {
         event::emit(RedeemCoupon { 
             program_id, 
             customer, 
-            coupon_id 
+            coupon_id,
+            current_redemptions,
+            description,
+            value
         });
     }
 
