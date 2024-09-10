@@ -9,6 +9,13 @@ export interface Coupon {
   currentRedemptions: number;
 }
 
+export interface Tier {
+  id: number;
+  name: string;
+  description: string;
+  stampsRequired: number;
+}
+
 export interface LoyaltyProgram {
   id: number;
   name: string;
@@ -16,12 +23,23 @@ export interface LoyaltyProgram {
   spinProbabilities: number[];
   spinAmounts: number[];
   coupons: Coupon[];
-  tierThresholds: number[];
+  tiers: Tier[];
   luckySpinEnabled: boolean;
   owner: string;
 }
 
 export interface ProgramDetails {
+  id: number;
+  name: string;
+  balance: number;
+  spinProbabilities: number[];
+  spinAmounts: number[];
+  tiers: Tier[];
+  luckySpinEnabled: boolean;
+  owner: string;
+}
+
+export interface ProgramInfo {
   id: number;
   name: string;
 }

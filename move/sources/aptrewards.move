@@ -18,7 +18,14 @@ module aptrewards_addr::AptRewardsMain {
         current_redemptions: u64,
     }
 
-     struct LoyaltyProgram has store {
+    struct Tier has store, copy, drop {
+        id: u64,
+        name: String,
+        description: String,
+        stamps_required: u64,
+    }
+
+    struct LoyaltyProgram has store {
         id: u64,
         name: String,
         balance: u64,
@@ -27,7 +34,7 @@ module aptrewards_addr::AptRewardsMain {
         coupons: vector<Coupon>,
         customer_stamps: Table<address, u64>,
         customer_lifetime_stamps: Table<address, u64>,
-        tier_thresholds: vector<u64>,
+        tiers: vector<Tier>,
         lucky_spin_enabled: bool,
         owner: address,
     }
@@ -48,6 +55,7 @@ module aptrewards_addr::AptRewardsMain {
     const E_COUPON_EXPIRED: u64 = 8;
     const E_LUCKY_SPIN_DISABLED: u64 = 9;
     const E_INSUFFICIENT_STAMPS_FOR_SPIN: u64 = 10;
+    const E_TIER_NOT_FOUND: u64 = 11;
 
     fun init_module(aptrewards_addr: &signer) {
         let factory = LoyaltyProgramFactory {
@@ -72,7 +80,7 @@ module aptrewards_addr::AptRewardsMain {
             coupons: vector::empty(),
             customer_stamps: table::new(),
             customer_lifetime_stamps: table::new(),
-            tier_thresholds: vector::empty(),
+            tiers: vector::empty(),
             lucky_spin_enabled,
             owner: owner_address,
         };
@@ -152,13 +160,62 @@ module aptrewards_addr::AptRewardsMain {
         AptRewardsEvents::emit_create_coupon(program_id, id, stamps_required, description, is_monetary, value, expiration_date, max_redemptions);
     }
 
-    public entry fun set_tier_thresholds(sender: &signer, program_id: u64, thresholds: vector<u64>) acquires LoyaltyProgramFactory {
+    public entry fun add_tier(
+        sender: &signer,
+        program_id: u64,
+        name: String,
+        description: String,
+        stamps_required: u64
+    ) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = table::borrow_mut(&mut factory.programs, program_id);
         assert!(program.owner == address_of(sender), E_NOT_OWNER);
-        program.tier_thresholds = thresholds;
+        
+        let tier_id = vector::length(&program.tiers);
+        let new_tier = Tier {
+            id: tier_id,
+            name,
+            description,
+            stamps_required,
+        };
+        vector::push_back(&mut program.tiers, new_tier);
 
-        AptRewardsEvents::emit_set_tier_thresholds(program_id, thresholds);
+        AptRewardsEvents::emit_add_tier(program_id, tier_id, name, description, stamps_required);
+    }
+
+    public entry fun remove_tier(
+        sender: &signer,
+        program_id: u64,
+        tier_id: u64
+    ) acquires LoyaltyProgramFactory {
+        let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
+        let program = table::borrow_mut(&mut factory.programs, program_id);
+        assert!(program.owner == address_of(sender), E_NOT_OWNER);
+        assert!(tier_id < vector::length(&program.tiers), E_TIER_NOT_FOUND);
+
+        let removed_tier = vector::remove(&mut program.tiers, tier_id);
+        AptRewardsEvents::emit_remove_tier(program_id, tier_id, removed_tier.name);
+    }
+
+    public entry fun edit_tier(
+        sender: &signer,
+        program_id: u64,
+        tier_id: u64,
+        new_name: String,
+        new_description: String,
+        new_stamps_required: u64
+    ) acquires LoyaltyProgramFactory {
+        let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
+        let program = table::borrow_mut(&mut factory.programs, program_id);
+        assert!(program.owner == address_of(sender), E_NOT_OWNER);
+        assert!(tier_id < vector::length(&program.tiers), E_TIER_NOT_FOUND);
+
+        let tier = vector::borrow_mut(&mut program.tiers, tier_id);
+        tier.name = new_name;
+        tier.description = new_description;
+        tier.stamps_required = new_stamps_required;
+
+        AptRewardsEvents::emit_edit_tier(program_id, tier_id, new_name, new_description, new_stamps_required);
     }
 
     public entry fun earn_stamps(admin: &signer, program_id: u64, customer: address, amount: u64) acquires LoyaltyProgramFactory {
@@ -280,7 +337,7 @@ module aptrewards_addr::AptRewardsMain {
         balance: u64,
         spin_probabilities: vector<u64>,
         spin_amounts: vector<u64>,
-        tier_thresholds: vector<u64>,
+        tiers: vector<Tier>,
         lucky_spin_enabled: bool,
         owner: address,
     }
@@ -299,7 +356,7 @@ module aptrewards_addr::AptRewardsMain {
             balance: program.balance,
             spin_probabilities: program.spin_probabilities,
             spin_amounts: program.spin_amounts,
-            tier_thresholds: program.tier_thresholds,
+            tiers: program.tiers,
             lucky_spin_enabled: program.lucky_spin_enabled,
         }
  
@@ -416,17 +473,53 @@ module aptrewards_addr::AptRewardsMain {
     }
 
     #[test(fx = @aptos_framework, owner = @0x123)]
-    public fun test_set_tier_thresholds(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+    public fun test_add_tier(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), true);
         
-        let thresholds = vector<u64>[100, 200, 300];
-        set_tier_thresholds(owner, 1, thresholds);
+        add_tier(owner, 1, utf8(b"Bronze"), utf8(b"Entry level tier"), 100);
         
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = table::borrow(&factory.programs, 1);
-        // Checks if the tier thresholds set for the program match the expected thresholds
-        assert!(program.tier_thresholds == thresholds, 0);
+        assert!(vector::length(&program.tiers) == 1, 0);
+        let tier = vector::borrow(&program.tiers, 0);
+        assert!(tier.name == utf8(b"Bronze"), 1);
+        assert!(tier.description == utf8(b"Entry level tier"), 2);
+        assert!(tier.stamps_required == 100, 3);
+    }
+
+    #[test(fx = @aptos_framework, owner = @0x123)]
+    public fun test_remove_tier(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
+        
+        add_tier(owner, 1, utf8(b"Bronze"), utf8(b"Entry level tier"), 100);
+        add_tier(owner, 1, utf8(b"Silver"), utf8(b"Mid level tier"), 200);
+        
+        remove_tier(owner, 1, 0);
+        
+        let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
+        let program = table::borrow(&factory.programs, 1);
+        assert!(vector::length(&program.tiers) == 1, 0);
+        let tier = vector::borrow(&program.tiers, 0);
+        assert!(tier.name == utf8(b"Silver"), 1);
+    }
+
+    #[test(fx = @aptos_framework, owner = @0x123)]
+    public fun test_edit_tier(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
+        
+        add_tier(owner, 1, utf8(b"Bronze"), utf8(b"Entry level tier"), 100);
+        
+        edit_tier(owner, 1, 0, utf8(b"New Bronze"), utf8(b"Updated entry level"), 150);
+        
+        let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
+        let program = table::borrow(&factory.programs, 1);
+        let tier = vector::borrow(&program.tiers, 0);
+        assert!(tier.name == utf8(b"New Bronze"), 0);
+        assert!(tier.description == utf8(b"Updated entry level"), 1);
+        assert!(tier.stamps_required == 150, 2);
     }
 
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]

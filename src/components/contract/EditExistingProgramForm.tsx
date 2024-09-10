@@ -5,12 +5,13 @@ import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Checkbox } from '../ui/checkbox';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function EditExistingProgramForm() {
-    const [message, setMessage] = useState('');
+
+    const { toast } = useToast();
 
     const handleSubmit = async (action: string, params: any) => {
-        setMessage('Processing...');
 
         try {
             const response = await fetch('/api/loyalty', {
@@ -22,18 +23,23 @@ export default function EditExistingProgramForm() {
             });
 
             const data = await response.json();
-            setMessage(`Success! ${data.transactionHash ? `Transaction Hash: ${data.transactionHash}` :
-                data.tier ? `Tier: ${data.tier}` :
-                    data.initialized !== undefined ? `Initialized: ${data.initialized}` :
-                        JSON.stringify(data)}`);
+            toast({
+                title: 'Success',
+                description: 'Program updated successfully',
+            });
         } catch (error) {
-            setMessage(`Error performing action: ${error}`);
+            console.log(error);
+            toast({
+                title: 'Error',
+                description: 'Error updating program',
+                variant: 'destructive',
+            });
         }
     };
 
     return (
-        <div>
-            <div className="bg-white shadow-md rounded-lg p-4">
+        <div className="flex flex-col gap-4">
+            <div className="bg-white shadow-sm border rounded-lg p-6">
                 <h3 className="font-semibold mb-2">Set Spin Probabilities</h3>
                 <form onSubmit={(e) => {
                     e.preventDefault();
@@ -61,7 +67,7 @@ export default function EditExistingProgramForm() {
                 </form>
             </div>
 
-            <div className="bg-white shadow-md rounded-lg p-4">
+            <div className="bg-white shadow-sm border rounded-lg p-6">
                 <h3 className="font-semibold mb-2">Create Coupon</h3>
                 <form onSubmit={(e) => {
                     e.preventDefault();
@@ -106,7 +112,7 @@ export default function EditExistingProgramForm() {
                 </form>
             </div>
 
-            <div className="bg-white shadow-md rounded-lg p-4">
+            <div className="bg-white shadow-sm border rounded-lg p-6">
                 <h3 className="font-semibold mb-2">Set Tier Thresholds</h3>
                 <form onSubmit={(e) => {
                     e.preventDefault();
@@ -145,8 +151,6 @@ export default function EditExistingProgramForm() {
                     <Button type="submit" className="w-full mt-2">Set Tier Thresholds</Button>
                 </form>
             </div>
-
-            <p className="text-sm bg-white p-4 rounded-lg shadow-md mt-4">{message}</p>
         </div>
     );
 }

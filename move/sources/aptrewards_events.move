@@ -64,6 +64,31 @@ module aptrewards_addr::AptRewardsEvents {
         winning_amount: u64,
     }
 
+    #[event]
+    struct AddTier has store, drop {
+        program_id: u64,
+        tier_id: u64,
+        name: String,
+        description: String,
+        stamps_required: u64,
+    }
+
+    #[event]
+    struct RemoveTier has store, drop {
+        program_id: u64,
+        tier_id: u64,
+        name: String,
+    }
+
+    #[event]
+    struct EditTier has store, drop {
+        program_id: u64,
+        tier_id: u64,
+        new_name: String,
+        new_description: String,
+        new_stamps_required: u64,
+    }
+
     public(friend) fun emit_create_loyalty_program(
         program_id: u64, 
         owner: address
@@ -167,6 +192,50 @@ module aptrewards_addr::AptRewardsEvents {
             program_id, 
             customer, 
             winning_amount 
+        });
+    }
+
+    public(friend) fun emit_add_tier(
+        program_id: u64,
+        tier_id: u64,
+        name: String,
+        description: String,
+        stamps_required: u64
+    ) {
+        event::emit(AddTier { 
+            program_id,
+            tier_id,
+            name,
+            description,
+            stamps_required
+        });
+    }
+
+    public(friend) fun emit_remove_tier(
+        program_id: u64,
+        tier_id: u64,
+        name: String
+    ) {
+        event::emit(RemoveTier { 
+            program_id,
+            tier_id,
+            name
+        });
+    }
+
+    public(friend) fun emit_edit_tier(
+        program_id: u64,
+        tier_id: u64,
+        new_name: String,
+        new_description: String,
+        new_stamps_required: u64
+    ) {
+        event::emit(EditTier { 
+            program_id,
+            tier_id,
+            new_name,
+            new_description,
+            new_stamps_required
         });
     }
 }
