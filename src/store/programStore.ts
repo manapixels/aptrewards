@@ -1,16 +1,16 @@
 import { create } from 'zustand';
 import { getAptosClient } from "@/lib/utils";
-import { ProgramDetails } from "@/types/aptrewards";
+import { ProgramInfo } from "@/types/aptrewards";
 import { moduleAddress, moduleName } from "@/constants";
 
 type ProgramStore = {
-  programs: ProgramDetails[];
+  programs: ProgramInfo[];
   shouldRefetch: boolean;
   fetchPrograms: (address: string) => Promise<void>;
   triggerRefetch: () => void;
 };
 
-const getProgramsByAddress = async (address: string): Promise<ProgramDetails[]> => {
+const getProgramsByAddress = async (address: string): Promise<ProgramInfo[]> => {
   if (!moduleAddress || !moduleName) throw new Error("No module address or name");
   const response = await getAptosClient().view({
     payload: {
@@ -20,13 +20,12 @@ const getProgramsByAddress = async (address: string): Promise<ProgramDetails[]> 
   });
 
   if (!response || !response[0]) return [];
-  const programs = response[0] as ProgramDetails[];
+  const programs = response[0] as ProgramInfo[];
   
-  return programs.map((program: ProgramDetails) => ({
-    id: program.id as number,
-    name: program.name as string,
+  return programs.map((program: ProgramInfo) => ({
+    id: program.id,
+    name: program.name,
   }));
-
 };
 
 export const useProgramStore = create<ProgramStore>((set) => ({
