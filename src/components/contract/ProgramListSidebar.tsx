@@ -3,10 +3,14 @@
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useEffect } from "react";
 import { useProgramStore } from '@/store/programStore';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from "@/components/ui/button";
 
 const ProgramListSidebar = () => {
     const { account } = useWallet();
     const { programs, fetchPrograms, shouldRefetch } = useProgramStore();
+    const pathname = usePathname();
 
     useEffect(() => {
         if (account?.address) {
@@ -14,20 +18,35 @@ const ProgramListSidebar = () => {
         }
     }, [account?.address, shouldRefetch, fetchPrograms]);
 
-    console.log(programs)
-
     return (
         <div>
+            <div className="flex justify-between items-center mb-4">
+                <div className="text-sm font-semibold">Your Programs</div>
+                {programs.length > 1 && (
+                    <Link href="/admin/new">
+                        <Button variant="outline" className="w-full border-gray-500" size="sm">+</Button>
+                    </Link>
+                )}
+            </div>
             {account ? (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
                     {programs.map((program) => (
-                        <a key={program.id} href={`/programs/${program.id}`}>
-                            <div className="text-md font-bold">{program.name}</div>
-                        </a>
+                        <Link
+                            key={program.id}
+                            href={`/admin/edit/${program.id}`}
+                            className={`px-4 py-2 rounded-md ${pathname === `/admin/edit/${program.id}` ? 'bg-gray-100 font-semibold text-black' : 'text-gray-600'}`}
+                        >
+                            <div>{program.name}</div>
+                        </Link>
                     ))}
                 </div>
             ) : (
                 <div>Connect your wallet to view your programs</div>
+            )}
+            {programs.length === 0 && (
+                <Link href="/admin/new">
+                    <Button variant="outline" className="w-full" size="sm">+ New</Button>
+                </Link>
             )}
         </div>
     )
