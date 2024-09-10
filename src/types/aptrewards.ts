@@ -24,10 +24,4 @@ export interface LoyaltyProgram {
 export interface ProgramDetails {
   id: number;
   name: string;
-  balance: number;
-  spinProbabilities: number[];
-  spinAmounts: number[];
-  tierThresholds: number[];
-  luckySpinEnabled: boolean;
-  owner: string;
 }

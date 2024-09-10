@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getAptosClient } from "@/lib/utils";
-import { Coupon, ProgramDetails } from "@/types/aptrewards";
+import { ProgramDetails } from "@/types/aptrewards";
 import { moduleAddress, moduleName } from "@/constants";
 
 type ProgramStore = {
@@ -18,18 +18,15 @@ const getProgramsByAddress = async (address: string): Promise<ProgramDetails[]> 
       functionArguments: [address],
     },
   });
+
+  if (!response || !response[0]) return [];
+  const programs = response[0] as ProgramDetails[];
   
-  return response.map((program: any) => ({
-    id: program[0] as number,
-    name: program[1] as string,
-    balance: program[2] as number,
-    spinProbabilities: program[3] as number[],
-    spinAmounts: program[4] as number[],
-    coupons: program[5] as Coupon[],
-    tierThresholds: program[6] as number[],
-    luckySpinEnabled: program[7] as boolean,
-    owner: program[8] as string,
+  return programs.map((program: ProgramDetails) => ({
+    id: program.id as number,
+    name: program.name as string,
   }));
+
 };
 
 export const useProgramStore = create<ProgramStore>((set) => ({
