@@ -6,10 +6,11 @@ import { useProgramStore } from '@/store/programStore';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const ProgramListSidebar = () => {
     const { account } = useWallet();
-    const { programs, fetchPrograms, shouldRefetch } = useProgramStore();
+    const { programs, fetchPrograms, shouldRefetch, isFetchingAllPrograms } = useProgramStore();
     const pathname = usePathname();
 
     useEffect(() => {
@@ -29,16 +30,20 @@ const ProgramListSidebar = () => {
                 )}
             </div>
             {account ? (
-                <div className="flex flex-col gap-2">
-                    {programs.map((program) => (
-                        <Link
-                            key={`program-${program.id}`}
-                            href={`/admin/edit/${program.id}`}
-                            className={`px-4 py-2 rounded-md ${pathname === `/admin/edit/${program.id}` ? 'bg-gray-100 font-semibold text-black' : 'text-gray-600'}`}
-                        >
-                            <div>{program.name}</div>
-                        </Link>
-                    ))}
+                <div className="flex flex-col gap-2 text-sm">
+                    {isFetchingAllPrograms && programs.length === 0 ? (
+                        <div><LoadingSpinner /></div>
+                    ) : (
+                        programs.map((program) => (
+                            <Link
+                                key={`program-${program.id}`}
+                                href={`/admin/edit/${program.id}`}
+                                className={`px-4 py-2 rounded-md ${pathname === `/admin/edit/${program.id}` ? 'bg-gray-100 font-semibold text-black' : 'text-gray-600'}`}
+                            >
+                                <div>{program.name}</div>
+                            </Link>
+                        ))
+                    )}
                 </div>
             ) : (
                 <div>Connect your wallet to view your programs</div>

@@ -1,23 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Label } from '../ui/label';
-import { Input } from '../ui/input';
-import { Checkbox } from '../ui/checkbox';
-import { useToast } from '@/components/ui/use-toast';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/components/ui/use-toast';
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/lib/utils';
 import { useProgramStore } from '@/store/programStore';
 import TierManagement from './TierManagement';
+import { AlertCircle } from 'lucide-react';
+
 
 export default function EditExistingProgramForm({ programId }: { programId: string }) {
 
     const { toast } = useToast();
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
-    const { triggerRefetch, fetchProgramDetails, programs } = useProgramStore();
+    const { triggerRefetch, fetchProgramDetails, programs, isFetchingOneProgram } = useProgramStore();
     const currProgram = programs.find(program => program.id === programId.toString());
 
     useEffect(() => {
@@ -84,8 +88,16 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
         }
     };
 
-    if (!currProgram) {
-        return <div>Loading...</div>;
+    if (!currProgram && !isFetchingOneProgram) {
+        return (
+            <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>No access to this loyalty program</AlertTitle>
+            <AlertDescription>
+                Choose a different loyalty program to edit.
+            </AlertDescription>
+          </Alert>
+        );
     }
 
     return (

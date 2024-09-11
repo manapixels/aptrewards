@@ -1,8 +1,6 @@
 import { Aptos, AptosConfig, Network, NetworkToNetworkName } from '@aptos-labs/ts-sdk';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-type ClassValue = string | number | null | undefined | { [key: string]: boolean };
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

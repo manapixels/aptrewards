@@ -6,6 +6,8 @@ import { moduleAddress, moduleName } from "@/constants";
 type ProgramStore = {
     programs: LoyaltyProgram[];
     shouldRefetch: boolean;
+    isFetchingAllPrograms: boolean;
+    isFetchingOneProgram: boolean;
     fetchPrograms: (address: string) => Promise<void>;
     fetchProgramDetails: (programId: string) => Promise<void>;
     triggerRefetch: () => void;
@@ -40,27 +42,41 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
 export const useProgramStore = create<ProgramStore>((set) => ({
     programs: [],
     shouldRefetch: false,
+    isFetchingAllPrograms: false,
+    isFetchingOneProgram: false,
     fetchPrograms: async (address: string) => {
-        const fetchedPrograms = await getProgramsByAddress(address);
-        set((state) => {
-            const mergedPrograms = fetchedPrograms.map(fetchedProgram => {
-                const existingProgram = state.programs.find(p => p.id.toString() === fetchedProgram.id.toString());
-                return existingProgram ? { ...existingProgram, ...fetchedProgram } : fetchedProgram;
-            });
+        set({ isFetchingAllPrograms: true });
+        try {
+            const fetchedPrograms = await getProgramsByAddress(address);
+            set((state) => {
+                const mergedPrograms = fetchedPrograms.map(fetchedProgram => {
+                    const existingProgram = state.programs.find(p => p.id.toString() === fetchedProgram.id.toString());
+                    return existingProgram ? { ...existingProgram, ...fetchedProgram } : fetchedProgram;
+                });
 
-            return { programs: mergedPrograms, shouldRefetch: false };
-        });
+                return { programs: mergedPrograms, shouldRefetch: false, isFetchingAllPrograms: false };
+            });
+        } catch (error) {
+            console.error("Error fetching programs:", error);
+            set({ isFetchingAllPrograms: false });
+        }
     },
     fetchProgramDetails: async (programId: string) => {
-        const programDetails = await getProgramDetails(programId);
-        set((state) => {
-            const index = state.programs.findIndex((program) => program.id.toString() === programId.toString());
-            if (index === -1) {
-                return { programs: [...state.programs, programDetails] };
-            } else {
-                return { programs: [...state.programs.slice(0, index), programDetails, ...state.programs.slice(index + 1)] };
-            }
-        });
+        set({ isFetchingOneProgram: true });
+        try {
+            const programDetails = await getProgramDetails(programId);
+            set((state) => {
+                const index = state.programs.findIndex((program) => program.id.toString() === programId.toString());
+                if (index === -1) {
+                    return { programs: [...state.programs, programDetails], isFetchingOneProgram: false };
+                } else {
+                    return { programs: [...state.programs.slice(0, index), programDetails, ...state.programs.slice(index + 1)], isFetchingOneProgram: false };
+                }
+            });
+        } catch (error) {
+            console.error("Error fetching program details:", error);
+            set({ isFetchingOneProgram: false });
+        }
     },
     triggerRefetch: () => set({ shouldRefetch: true }),
 }));
