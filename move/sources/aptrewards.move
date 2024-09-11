@@ -6,6 +6,7 @@ module aptrewards_addr::AptRewardsMain {
     use std::signer::address_of;
     use std::string::{String,utf8};
     use std::timestamp;
+    use std::option::{Self, Option};
 
     struct Coupon has store {
         id: u64,
@@ -28,7 +29,6 @@ module aptrewards_addr::AptRewardsMain {
     struct LoyaltyProgram has store {
         id: u64,
         name: String,
-        balance: u64,
         spin_probabilities: vector<u64>,
         spin_amounts: vector<u64>,
         coupons: vector<Coupon>,
@@ -56,6 +56,7 @@ module aptrewards_addr::AptRewardsMain {
     const E_LUCKY_SPIN_DISABLED: u64 = 9;
     const E_INSUFFICIENT_STAMPS_FOR_SPIN: u64 = 10;
     const E_TIER_NOT_FOUND: u64 = 11;
+    const E_INVALID_SPIN_CONFIG: u64 = 12;
 
     fun init_module(aptrewards_addr: &signer) {
         let factory = LoyaltyProgramFactory {
@@ -74,7 +75,6 @@ module aptrewards_addr::AptRewardsMain {
         let program = LoyaltyProgram {
             id: program_id,
             name,
-            balance: 0,
             spin_probabilities: vector::empty(),
             spin_amounts: vector::empty(),
             coupons: vector::empty(),
@@ -268,11 +268,6 @@ module aptrewards_addr::AptRewardsMain {
         *customer_stamps = *customer_stamps - coupon.stamps_required;
         coupon.current_redemptions = coupon.current_redemptions + 1;
         
-        if (coupon.is_monetary) {
-            // Update customer balance or transfer funds
-            // This part depends on how you want to handle monetary coupons
-        };
-        
         AptRewardsEvents::emit_redeem_coupon(program_id, customer, coupon_id, coupon.current_redemptions, coupon.description, coupon.value);
     }
 
@@ -334,7 +329,6 @@ module aptrewards_addr::AptRewardsMain {
     struct ProgramDetails has drop, copy {
         id: u64,
         name: String,
-        balance: u64,
         spin_probabilities: vector<u64>,
         spin_amounts: vector<u64>,
         tiers: vector<Tier>,
@@ -353,7 +347,6 @@ module aptrewards_addr::AptRewardsMain {
             id: program.id,
             name: program.name,
             owner: program.owner,
-            balance: program.balance,
             spin_probabilities: program.spin_probabilities,
             spin_amounts: program.spin_amounts,
             tiers: program.tiers,
@@ -385,6 +378,47 @@ module aptrewards_addr::AptRewardsMain {
         } else {
             vector::empty<ProgramInfo>()
         }
+    }
+
+    public entry fun edit_loyalty_program(
+        sender: &signer,
+        program_id: u64,
+        new_name: Option<String>,
+        new_lucky_spin_enabled: Option<bool>,
+        new_spin_probabilities: Option<vector<u64>>,
+        new_spin_amounts: Option<vector<u64>>
+    ) acquires LoyaltyProgramFactory {
+        let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
+        assert!(table::contains(&factory.programs, program_id), E_PROGRAM_NOT_FOUND);
+        
+        let program = table::borrow_mut(&mut factory.programs, program_id);
+        assert!(program.owner == address_of(sender), E_NOT_OWNER);
+
+        if (option::is_some(&new_name)) {
+            program.name = option::extract(&mut new_name);
+        };
+
+        if (option::is_some(&new_lucky_spin_enabled)) {
+            program.lucky_spin_enabled = option::extract(&mut new_lucky_spin_enabled);
+        };
+
+        if (option::is_some(&new_spin_probabilities) && option::is_some(&new_spin_amounts)) {
+            let probabilities = option::extract(&mut new_spin_probabilities);
+            let amounts = option::extract(&mut new_spin_amounts);
+            assert!(vector::length(&probabilities) == vector::length(&amounts), E_INVALID_SPIN_CONFIG);
+            program.spin_probabilities = probabilities;
+            program.spin_amounts = amounts;
+        } else {
+            assert!(option::is_none(&new_spin_probabilities) && option::is_none(&new_spin_amounts), E_INVALID_SPIN_CONFIG);
+        };
+
+        AptRewardsEvents::emit_edit_loyalty_program(
+            program_id,
+            program.name,
+            program.lucky_spin_enabled,
+            program.spin_probabilities,
+            program.spin_amounts
+        );
     }
 
     /////////////////////////// Tests //////////////////////////////////
@@ -639,5 +673,65 @@ module aptrewards_addr::AptRewardsMain {
         assert!(coupon.value == 10, 3);
         assert!(coupon.max_redemptions == 1, 4);
         assert!(coupon.current_redemptions == 0, 5);
+    }
+
+    #[test(fx = @aptos_framework, owner = @0x123)]
+    public fun test_edit_loyalty_program(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
+        
+        let new_name = option::some(utf8(b"Updated Program"));
+        let new_lucky_spin_enabled = option::some(false);
+        let new_spin_probabilities = option::some(vector<u64>[30, 30, 40]);
+        let new_spin_amounts = option::some(vector<u64>[5, 10, 15]);
+        
+        edit_loyalty_program(owner, 1, new_name, new_lucky_spin_enabled, new_spin_probabilities, new_spin_amounts);
+        
+        let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
+        let program = table::borrow(&factory.programs, 1);
+        
+        // Check if the program details were updated correctly
+        assert!(program.name == utf8(b"Updated Program"), 0);
+        assert!(program.lucky_spin_enabled == false, 1);
+        assert!(program.spin_probabilities == vector<u64>[30, 30, 40], 2);
+        assert!(program.spin_amounts == vector<u64>[5, 10, 15], 3);
+    }
+
+    // Test editing only some fields
+    #[test(fx = @aptos_framework, owner = @0x123)]
+    public fun test_edit_loyalty_program_partial(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
+        
+        let new_name = option::some(utf8(b"Updated Program"));
+        let new_lucky_spin_enabled = option::none();
+        let new_spin_probabilities = option::none();
+        let new_spin_amounts = option::none();
+        
+        edit_loyalty_program(owner, 1, new_name, new_lucky_spin_enabled, new_spin_probabilities, new_spin_amounts);
+        
+        let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
+        let program = table::borrow(&factory.programs, 1);
+        
+        // Check if only the name was updated
+        assert!(program.name == utf8(b"Updated Program"), 0);
+        assert!(program.lucky_spin_enabled == true, 1); // Should remain unchanged
+        assert!(vector::is_empty(&program.spin_probabilities), 2); // Should remain empty
+        assert!(vector::is_empty(&program.spin_amounts), 3); // Should remain empty
+    }
+
+    // Test editing with invalid spin configuration
+    #[test(fx = @aptos_framework, owner = @0x123)]
+    #[expected_failure(abort_code = E_INVALID_SPIN_CONFIG)]
+    public fun test_edit_loyalty_program_invalid_spin_config(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), true);
+        
+        let new_name = option::none();
+        let new_lucky_spin_enabled = option::none();
+        let new_spin_probabilities = option::some(vector<u64>[30, 30, 40]);
+        let new_spin_amounts = option::some(vector<u64>[5, 10]); // Different length from probabilities
+        
+        edit_loyalty_program(owner, 1, new_name, new_lucky_spin_enabled, new_spin_probabilities, new_spin_amounts);
     }
 }

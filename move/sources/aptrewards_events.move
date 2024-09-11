@@ -89,6 +89,15 @@ module aptrewards_addr::AptRewardsEvents {
         new_stamps_required: u64,
     }
 
+    #[event]
+    struct EditLoyaltyProgram has store, drop {
+        program_id: u64,
+        new_name: String,
+        new_lucky_spin_enabled: bool,
+        new_spin_probabilities: vector<u64>,
+        new_spin_amounts: vector<u64>,
+    }
+
     public(friend) fun emit_create_loyalty_program(
         program_id: u64, 
         owner: address
@@ -236,6 +245,22 @@ module aptrewards_addr::AptRewardsEvents {
             new_name,
             new_description,
             new_stamps_required
+        });
+    }
+
+    public(friend) fun emit_edit_loyalty_program(
+        program_id: u64,
+        new_name: String,
+        new_lucky_spin_enabled: bool,
+        new_spin_probabilities: vector<u64>,
+        new_spin_amounts: vector<u64>
+    ) {
+        event::emit(EditLoyaltyProgram {
+            program_id,
+            new_name,
+            new_lucky_spin_enabled,
+            new_spin_probabilities,
+            new_spin_amounts
         });
     }
 }
