@@ -44,7 +44,7 @@ export const useProgramStore = create<ProgramStore>((set) => ({
         const fetchedPrograms = await getProgramsByAddress(address);
         set((state) => {
             const mergedPrograms = fetchedPrograms.map(fetchedProgram => {
-                const existingProgram = state.programs.find(p => p.id === fetchedProgram.id);
+                const existingProgram = state.programs.find(p => p.id.toString() === fetchedProgram.id.toString());
                 return existingProgram ? { ...existingProgram, ...fetchedProgram } : fetchedProgram;
             });
 
@@ -54,7 +54,7 @@ export const useProgramStore = create<ProgramStore>((set) => ({
     fetchProgramDetails: async (programId: string) => {
         const programDetails = await getProgramDetails(programId);
         set((state) => {
-            const index = state.programs.findIndex((program) => program.id === programId);
+            const index = state.programs.findIndex((program) => program.id.toString() === programId.toString());
             if (index === -1) {
                 return { programs: [...state.programs, programDetails] };
             } else {
