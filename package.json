@@ -18,6 +18,7 @@
     "aptos:compile": "aptos move compile --package-dir move/ --named-addresses aptrewards_addr=fdf10dc600959de16b94a042e523c6d91ce0a0c5039ddb06fa71c72e7bf0ba2e",
     "aptos:deploy": "aptos move deploy-object --address-name aptrewards_addr --package-dir move/ --profile default",
     "aptos:deploy_and_init": "tsx move/deploy_and_initialize.ts",
+    "aptos:create_test_program": "tsx move/create_test_program.ts",
     "aptos:upgrade": "tsx scripts/upgrade.ts",
     "aptos:test": "aptos move test --package-dir move/ --named-addresses aptrewards_addr=123"
   },

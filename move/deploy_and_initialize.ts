@@ -68,33 +68,7 @@ async function main() {
             fs.writeFileSync(envPath, envContent);
             
             console.log(`Updated .env file with new contract address: ${response.objectAddress}`);
-        }
-
-        // console.log("====== Initializing Factory ======\n");
-
-        // const initializeFactoryTxn = await aptos.transaction.build.simple({
-        //     sender: admin.accountAddress,
-        //     data: {
-        //         // All transactions on Aptos are implemented via smart contracts.
-        //         function: `${response?.objectAddress}::AptRewardsMain::initialize_factory`,
-        //         functionArguments: [],
-        //     },
-        // });
-
-        // const pendingTxn = await aptos.signAndSubmitTransaction({ signer: admin, transaction: initializeFactoryTxn });
-        // const initializeFactoryResponse = await aptos.waitForTransaction({ transactionHash: pendingTxn.hash });
-
-        // console.log("Factory initialized successfully. - ", initializeFactoryResponse.hash);
-
-        // Write the contract address to a JSON file
-        // const contractInfo = {
-        //     address: moduleAddress
-        // };
-        // fs.writeFileSync(path.join(__dirname, "contract_address.json"), JSON.stringify(contractInfo, null, 2));
-
-        // console.log(`Contract address written to contract_address.json: ${moduleAddress}`);
-
-        
+        }        
     });
 
 
