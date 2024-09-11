@@ -17,29 +17,13 @@ export interface Tier {
 }
 
 export interface LoyaltyProgram {
-  id: number;
+  id: string;
   name: string;
-  balance: number;
-  spinProbabilities: number[];
-  spinAmounts: number[];
-  coupons: Coupon[];
-  tiers: Tier[];
-  luckySpinEnabled: boolean;
-  owner: string;
-}
-
-export interface ProgramDetails {
-  id: number;
-  name: string;
-  balance: number;
-  spinProbabilities: number[];
-  spinAmounts: number[];
-  tiers: Tier[];
-  luckySpinEnabled: boolean;
-  owner: string;
-}
-
-export interface ProgramInfo {
-  id: number;
-  name: string;
+  owner?: string;
+  balance?: number;
+  spinProbabilities?: number[];
+  spinAmounts?: number[];
+  coupons?: Coupon[];
+  tiers?: Tier[];
+  luckySpinEnabled?: boolean;
 }

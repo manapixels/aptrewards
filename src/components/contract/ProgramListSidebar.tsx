@@ -32,7 +32,7 @@ const ProgramListSidebar = () => {
                 <div className="flex flex-col gap-2">
                     {programs.map((program) => (
                         <Link
-                            key={program.id}
+                            key={`program-${program.id}`}
                             href={`/admin/edit/${program.id}`}
                             className={`px-4 py-2 rounded-md ${pathname === `/admin/edit/${program.id}` ? 'bg-gray-100 font-semibold text-black' : 'text-gray-600'}`}
                         >
