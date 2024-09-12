@@ -34,7 +34,7 @@ async function main() {
     });
 
     console.log("Admin's address:", admin.accountAddress.toString());
-    
+
 
     // Check if the module is deployed
     try {
@@ -44,7 +44,7 @@ async function main() {
         console.error("Module is not deployed on the network.");
         return;
     }
-    
+
 
     // Fund the admin account
     // await aptos.fundAccount({ accountAddress: admin.accountAddress, amount: 100_000_000 });
@@ -73,10 +73,10 @@ async function main() {
         signer: admin,
         transaction: createProgramTxn
     })
-    
+
     // Wait for transaction to be confirmed
     const confirmedTxn = await aptos.waitForTransaction({ transactionHash: createProgramResult.hash });
-    
+
     // @ts-ignore
     const programId = confirmedTxn?.events?.find(event => event.type.includes("CreateLoyaltyProgram"))?.data?.program_id;
 
@@ -84,34 +84,42 @@ async function main() {
 
     // Create tiers
     const tiers = [
-        { 
-            name: "Bronze", 
-            description: "Welcome to our loyalty program! Enjoy basic perks and start earning rewards with every purchase.", 
-            stamps: 100 
+        {
+            name: "Bronze",
+            description: "Welcome to our loyalty program! Enjoy basic perks and start earning rewards with every purchase.",
+            stamps: 100
         },
-        { 
-            name: "Silver", 
-            description: "You're a valued customer! Unlock exclusive discounts and priority service as a Silver member.", 
-            stamps: 500 
+        {
+            name: "Silver",
+            description: "You're a valued customer! Unlock exclusive discounts and priority service as a Silver member.",
+            stamps: 500
         },
-        { 
-            name: "Gold", 
-            description: "Experience VIP treatment! As a Gold member, indulge in premium rewards, personalized offers, and exclusive events.", 
-            stamps: 1000 
+        {
+            name: "Gold",
+            description: "Experience VIP treatment! As a Gold member, indulge in premium rewards, personalized offers, and exclusive events.",
+            stamps: 1000
         }
     ];
 
-    const tierTransactions: InputGenerateTransactionPayloadData[] = tiers.map(tier => ({
-        function: `${MODULE_ADDRESS}::AptRewardsMain::add_tier`,
-        functionArguments: [programId, tier.name, tier.description, tier.stamps]
-    }));
+    for (const tier of tiers) {
+        const createTierTxn = await aptos.transaction.build.simple({
+            sender: admin.accountAddress,
+            data: {
+                function: `${MODULE_ADDRESS}::AptRewardsMain::add_tier`,
+                typeArguments: [],
+                functionArguments: [programId, tier.name, tier.description, tier.stamps]
+            },
+        });
 
-    await aptos.transaction.batch.forSingleAccount({
-        sender: admin,
-        data: tierTransactions
-    });
+        const createTierResult = await aptos.signAndSubmitTransaction({
+            signer: admin,
+            transaction: createTierTxn
+        })
 
-    console.log("Added all tiers");
+        const confirmedTierTxn = await aptos.waitForTransaction({ transactionHash: createTierResult.hash });
+        // @ts-ignore
+        console.log(`Created tier "${tier.name}" with ID:`, confirmedTierTxn?.events?.find(event => event.type.includes("AddTier"))?.data?.tier_id);
+    }
 
     // Create coupons
     const coupons = [
@@ -122,21 +130,25 @@ async function main() {
         { stamps: 500, description: "VIP experience", isMonetary: false, value: 0, maxRedemptions: 10 }
     ];
 
-    const couponTransactions: InputGenerateTransactionPayloadData[] = coupons.map((coupon, i) => ({
-        function: `${MODULE_ADDRESS}::AptRewardsMain::create_coupon`,
-        functionArguments: [
-            programId, i, coupon.stamps, coupon.description, coupon.isMonetary, 
-            coupon.value, Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // 30 days expiration
-            coupon.maxRedemptions
-        ]
-    }));
+    for (const coupon of coupons) {
+        const createCouponTxn = await aptos.transaction.build.simple({
+            sender: admin.accountAddress,
+            data: {
+                function: `${MODULE_ADDRESS}::AptRewardsMain::create_coupon`,
+                typeArguments: [],
+                functionArguments: [programId, coupon.stamps, coupon.description, coupon.isMonetary, coupon.value, Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, coupon.maxRedemptions]
+            }
+        });
 
-    await aptos.transaction.batch.forSingleAccount({
-        sender: admin,
-        data: couponTransactions
-    });
+        const createCouponResult = await aptos.signAndSubmitTransaction({
+            signer: admin,
+            transaction: createCouponTxn
+        })
 
-    console.log("Created all coupons");
+        const confirmedCouponTxn = await aptos.waitForTransaction({ transactionHash: createCouponResult.hash });
+        // @ts-ignore
+        console.log(`Created coupon "${coupon.description}" with ID:`, confirmedCouponTxn?.events?.find(event => event.type.includes("CreateCoupon"))?.data?.coupon_id);
+    }
 
     // Create 5 random customer accounts and assign stamps
     for (let i = 0; i < 5; i++) {
@@ -144,26 +156,49 @@ async function main() {
         await aptos.fundAccount({ accountAddress: customer.accountAddress, amount: 10_000_000 });
 
         const stamps = Math.floor(Math.random() * 1000) + 1; // Random stamps between 1 and 1000
-        const randomCouponId = Math.floor(Math.random() * coupons.length);
 
-        const customerTransactions: InputGenerateTransactionPayloadData[] = [
-            {
+        const earnStampsTxn = await aptos.transaction.build.simple({
+            sender: admin.accountAddress,
+            data: {
                 function: `${MODULE_ADDRESS}::AptRewardsMain::earn_stamps`,
+                typeArguments: [],
                 functionArguments: [programId, customer.accountAddress.toString(), stamps * 10] // Assuming 1 stamp per $10 spent
-            },
-            {
-                function: `${MODULE_ADDRESS}::AptRewardsMain::redeem_coupon`,
-                functionArguments: [programId, customer.accountAddress.toString(), randomCouponId]
             }
-        ];
-
-        await aptos.transaction.batch.forSingleAccount({
-            sender: admin,
-            data: customerTransactions
         });
 
+        const earnStampsResult = await aptos.signAndSubmitTransaction({
+            signer: admin,
+            transaction: earnStampsTxn
+        })
 
-        console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) earned ${stamps} stamps and redeemed coupon ${randomCouponId}`);
+        await aptos.waitForTransaction({ transactionHash: earnStampsResult.hash });
+        console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) earned ${stamps} stamps`);
+
+        // Find a coupon that the customer has enough stamps for
+        const availableCoupons = coupons.filter(coupon => coupon.stamps <= stamps);
+        if (availableCoupons.length > 0) {
+            const randomCoupon = availableCoupons[Math.floor(Math.random() * availableCoupons.length)];
+            const couponIndex = coupons.indexOf(randomCoupon);
+
+            const redeemCouponTxn = await aptos.transaction.build.simple({
+                sender: admin.accountAddress,
+                data: {
+                    function: `${MODULE_ADDRESS}::AptRewardsMain::redeem_coupon`,
+                    typeArguments: [],
+                    functionArguments: [programId, customer.accountAddress.toString(), couponIndex]
+                }
+            });
+
+            const redeemCouponResult = await aptos.signAndSubmitTransaction({
+                signer: admin,
+                transaction: redeemCouponTxn
+            })
+
+            await aptos.waitForTransaction({ transactionHash: redeemCouponResult.hash });
+            console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) redeemed coupon ${couponIndex} (${randomCoupon.description})`);
+        } else {
+            console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) doesn't have enough stamps to redeem any coupons`);
+        }
     }
 
     console.log("Test program setup completed successfully!");
