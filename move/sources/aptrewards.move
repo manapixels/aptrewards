@@ -7,35 +7,35 @@ module aptrewards_addr::AptRewardsMain {
     use std::timestamp;
     use std::option::{Self, Option};
 
-    struct Coupon has store {
+    struct Coupon has store, drop, copy {
         id: u64,
         stamps_required: u64,
         description: String,
         is_monetary: bool,
         value: u64,
-        expiration_date: u64, // Unix timestamp
+        expiration_date: u64,
         max_redemptions: u64,
         current_redemptions: u64,
     }
 
-    struct Tier has store, copy, drop {
+    struct Tier has store, drop, copy {
         id: u64,
         name: String,
         stamps_required: u64,
         benefits: vector<String>,
     }
 
-    struct LoyaltyProgram has store {
+    struct LoyaltyProgram has key, store {
         id: u64,
         name: String,
+        owner: address,
         coupons: vector<Coupon>,
+        coupon_count: u64,
         customer_stamps: Table<address, u64>,
         customer_lifetime_stamps: Table<address, u64>,
         customer_last_stamp_date: Table<address, u64>,
-        tiers: vector<Tier>,
-        owner: address,
-        coupon_count: u64,
         stamp_validity_days: u64,
+        tiers: vector<Tier>,
     }
 
     struct LoyaltyProgramFactory has key {
@@ -72,14 +72,14 @@ module aptrewards_addr::AptRewardsMain {
         let program = LoyaltyProgram {
             id: program_id,
             name,
+            owner: owner_address,
             coupons: vector::empty(),
+            coupon_count: 0,
             customer_stamps: table::new(),
             customer_lifetime_stamps: table::new(),
             customer_last_stamp_date: table::new(),
-            tiers: vector::empty(),
-            owner: owner_address,
-            coupon_count: 0,
             stamp_validity_days,
+            tiers: vector::empty(),
         };
 
         table::add(&mut factory.programs, program_id, program);
@@ -277,49 +277,30 @@ module aptrewards_addr::AptRewardsMain {
         AptRewardsEvents::emit_redeem_coupon(program_id, customer, coupon_id, coupon.current_redemptions, coupon.description, coupon.value);
     }
 
-    // Updated struct to include all program details
-    struct ProgramDetails has drop, copy {
-        id: u64,
-        name: String,
-        tiers: vector<Tier>,
-        owner: address,
-        stamp_validity_days: u64,
-    }
-
     #[view]
-    public fun get_loyalty_program_details(program_id: u64): ProgramDetails acquires LoyaltyProgramFactory {
+    public fun get_loyalty_program_details(program_id: u64): (u64, String, address, u64, u64, vector<Coupon>, vector<Tier>) acquires LoyaltyProgramFactory {
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         assert!(table::contains(&factory.programs, program_id), E_PROGRAM_NOT_FOUND);
         
         let program = table::borrow(&factory.programs, program_id);
-        
-        ProgramDetails {
-            id: program.id,
-            name: program.name,
-            owner: program.owner,
-            tiers: program.tiers,
-            stamp_validity_days: program.stamp_validity_days,
-        }
- 
+        (
+            program.id,
+            program.name,
+            program.owner,
+            program.coupon_count,
+            program.stamp_validity_days,
+            *&program.coupons,  // Return a copy of the coupons vector
+            *&program.tiers     // Return a copy of the tiers vector
+        )
     }
 
     #[view]
-    public fun get_owned_loyalty_programs(owner: address): vector<ProgramDetails> acquires LoyaltyProgramFactory {
+    public fun get_owned_loyalty_programs(owner: address): vector<u64> acquires LoyaltyProgramFactory {
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         if (table::contains(&factory.user_programs, owner)) {
-            let program_ids = table::borrow(&factory.user_programs, owner);
-            let result = vector::empty<ProgramDetails>();
-            let i = 0;
-            let len = vector::length(program_ids);
-            while (i < len) {
-                let program_id = *vector::borrow(program_ids, i);
-                let program = table::borrow(&factory.programs, program_id);
-                vector::push_back(&mut result, ProgramDetails { id: program_id, name: program.name, tiers: program.tiers, owner: program.owner, stamp_validity_days: program.stamp_validity_days });
-                i = i + 1;
-            };
-            result
+            *table::borrow(&factory.user_programs, owner)
         } else {
-            vector::empty<ProgramDetails>()
+            vector::empty<u64>()
         }
     }
 

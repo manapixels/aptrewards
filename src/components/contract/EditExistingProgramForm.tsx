@@ -248,7 +248,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                 <h3 className="font-semibold">Manage Tiers</h3>
                 <Dialog open={isAddTierOpen} onOpenChange={setIsAddTierOpen}>
                     <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="border-gray-500">Add New Tier</Button>
+                        <Button size="sm" variant="outline" className="border-gray-500">Add Tier</Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>

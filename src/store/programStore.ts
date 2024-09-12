@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getAptosClient } from "@/lib/utils";
-import { LoyaltyProgram, Tier } from "@/types/aptrewards";
+import { Coupon, LoyaltyProgram, Tier } from "@/types/aptrewards";
 import { moduleAddress, moduleName } from "@/constants";
 
 type ProgramStore = {
@@ -23,19 +23,31 @@ const getProgramsByAddress = async (address: string): Promise<LoyaltyProgram[]> 
     });
 
     if (!response || !response[0]) return [];
-    const rawPrograms = response[0] as any[];
-    return rawPrograms.map(rawProgram => ({
-        id: rawProgram.id.toString(),
-        name: rawProgram.name,
-        stampValidityDays: Number(rawProgram.stamp_validity_days),
-        owner: rawProgram.owner,
-        tiers: rawProgram.tiers.map((tier: any) => ({
+
+    const transformedPrograms: LoyaltyProgram[] = response.map((rawProgram: any) => ({
+        id: rawProgram[0].toString(),
+        name: rawProgram[1].toString(),
+        stampValidityDays: Number(rawProgram[4].toString()),
+        owner: rawProgram[2].toString(),
+        coupons: (rawProgram[5] as any[])?.map((coupon: any) => ({
+            id: Number(coupon.id),
+            stampsRequired: Number(coupon.stamps_required),
+            description: coupon.description,
+            isMonetary: coupon.is_monetary,
+            value: Number(coupon.value),
+            expirationDate: Number(coupon.expiration_date),
+            maxRedemptions: Number(coupon.max_redemptions),
+            currentRedemptions: Number(coupon.current_redemptions),
+        })) || [],
+        tiers: (rawProgram[6] as any[])?.map((tier: any) => ({
             id: Number(tier.id),
             name: tier.name,
             stampsRequired: Number(tier.stamps_required),
             benefits: tier.benefits,
-        })),
+        })) || [],
     }));
+
+    return transformedPrograms;
 };
 
 const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => {
@@ -47,32 +59,30 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
         },
     });
 
-    if (!response || !response[0]) throw new Error("Failed to fetch program details");
-    
-    const rawProgramDetails = response[0] as any;
+    if (!response) throw new Error("Failed to fetch program details");
     
     // Transform the raw data to match the LoyaltyProgram type
     const transformedProgramDetails: LoyaltyProgram = {
-        id: rawProgramDetails.id.toString(),
-        name: rawProgramDetails.name,
-        owner: rawProgramDetails.owner,
-        stampValidityDays: Number(rawProgramDetails.stamp_validity_days),
-        coupons: rawProgramDetails.coupons?.map((coupon: any) => ({
+        id: response[0]?.toString() || "",
+        name: response[1]?.toString() || "",
+        owner: response[2]?.toString() || "",
+        stampValidityDays: Number(response[4]?.toString() || "0"),
+        coupons: (response[5] as any[])?.map((coupon: any) => ({
             id: Number(coupon.id),
             stampsRequired: Number(coupon.stamps_required),
             description: coupon.description,
-            isMonetary: Boolean(coupon.is_monetary),
+            isMonetary: coupon.is_monetary,
             value: Number(coupon.value),
             expirationDate: Number(coupon.expiration_date),
             maxRedemptions: Number(coupon.max_redemptions),
             currentRedemptions: Number(coupon.current_redemptions),
-        })),
-        tiers: rawProgramDetails.tiers?.map((tier: any) => ({
+        })) || [],
+        tiers: (response[6] as any[])?.map((tier: any) => ({
             id: Number(tier.id),
             name: tier.name,
             stampsRequired: Number(tier.stamps_required),
             benefits: tier.benefits,
-        })),
+        })) || [],
     };
 
     return transformedProgramDetails;
