@@ -15,6 +15,7 @@ import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/lib/utils';
 import { useProgramStore } from '@/store/programStore';
 import { Tier } from '@/types/aptrewards';
+import { MoveString, MoveVector, U64 } from '@aptos-labs/ts-sdk';
 
 export default function EditExistingProgramForm({ programId }: { programId: string }) {
     const { toast } = useToast();
@@ -88,17 +89,35 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
             if (!account) throw new Error("No account connected");
             if (!currProgram?.id) throw new Error("No program id found")
 
+            let functionArguments: any[] = [];
+            if (action === 'add') {
+                functionArguments = [
+                    new U64(parseInt(currProgram?.id)),
+                    new MoveString(tier.name),
+                    new U64(tier.stampsRequired),
+                    MoveVector.MoveString(tier.benefits),
+                ];
+            } else if (action === 'edit') {
+                functionArguments = [
+                    new U64(parseInt(currProgram?.id)),
+                    new U64(tier.id),
+                    new MoveString(tier.name),
+                    new U64(tier.stampsRequired),
+                    MoveVector.MoveString(tier.benefits),
+                ];
+            } else if (action === 'remove') {
+                functionArguments = [       
+                    new U64(parseInt(currProgram?.id)),
+                    new U64(tier.id),
+                ];
+            }
+
             const response = await signAndSubmitTransaction({
                 sender: account?.address,
                 data: {
                     function: `${moduleAddress}::${moduleName}::${action}_tier`,
                     typeArguments: [],
-                    functionArguments: [
-                        currProgram?.id,
-                        action === 'remove' ? tier.id : tier.name,
-                        action === 'remove' ? undefined : tier.stampsRequired,
-                        action === 'remove' ? undefined : tier.benefits,
-                    ].filter(arg => arg !== undefined),
+                    functionArguments,
                 },
             });
             await getAptosClient().waitForTransaction({ transactionHash: response.hash });
@@ -111,6 +130,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
             fetchProgramDetails(currProgram.id);
             setIsAddTierOpen(false);
             setEditingTier(null);
+            setIsEditProgramOpen(false);
         } catch (error) {
             console.error(`Error: ${action} tier:`, error);
             toast({
@@ -293,12 +313,10 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                                         <Button variant="outline" className="border-gray-500" size="sm">Edit</Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
                                             <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <Button variant="ghost" className="w-full justify-start" onClick={() => handleEditTier(tier)}>
-                                                        Edit details
-                                                    </Button>
+                                                <DialogTrigger onClick={() => handleEditTier(tier)}>
+                                                    Edit details
                                                 </DialogTrigger>
                                                 <DialogContent>
                                                     <DialogHeader>
@@ -362,7 +380,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                                                 </DialogContent>
                                             </Dialog>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleTierAction('remove', tier)}>Remove Tier</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleTierAction('remove', tier)} className="cursor-pointer">Remove Tier</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>

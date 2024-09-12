@@ -6,7 +6,6 @@ import * as z from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Checkbox } from '../ui/checkbox';
 import { FormControl, FormField, FormItem, FormLabel } from '../ui/form';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useToast } from '@/components/ui/use-toast';
