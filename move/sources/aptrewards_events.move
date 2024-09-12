@@ -16,11 +16,9 @@ module aptrewards_addr::AptRewardsEvents {
         new_owner: address,
     }
 
-    #[event]
-    struct SetSpinProbabilities has store, drop {
-        program_id: u64,
-        probabilities: vector<u64>,
-    }
+    // Comment out or remove the SetSpinProbabilities event
+
+    // Comment out or remove the SpinLuckyWheel event
 
     #[event]
     struct CreateCoupon has store, drop {
@@ -57,12 +55,7 @@ module aptrewards_addr::AptRewardsEvents {
         value: u64,
     }
 
-    #[event]
-    struct SpinLuckyWheel has store, drop {
-        program_id: u64,
-        customer: address,
-        winning_amount: u64,
-    }
+    // Comment out or remove the SpinLuckyWheel event
 
     #[event]
     struct AddTier has store, drop {
@@ -93,9 +86,10 @@ module aptrewards_addr::AptRewardsEvents {
     struct EditLoyaltyProgram has store, drop {
         program_id: u64,
         new_name: String,
-        new_lucky_spin_enabled: bool,
-        new_spin_probabilities: vector<u64>,
-        new_spin_amounts: vector<u64>,
+        // new_lucky_spin_enabled: bool,
+        // new_spin_probabilities: vector<u64>,
+        // new_spin_amounts: vector<u64>,
+        new_dollars_per_stamp: u64,
     }
 
     public(friend) fun emit_create_loyalty_program(
@@ -120,15 +114,9 @@ module aptrewards_addr::AptRewardsEvents {
         });
     }
 
-    public(friend) fun emit_set_spin_probabilities(
-        program_id: u64,
-        probabilities: vector<u64>
-    ) {
-        event::emit(SetSpinProbabilities { 
-            program_id,
-            probabilities
-        });
-    }
+    // Comment out or remove the emit_set_spin_probabilities function
+
+    // Comment out or remove the emit_spin_lucky_wheel function
 
     public(friend) fun emit_create_coupon(
         program_id: u64, 
@@ -192,17 +180,7 @@ module aptrewards_addr::AptRewardsEvents {
         });
     }
 
-    public(friend) fun emit_spin_lucky_wheel(
-        program_id: u64, 
-        customer: address, 
-        winning_amount: u64
-    ) {
-        event::emit(SpinLuckyWheel { 
-            program_id, 
-            customer, 
-            winning_amount 
-        });
-    }
+    // Comment out or remove the emit_spin_lucky_wheel function
 
     public(friend) fun emit_add_tier(
         program_id: u64,
@@ -251,16 +229,18 @@ module aptrewards_addr::AptRewardsEvents {
     public(friend) fun emit_edit_loyalty_program(
         program_id: u64,
         new_name: String,
-        new_lucky_spin_enabled: bool,
-        new_spin_probabilities: vector<u64>,
-        new_spin_amounts: vector<u64>
+        // new_lucky_spin_enabled: bool,
+        // new_spin_probabilities: vector<u64>,
+        // new_spin_amounts: vector<u64>,
+        new_dollars_per_stamp: u64
     ) {
         event::emit(EditLoyaltyProgram {
             program_id,
             new_name,
-            new_lucky_spin_enabled,
-            new_spin_probabilities,
-            new_spin_amounts
+            // new_lucky_spin_enabled,
+            // new_spin_probabilities,
+            // new_spin_amounts,
+            new_dollars_per_stamp
         });
     }
 }
