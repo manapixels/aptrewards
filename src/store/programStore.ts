@@ -23,7 +23,12 @@ const getProgramsByAddress = async (address: string): Promise<LoyaltyProgram[]> 
     });
 
     if (!response || !response[0]) return [];
-    return response[0] as LoyaltyProgram[];
+    const rawPrograms = response[0] as any[];
+    return rawPrograms.map(rawProgram => ({
+        id: rawProgram.id.toString(),
+        name: rawProgram.name,
+        stampValidityDays: Number(rawProgram.stamp_validity_days),
+    }));
 };
 
 const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => {
@@ -36,7 +41,34 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
     });
 
     if (!response || !response[0]) throw new Error("Failed to fetch program details");
-    return response[0] as LoyaltyProgram;
+    
+    const rawProgramDetails = response[0] as any;
+    
+    // Transform the raw data to match the LoyaltyProgram type
+    const transformedProgramDetails: LoyaltyProgram = {
+        id: rawProgramDetails.id.toString(),
+        name: rawProgramDetails.name,
+        owner: rawProgramDetails.owner,
+        stampValidityDays: Number(rawProgramDetails.stamp_validity_days),
+        coupons: rawProgramDetails.coupons?.map((coupon: any) => ({
+            id: Number(coupon.id),
+            stampsRequired: Number(coupon.stamps_required),
+            description: coupon.description,
+            isMonetary: Boolean(coupon.is_monetary),
+            value: Number(coupon.value),
+            expirationDate: Number(coupon.expiration_date),
+            maxRedemptions: Number(coupon.max_redemptions),
+            currentRedemptions: Number(coupon.current_redemptions),
+        })),
+        tiers: rawProgramDetails.tiers?.map((tier: any) => ({
+            id: Number(tier.id),
+            name: tier.name,
+            description: tier.description,
+            stampsRequired: Number(tier.stamps_required),
+        })),
+    };
+
+    return transformedProgramDetails;
 };
 
 export const useProgramStore = create<ProgramStore>((set) => ({
@@ -48,9 +80,12 @@ export const useProgramStore = create<ProgramStore>((set) => ({
         set({ isFetchingAllPrograms: true });
         try {
             const fetchedPrograms = await getProgramsByAddress(address);
+            
             set((state) => {
+                console.log(fetchedPrograms, state.programs)
                 const mergedPrograms = fetchedPrograms.map(fetchedProgram => {
                     const existingProgram = state.programs.find(p => p.id.toString() === fetchedProgram.id.toString());
+                    console.log('existingProgram', existingProgram, { ...existingProgram, ...fetchedProgram })
                     return existingProgram ? { ...existingProgram, ...fetchedProgram } : fetchedProgram;
                 });
 
