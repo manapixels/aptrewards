@@ -121,6 +121,41 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
         }
     };
 
+    const handleEditTier = (tier: Tier) => {
+        setEditingTier({ ...tier, benefits: [...tier.benefits] });
+    };
+
+    const handleAddBenefit = () => {
+        if (editingTier) {
+            setEditingTier({
+                ...editingTier,
+                benefits: [...editingTier.benefits, '']
+            });
+        }
+    };
+
+    const handleRemoveBenefit = (index: number) => {
+        if (editingTier) {
+            const newBenefits = [...editingTier.benefits];
+            newBenefits.splice(index, 1);
+            setEditingTier({
+                ...editingTier,
+                benefits: newBenefits
+            });
+        }
+    };
+
+    const handleBenefitChange = (index: number, value: string) => {
+        if (editingTier) {
+            const newBenefits = [...editingTier.benefits];
+            newBenefits[index] = value;
+            setEditingTier({
+                ...editingTier,
+                benefits: newBenefits
+            });
+        }
+    };
+
     if (!currProgram && !isFetchingOneProgram) {
         return (
             <Alert variant="destructive">
@@ -258,10 +293,12 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                                         <Button variant="outline" className="border-gray-500" size="sm">Edit</Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        <DropdownMenuItem onClick={() => setEditingTier(tier)} className="cursor-pointer">
-                                            <Dialog open={editingTier?.id === tier.id} onOpenChange={(open) => !open && setEditingTier(null)}>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                            <Dialog>
                                                 <DialogTrigger asChild>
-                                                    <span>Edit details</span>
+                                                    <Button variant="ghost" className="w-full justify-start" onClick={() => handleEditTier(tier)}>
+                                                        Edit details
+                                                    </Button>
                                                 </DialogTrigger>
                                                 <DialogContent>
                                                     <DialogHeader>
@@ -269,20 +306,16 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                                                     </DialogHeader>
                                                     <form onSubmit={(e) => {
                                                         e.preventDefault();
-                                                        const formData = new FormData(e.target as HTMLFormElement);
-                                                        const updatedTier: Tier = {
-                                                            ...tier,
-                                                            name: formData.get('tierName') as string,
-                                                            stampsRequired: parseInt(formData.get('tierStampsRequired') as string),
-                                                            benefits: Array.from(formData.getAll('tierBenefits') as string[]),
-                                                        };
-                                                        handleTierAction('edit', updatedTier);
+                                                        if (editingTier) {
+                                                            handleTierAction('edit', editingTier);
+                                                        }
                                                     }}>
                                                         <Label htmlFor="tierName">Tier Name</Label>
                                                         <Input
                                                             id="tierName"
                                                             name="tierName"
-                                                            defaultValue={tier.name}
+                                                            value={editingTier?.name || ''}
+                                                            onChange={(e) => setEditingTier(prev => prev ? { ...prev, name: e.target.value } : null)}
                                                             className="mb-2"
                                                         />
                                                         <Label htmlFor="tierStampsRequired">Stamps Required</Label>
@@ -290,26 +323,24 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                                                             id="tierStampsRequired"
                                                             name="tierStampsRequired"
                                                             type="number"
-                                                            defaultValue={tier.stampsRequired}
+                                                            value={editingTier?.stampsRequired || 0}
+                                                            onChange={(e) => setEditingTier(prev => prev ? { ...prev, stampsRequired: parseInt(e.target.value) } : null)}
                                                             className="mb-2"
                                                         />
                                                         <Label>Benefits</Label>
-                                                        {tier.benefits.map((benefit, index) => (
+                                                        {editingTier?.benefits.map((benefit, index) => (
                                                             <div key={index} className="flex items-center mb-2">
                                                                 <Input
                                                                     name="tierBenefits"
-                                                                    defaultValue={benefit}
+                                                                    value={benefit}
+                                                                    onChange={(e) => handleBenefitChange(index, e.target.value)}
                                                                     className="flex-grow"
                                                                 />
                                                                 <Button
                                                                     type="button"
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    onClick={() => {
-                                                                        const newBenefits = [...tier.benefits];
-                                                                        newBenefits.splice(index, 1);
-                                                                        setEditingTier({ ...tier, benefits: newBenefits });
-                                                                    }}
+                                                                    onClick={() => handleRemoveBenefit(index)}
                                                                 >
                                                                     <X className="h-4 w-4" />
                                                                 </Button>
@@ -319,7 +350,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                                                             type="button"
                                                             variant="outline"
                                                             size="sm"
-                                                            onClick={() => setEditingTier({ ...tier, benefits: [...tier.benefits, ''] })}
+                                                            onClick={handleAddBenefit}
                                                             className="mb-2"
                                                         >
                                                             <Plus className="h-4 w-4 mr-2" /> Add Benefit
@@ -331,7 +362,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                                                 </DialogContent>
                                             </Dialog>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleTierAction('remove', tier)} className="cursor-pointer">Remove Tier</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleTierAction('remove', tier)}>Remove Tier</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
