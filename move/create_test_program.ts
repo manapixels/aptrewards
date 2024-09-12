@@ -65,7 +65,7 @@ async function main() {
         data: {
             function: `${MODULE_ADDRESS}::AptRewardsMain::create_loyalty_program`,
             typeArguments: [],
-            functionArguments: [programName, true, 10, 30]
+            functionArguments: [programName, 30] // 30 days stamp validity
         },
     });
 
@@ -162,7 +162,7 @@ async function main() {
             data: {
                 function: `${MODULE_ADDRESS}::AptRewardsMain::earn_stamps`,
                 typeArguments: [],
-                functionArguments: [programId, customer.accountAddress.toString(), stamps * 10] // Assuming 1 stamp per $10 spent
+                functionArguments: [programId, customer.accountAddress.toString(), stamps]
             }
         });
 
