@@ -18,7 +18,8 @@ import { useProgramStore } from '@/store/programStore';
 
 const initializeFormSchema = z.object({
     name: z.string().min(2).max(50),
-    luckySpinEnabled: z.boolean(),
+    // luckySpinEnabled: z.boolean(),
+    stampValidityDays: z.number().min(1).max(365),
 })
 
 export default function CreateNewProgramForm() {
@@ -34,7 +35,8 @@ export default function CreateNewProgramForm() {
         resolver: zodResolver(initializeFormSchema),
         defaultValues: {
             name: "",
-            luckySpinEnabled: true,
+            // luckySpinEnabled: true,
+            stampValidityDays: 365,
         },
     })
 
@@ -49,7 +51,7 @@ export default function CreateNewProgramForm() {
                 data: {
                     function: `${moduleAddress}::${moduleName}::create_loyalty_program`,
                     typeArguments: [],
-                    functionArguments: [data.name, data.luckySpinEnabled]
+                    functionArguments: [data.name, data.stampValidityDays]
                 },
 
             });
@@ -110,7 +112,7 @@ export default function CreateNewProgramForm() {
                     <div className="mt-2">
                         <FormLabel>Features</FormLabel>
                     </div>
-                    <FormField
+                    {/* <FormField
                         control={methods.control}
                         name="luckySpinEnabled"
                         render={({ field }) => (
@@ -128,7 +130,7 @@ export default function CreateNewProgramForm() {
                                 </FormLabel>
                             </FormItem>
                         )}
-                    />
+                    /> */}
                     <div className="mt-4 flex justify-end">
                         <Button type="submit" disabled={transactionInProgress || success} className={`${success ? "bg-green-500" : ""}`}>
                             {transactionInProgress ? 'Creating...' : success ? `${<Check />}${" "}Created` : 'Create'}

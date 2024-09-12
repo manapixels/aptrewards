@@ -21,9 +21,7 @@ export interface LoyaltyProgram {
   name: string;
   owner?: string;
   balance?: number;
-  spinProbabilities?: number[];
-  spinAmounts?: number[];
   coupons?: Coupon[];
   tiers?: Tier[];
-  luckySpinEnabled?: boolean;
+  stampValidityDays?: number;
 }
