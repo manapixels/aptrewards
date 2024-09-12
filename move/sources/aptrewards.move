@@ -1,10 +1,9 @@
 module aptrewards_addr::AptRewardsMain {
-    use aptos_framework::randomness;
     use aptos_std::table::{Self, Table};
     use std::vector;
     use aptrewards_addr::AptRewardsEvents::{Self, emit_create_loyalty_program};
     use std::signer::address_of;
-    use std::string::{String,utf8};
+    use std::string::{String};
     use std::timestamp;
     use std::option::{Self, Option};
 
@@ -92,7 +91,7 @@ module aptrewards_addr::AptRewardsMain {
         let user_programs = table::borrow_mut(&mut factory.user_programs, owner_address);
         vector::push_back(user_programs, program_id);
 
-        emit_create_loyalty_program(program_id, owner_address);
+        emit_create_loyalty_program(program_id, owner_address, stamp_validity_days);
     }
 
     public entry fun transfer_ownership(sender: &signer, program_id: u64, new_owner: address) acquires LoyaltyProgramFactory {
@@ -586,16 +585,56 @@ module aptrewards_addr::AptRewardsMain {
         assert!(program.stamp_validity_days == 30, 1); // Should remain unchanged
     }
 
-    // Test editing with invalid spin configuration
-    #[test(fx = @aptos_framework, owner = @0x123)]
-    #[expected_failure(abort_code = E_INVALID_SPIN_CONFIG)]
-    public fun test_edit_loyalty_program_invalid_spin_config(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+    #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
+    public fun test_stamp_expiration(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 30);
+        create_loyalty_program(owner, utf8(b"Test Program"), 30); // 30 days validity
         
-        let new_name = option::none();
-        let new_stamp_validity_days = option::some(20);
+        account::create_account_for_test(address_of(customer));
+        earn_stamps(owner, 1, address_of(customer), 10); // Earn 10 stamps
         
-        edit_loyalty_program(owner, 1, new_name, new_stamp_validity_days);
+        {
+            let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
+            let program = table::borrow(&factory.programs, 1);
+            assert!(*table::borrow(&program.customer_stamps, address_of(customer)) == 10, 0);
+        }; // Release the borrow here
+        
+        // Fast forward time by 31 days (1 day more than validity period)
+        timestamp::fast_forward_seconds(31 * 24 * 60 * 60);
+        
+        // Earn more stamps, which should trigger expiration check
+        earn_stamps(owner, 1, address_of(customer), 5);
+        
+        {
+            let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
+            let program = table::borrow(&factory.programs, 1);
+            // Check if stamps were reset to 5 (new stamps) instead of 15 (10 + 5)
+            assert!(*table::borrow(&program.customer_stamps, address_of(customer)) == 5, 1);
+        };
+    }
+
+    #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
+    public fun test_stamp_validity(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), 30); // 30 days validity
+        
+        account::create_account_for_test(address_of(customer));
+        earn_stamps(owner, 1, address_of(customer), 10); // Earn 10 stamps
+        
+        // Fast forward time by 29 days (1 day less than validity period)
+        timestamp::fast_forward_seconds(29 * 24 * 60 * 60);
+        
+        // Earn more stamps
+        earn_stamps(owner, 1, address_of(customer), 5);
+        
+        {
+            let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
+            let program = table::borrow(&factory.programs, 1);
+            // Check if stamps were added correctly (10 + 5)
+            assert!(*table::borrow(&program.customer_stamps, address_of(customer)) == 15, 0);
+            
+            // Check if last_stamp_date was updated
+            assert!(*table::borrow(&program.customer_last_stamp_date, address_of(customer)) == timestamp::now_seconds(), 1);
+        };
     }
 }

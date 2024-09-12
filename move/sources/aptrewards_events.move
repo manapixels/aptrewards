@@ -7,6 +7,7 @@ module aptrewards_addr::AptRewardsEvents {
     struct CreateLoyaltyProgram has store, drop {
         program_id: u64,
         owner: address,
+        stamp_validity_days: u64
     }
 
     #[event]
@@ -80,17 +81,18 @@ module aptrewards_addr::AptRewardsEvents {
     struct EditLoyaltyProgram has store, drop {
         program_id: u64,
         new_name: String,
-        new_dollars_per_stamp: u64,
         new_stamp_validity_days: u64,
     }
 
     public(friend) fun emit_create_loyalty_program(
         program_id: u64, 
-        owner: address
+        owner: address,
+        stamp_validity_days: u64
     ) {
         event::emit(CreateLoyaltyProgram { 
             program_id,
-            owner
+            owner,
+            stamp_validity_days
         });
     }
 
@@ -215,13 +217,11 @@ module aptrewards_addr::AptRewardsEvents {
     public(friend) fun emit_edit_loyalty_program(
         program_id: u64,
         new_name: String,
-        new_dollars_per_stamp: u64,
         new_stamp_validity_days: u64
     ) {
         event::emit(EditLoyaltyProgram {
             program_id,
             new_name,
-            new_dollars_per_stamp,
             new_stamp_validity_days
         });
     }
