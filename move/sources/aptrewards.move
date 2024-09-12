@@ -303,28 +303,23 @@ module aptrewards_addr::AptRewardsMain {
  
     }
 
-    struct ProgramInfo has drop, copy {
-        id: u64,
-        name: String,
-    }
-
     #[view]
-    public fun get_owned_loyalty_programs(owner: address): vector<ProgramInfo> acquires LoyaltyProgramFactory {
+    public fun get_owned_loyalty_programs(owner: address): vector<ProgramDetails> acquires LoyaltyProgramFactory {
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         if (table::contains(&factory.user_programs, owner)) {
             let program_ids = table::borrow(&factory.user_programs, owner);
-            let result = vector::empty<ProgramInfo>();
+            let result = vector::empty<ProgramDetails>();
             let i = 0;
             let len = vector::length(program_ids);
             while (i < len) {
                 let program_id = *vector::borrow(program_ids, i);
                 let program = table::borrow(&factory.programs, program_id);
-                vector::push_back(&mut result, ProgramInfo { id: program_id, name: program.name });
+                vector::push_back(&mut result, ProgramDetails { id: program_id, name: program.name, tiers: program.tiers, owner: program.owner, stamp_validity_days: program.stamp_validity_days });
                 i = i + 1;
             };
             result
         } else {
-            vector::empty<ProgramInfo>()
+            vector::empty<ProgramDetails>()
         }
     }
 
@@ -358,6 +353,10 @@ module aptrewards_addr::AptRewardsMain {
     /////////////////////////// Tests //////////////////////////////////
     #[test_only]
     use aptos_framework::account;
+    #[test_only]
+    use aptos_framework::randomness;
+    #[test_only]
+    use std::string::{utf8};
     #[test_only]
     use aptos_std::crypto_algebra::enable_cryptography_algebra_natives;
 
