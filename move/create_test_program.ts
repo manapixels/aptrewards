@@ -65,7 +65,7 @@ async function main() {
         data: {
             function: `${MODULE_ADDRESS}::AptRewardsMain::create_loyalty_program`,
             typeArguments: [],
-            functionArguments: [programName, true]
+            functionArguments: [programName, true, 10, 30]
         },
     });
 

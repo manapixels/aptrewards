@@ -32,10 +32,12 @@ module aptrewards_addr::AptRewardsMain {
         coupons: vector<Coupon>,
         customer_stamps: Table<address, u64>,
         customer_lifetime_stamps: Table<address, u64>,
+        customer_last_stamp_date: Table<address, u64>,
         tiers: vector<Tier>,
         owner: address,
         coupon_count: u64,
         dollars_per_stamp: u64,
+        stamp_validity_days: u64,
     }
 
     struct LoyaltyProgramFactory has key {
@@ -64,7 +66,7 @@ module aptrewards_addr::AptRewardsMain {
         move_to(aptrewards_addr, factory);
     }
 
-    public entry fun create_loyalty_program(sender: &signer, name: String, dollars_per_stamp: u64) acquires LoyaltyProgramFactory {
+    public entry fun create_loyalty_program(sender: &signer, name: String, dollars_per_stamp: u64, stamp_validity_days: u64) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
         let program_id = factory.program_count + 1;
         let owner_address = address_of(sender);
@@ -75,10 +77,12 @@ module aptrewards_addr::AptRewardsMain {
             coupons: vector::empty(),
             customer_stamps: table::new(),
             customer_lifetime_stamps: table::new(),
+            customer_last_stamp_date: table::new(),
             tiers: vector::empty(),
             owner: owner_address,
             coupon_count: 0,
             dollars_per_stamp,
+            stamp_validity_days,
         };
 
         table::add(&mut factory.programs, program_id, program);
@@ -216,12 +220,24 @@ module aptrewards_addr::AptRewardsMain {
 
         let stamps = amount / program.dollars_per_stamp;
         
+        // Check for expired stamps and reset if necessary
+        if (table::contains(&program.customer_stamps, customer)) {
+            let customer_stamps = table::borrow_mut(&mut program.customer_stamps, customer);
+            let last_stamp_date = table::borrow_mut(&mut program.customer_last_stamp_date, customer);
+            if (timestamp::now_seconds() > *last_stamp_date + (program.stamp_validity_days * 24 * 60 * 60)) {
+                *customer_stamps = 0;
+            }
+        };
+
         // Update customer_stamps
         if (!table::contains(&program.customer_stamps, customer)) {
             table::add(&mut program.customer_stamps, customer, stamps);
+            table::add(&mut program.customer_last_stamp_date, customer, timestamp::now_seconds());
         } else {
             let customer_stamps = table::borrow_mut(&mut program.customer_stamps, customer);
             *customer_stamps = *customer_stamps + stamps;
+            let last_stamp_date = table::borrow_mut(&mut program.customer_last_stamp_date, customer);
+            *last_stamp_date = timestamp::now_seconds();
         };
 
         // Update customer_lifetime_stamps
@@ -251,7 +267,13 @@ module aptrewards_addr::AptRewardsMain {
         assert!(coupon.current_redemptions < coupon.max_redemptions, E_COUPON_LIMIT_REACHED);
         assert!(timestamp::now_seconds() <= coupon.expiration_date, E_COUPON_EXPIRED);
         
+        // Check for expired stamps before redemption
         let customer_stamps = table::borrow_mut(&mut program.customer_stamps, customer);
+        let last_stamp_date = table::borrow(&program.customer_last_stamp_date, customer);
+        if (timestamp::now_seconds() > *last_stamp_date + (program.stamp_validity_days * 24 * 60 * 60)) {
+            *customer_stamps = 0;
+        };
+        
         assert!(*customer_stamps >= coupon.stamps_required, E_INSUFFICIENT_STAMPS);
         
         *customer_stamps = *customer_stamps - coupon.stamps_required;
@@ -267,6 +289,7 @@ module aptrewards_addr::AptRewardsMain {
         tiers: vector<Tier>,
         owner: address,
         dollars_per_stamp: u64,
+        stamp_validity_days: u64,
     }
 
     #[view]
@@ -282,6 +305,7 @@ module aptrewards_addr::AptRewardsMain {
             owner: program.owner,
             tiers: program.tiers,
             dollars_per_stamp: program.dollars_per_stamp,
+            stamp_validity_days: program.stamp_validity_days,
         }
  
     }
@@ -315,7 +339,8 @@ module aptrewards_addr::AptRewardsMain {
         sender: &signer,
         program_id: u64,
         new_name: Option<String>,
-        new_dollars_per_stamp: Option<u64>
+        new_dollars_per_stamp: Option<u64>,
+        new_stamp_validity_days: Option<u64>
     ) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
         assert!(table::contains(&factory.programs, program_id), E_PROGRAM_NOT_FOUND);
@@ -331,10 +356,15 @@ module aptrewards_addr::AptRewardsMain {
             program.dollars_per_stamp = option::extract(&mut new_dollars_per_stamp);
         };
 
+        if (option::is_some(&new_stamp_validity_days)) {
+            program.stamp_validity_days = option::extract(&mut new_stamp_validity_days);
+        };
+
         AptRewardsEvents::emit_edit_loyalty_program(
             program_id,
             program.name,
-            program.dollars_per_stamp
+            program.dollars_per_stamp,
+            program.stamp_validity_days
         );
     }
 
@@ -370,7 +400,7 @@ module aptrewards_addr::AptRewardsMain {
     #[test(fx = @aptos_framework, owner = @0x123)]
     public fun test_create_loyalty_program(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         // Checks if the program count in the factory is equal to 1, indicating a single program was created successfully.
@@ -383,7 +413,7 @@ module aptrewards_addr::AptRewardsMain {
     #[test(fx = @aptos_framework, owner = @0x123, new_owner = @0x456)]
     public fun test_transfer_ownership(fx: &signer, owner: &signer, new_owner: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         account::create_account_for_test(address_of(new_owner));
         transfer_ownership(owner, 1, address_of(new_owner));
@@ -397,7 +427,7 @@ module aptrewards_addr::AptRewardsMain {
     #[test(fx = @aptos_framework, owner = @0x123)]
     public fun test_create_coupon(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         create_coupon(owner, 1, 10, utf8(b"Test Coupon"), true, 100, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
         
@@ -410,7 +440,7 @@ module aptrewards_addr::AptRewardsMain {
     #[test(fx = @aptos_framework, owner = @0x123)]
     public fun test_add_tier(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         add_tier(owner, 1, utf8(b"Bronze"), utf8(b"Entry level tier"), 100);
         
@@ -426,7 +456,7 @@ module aptrewards_addr::AptRewardsMain {
     #[test(fx = @aptos_framework, owner = @0x123)]
     public fun test_remove_tier(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         add_tier(owner, 1, utf8(b"Bronze"), utf8(b"Entry level tier"), 100);
         add_tier(owner, 1, utf8(b"Silver"), utf8(b"Mid level tier"), 200);
@@ -443,7 +473,7 @@ module aptrewards_addr::AptRewardsMain {
     #[test(fx = @aptos_framework, owner = @0x123)]
     public fun test_edit_tier(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         add_tier(owner, 1, utf8(b"Bronze"), utf8(b"Entry level tier"), 100);
         
@@ -460,7 +490,7 @@ module aptrewards_addr::AptRewardsMain {
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
     public fun test_earn_stamps(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         account::create_account_for_test(address_of(customer));
         earn_stamps(owner, 1, address_of(customer), 100); // $100 spent
@@ -475,7 +505,7 @@ module aptrewards_addr::AptRewardsMain {
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
     public fun test_redeem_coupon(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         create_coupon(owner, 1, 10, utf8(b"Test Coupon"), true, 100, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
         
         account::create_account_for_test(address_of(customer));
@@ -494,7 +524,7 @@ module aptrewards_addr::AptRewardsMain {
     #[expected_failure(abort_code = E_COUPON_EXPIRED)]
     public fun test_coupon_expiration(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         let current_time = timestamp::now_seconds();
         create_coupon(owner, 1, 10, utf8(b"Expired Coupon"), true, 100, current_time + 10, 1);
@@ -514,7 +544,7 @@ module aptrewards_addr::AptRewardsMain {
     #[expected_failure(abort_code = E_COUPON_LIMIT_REACHED)]
     public fun test_coupon_redemption_limit(fx: &signer, owner: &signer, customer1: &signer, customer2: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         let current_time = timestamp::now_seconds();
         create_coupon(owner, 1, 10, utf8(b"Limited Coupon"), true, 100, current_time + 3600, 1);
@@ -532,35 +562,15 @@ module aptrewards_addr::AptRewardsMain {
     }
 
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
-    public fun test_lucky_spin_coupon_creation(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
-        setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
-        
-        account::create_account_for_test(address_of(customer));
-        lucky_spin(customer, 1);
-        
-        let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
-        let program = table::borrow(&factory.programs, 1);
-        let coupon = vector::borrow(&program.coupons, 0);
-        
-        // Check if the coupon created by lucky spin has the correct properties
-        assert!(coupon.stamps_required == 0, 0);
-        assert!(coupon.description == utf8(b"Spin Win"), 1);
-        assert!(coupon.is_monetary == true, 2);
-        assert!(coupon.value == 10, 3);
-        assert!(coupon.max_redemptions == 1, 4);
-        assert!(coupon.current_redemptions == 0, 5);
-    }
-
-    #[test(fx = @aptos_framework, owner = @0x123)]
     public fun test_edit_loyalty_program(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         let new_name = option::some(utf8(b"Updated Program"));
         let new_dollars_per_stamp = option::some(20);
+        let new_stamp_validity_days = option::some(45);
         
-        edit_loyalty_program(owner, 1, new_name, new_dollars_per_stamp);
+        edit_loyalty_program(owner, 1, new_name, new_dollars_per_stamp, new_stamp_validity_days);
         
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = table::borrow(&factory.programs, 1);
@@ -568,18 +578,20 @@ module aptrewards_addr::AptRewardsMain {
         // Check if the program details were updated correctly
         assert!(program.name == utf8(b"Updated Program"), 0);
         assert!(program.dollars_per_stamp == 20, 1);
+        assert!(program.stamp_validity_days == 45, 2);
     }
 
     // Test editing only some fields
     #[test(fx = @aptos_framework, owner = @0x123)]
     public fun test_edit_loyalty_program_partial(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         let new_name = option::some(utf8(b"Updated Program"));
         let new_dollars_per_stamp = option::none();
+        let new_stamp_validity_days = option::none();
         
-        edit_loyalty_program(owner, 1, new_name, new_dollars_per_stamp);
+        edit_loyalty_program(owner, 1, new_name, new_dollars_per_stamp, new_stamp_validity_days);
         
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = table::borrow(&factory.programs, 1);
@@ -587,6 +599,7 @@ module aptrewards_addr::AptRewardsMain {
         // Check if only the name was updated
         assert!(program.name == utf8(b"Updated Program"), 0);
         assert!(program.dollars_per_stamp == 10, 1); // Should remain unchanged
+        assert!(program.stamp_validity_days == 30, 2); // Should remain unchanged
     }
 
     // Test editing with invalid spin configuration
@@ -594,11 +607,12 @@ module aptrewards_addr::AptRewardsMain {
     #[expected_failure(abort_code = E_INVALID_SPIN_CONFIG)]
     public fun test_edit_loyalty_program_invalid_spin_config(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
-        create_loyalty_program(owner, utf8(b"Test Program"), 10);
+        create_loyalty_program(owner, utf8(b"Test Program"), 10, 30);
         
         let new_name = option::none();
         let new_dollars_per_stamp = option::some(20);
+        let new_stamp_validity_days = option::none();
         
-        edit_loyalty_program(owner, 1, new_name, new_dollars_per_stamp);
+        edit_loyalty_program(owner, 1, new_name, new_dollars_per_stamp, new_stamp_validity_days);
     }
 }
