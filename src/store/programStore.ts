@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getAptosClient } from "@/lib/utils";
-import { LoyaltyProgram } from "@/types/aptrewards";
+import { LoyaltyProgram, Tier } from "@/types/aptrewards";
 import { moduleAddress, moduleName } from "@/constants";
 
 type ProgramStore = {
@@ -28,6 +28,13 @@ const getProgramsByAddress = async (address: string): Promise<LoyaltyProgram[]> 
         id: rawProgram.id.toString(),
         name: rawProgram.name,
         stampValidityDays: Number(rawProgram.stamp_validity_days),
+        owner: rawProgram.owner,
+        tiers: rawProgram.tiers.map((tier: any) => ({
+            id: Number(tier.id),
+            name: tier.name,
+            stampsRequired: Number(tier.stamps_required),
+            benefits: tier.benefits,
+        })),
     }));
 };
 
@@ -63,8 +70,8 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
         tiers: rawProgramDetails.tiers?.map((tier: any) => ({
             id: Number(tier.id),
             name: tier.name,
-            description: tier.description,
             stampsRequired: Number(tier.stamps_required),
+            benefits: tier.benefits,
         })),
     };
 
@@ -82,10 +89,8 @@ export const useProgramStore = create<ProgramStore>((set) => ({
             const fetchedPrograms = await getProgramsByAddress(address);
             
             set((state) => {
-                console.log(fetchedPrograms, state.programs)
                 const mergedPrograms = fetchedPrograms.map(fetchedProgram => {
                     const existingProgram = state.programs.find(p => p.id.toString() === fetchedProgram.id.toString());
-                    console.log('existingProgram', existingProgram, { ...existingProgram, ...fetchedProgram })
                     return existingProgram ? { ...existingProgram, ...fetchedProgram } : fetchedProgram;
                 });
 
@@ -105,7 +110,9 @@ export const useProgramStore = create<ProgramStore>((set) => ({
                 if (index === -1) {
                     return { programs: [...state.programs, programDetails], isFetchingOneProgram: false };
                 } else {
-                    return { programs: [...state.programs.slice(0, index), programDetails, ...state.programs.slice(index + 1)], isFetchingOneProgram: false };
+                    const updatedPrograms = [...state.programs];
+                    updatedPrograms[index] = programDetails;
+                    return { programs: updatedPrograms, isFetchingOneProgram: false };
                 }
             });
         } catch (error) {

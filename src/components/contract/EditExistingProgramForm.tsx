@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { AlertCircle, Plus, X } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/lib/utils';
 import { useProgramStore } from '@/store/programStore';
-import { AlertCircle } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tier } from '@/types/aptrewards';
 
 export default function EditExistingProgramForm({ programId }: { programId: string }) {
@@ -24,9 +24,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
     const currProgram = programs.find(program => program.id === programId.toString());
 
     const [name, setName] = useState('');
-    const [spinProbability, setSpinProbability] = useState('');
-    const [spinAmount, setSpinAmount] = useState('');
-    const [stampValidityDays, setStampValidityDays] = useState('');
+    const [stampValidityDays, setStampValidityDays] = useState(0);
 
     const [isEditProgramOpen, setIsEditProgramOpen] = useState(false);
     const [isAddTierOpen, setIsAddTierOpen] = useState(false);
@@ -39,7 +37,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
     useEffect(() => {
         if (currProgram) {
             setName(currProgram.name);
-            setStampValidityDays(currProgram.stampValidityDays?.toString() || '');
+            setStampValidityDays(currProgram?.stampValidityDays || 0);
         }
     }, [currProgram]);
 
@@ -58,9 +56,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                     functionArguments: [
                         programId,
                         name,
-                        parseInt(stampValidityDays),
-                        [parseInt(spinProbability)],
-                        [parseInt(spinAmount)]
+                        stampValidityDays,
                     ],
                 },
             });
@@ -100,8 +96,8 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                     functionArguments: [
                         currProgram?.id,
                         action === 'remove' ? tier.id : tier.name,
-                        action === 'remove' ? undefined : tier.description,
                         action === 'remove' ? undefined : tier.stampsRequired,
+                        action === 'remove' ? undefined : tier.benefits,
                     ].filter(arg => arg !== undefined),
                 },
             });
@@ -161,41 +157,13 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                                         className="mb-2"
                                     />
                                 </Label>
-                                {/* <div className="flex items-center space-x-2 mb-2">
-                                    <Checkbox
-                                        id="luckySpinEnabled"
-                                        checked={luckySpinEnabled}
-                                        onCheckedChange={(checked) => setLuckySpinEnabled(checked as boolean)}
-                                    />
-                                    <Label htmlFor="luckySpinEnabled">Lucky Spin Enabled</Label>
-                                </div> */}
-                                {/* <Label htmlFor="spinProbability">
-                                    Spin Probability:
-                                    <Input
-                                        type="number"
-                                        id="spinProbability"
-                                        value={spinProbability}
-                                        onChange={(e) => setSpinProbability(e.target.value)}
-                                        className="mb-2"
-                                    />
-                                </Label>
-                                <Label htmlFor="spinAmount">
-                                    Spin Amount:
-                                    <Input
-                                        type="number"
-                                        id="spinAmount"
-                                        value={spinAmount}
-                                        onChange={(e) => setSpinAmount(e.target.value)}
-                                        className="mb-2"
-                                    />
-                                </Label> */}
                                 <Label htmlFor="stampValidityDays">
                                     Stamp Validity Days:
                                     <Input
                                         type="number"
                                         id="stampValidityDays"
                                         value={stampValidityDays}
-                                        onChange={(e) => setStampValidityDays(e.target.value)}
+                                        onChange={(e) => setStampValidityDays(Number(e.target.value))}
                                         className="mb-2"
                                     />
                                 </Label>
@@ -208,81 +176,24 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                         </DialogContent>
                     </Dialog>
                 </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label>Name:</Label>
-                            <p className="font-medium">{currProgram?.name}</p>
-                        </div>
-                        <div>
-                            <Label>Stamp Validity Days:</Label>
-                            <p className="font-medium">{currProgram?.stampValidityDays || 'N/A'}</p>
-                        </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label className="text-gray-600 text-xs">Name:</Label>
+                        <p className="font-medium">{currProgram?.name}</p>
                     </div>
+                    <div>
+                        <Label className="text-gray-600 text-xs">Stamp Validity Days:</Label>
+                        <p className="font-medium">{currProgram?.stampValidityDays || 'N/A'}</p>
+                    </div>
+                </div>
             </div>
 
             <div className="bg-white shadow-sm border rounded-lg p-6">
-                <h3 className="font-semibold mb-4">Manage Tiers</h3>
-                {currProgram?.tiers?.map((tier: Tier) => (
-                    <div key={tier.id} className="mb-4 p-4 border rounded">
-                        <h4 className="font-medium">{tier.name}</h4>
-                        <p>{tier.description}</p>
-                        <p>Stamps required: {tier.stampsRequired}</p>
-                        <div className="mt-2">
-                            <Dialog open={editingTier?.id === tier.id} onOpenChange={(open) => !open && setEditingTier(null)}>
-                                <DialogTrigger asChild>
-                                    <Button onClick={() => setEditingTier(tier)} className="mr-2">Edit</Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Edit Tier</DialogTitle>
-                                    </DialogHeader>
-                                    <form onSubmit={(e) => {
-                                        e.preventDefault();
-                                        const formData = new FormData(e.target as HTMLFormElement);
-                                        const updatedTier: Tier = {
-                                            ...tier,
-                                            name: formData.get('tierName') as string,
-                                            description: formData.get('tierDescription') as string,
-                                            stampsRequired: parseInt(formData.get('tierStampsRequired') as string),
-                                        };
-                                        handleTierAction('edit', updatedTier);
-                                    }}>
-                                        <Label htmlFor="tierName">Tier Name</Label>
-                                        <Input
-                                            id="tierName"
-                                            name="tierName"
-                                            defaultValue={tier.name}
-                                            className="mb-2"
-                                        />
-                                        <Label htmlFor="tierDescription">Description</Label>
-                                        <Input
-                                            id="tierDescription"
-                                            name="tierDescription"
-                                            defaultValue={tier.description}
-                                            className="mb-2"
-                                        />
-                                        <Label htmlFor="tierStampsRequired">Stamps Required</Label>
-                                        <Input
-                                            id="tierStampsRequired"
-                                            name="tierStampsRequired"
-                                            type="number"
-                                            defaultValue={tier.stampsRequired}
-                                            className="mb-2"
-                                        />
-                                        <div className="flex justify-end">
-                                            <Button type="submit">Update Tier</Button>
-                                        </div>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
-                            <Button onClick={() => handleTierAction('remove', tier)} variant="destructive">Remove</Button>
-                        </div>
-                    </div>
-                ))}
-
+                <div className="flex justify-between align-center mb-4">
+                <h3 className="font-semibold">Manage Tiers</h3>
                 <Dialog open={isAddTierOpen} onOpenChange={setIsAddTierOpen}>
                     <DialogTrigger asChild>
-                        <Button>Add New Tier</Button>
+                        <Button size="sm" variant="outline" className="border-gray-500">Add New Tier</Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
@@ -294,8 +205,8 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                             const newTier: Tier = {
                                 id: 0,
                                 name: formData.get('tierName') as string,
-                                description: formData.get('tierDescription') as string,
                                 stampsRequired: parseInt(formData.get('tierStampsRequired') as string),
+                                benefits: (formData.get('tierBenefits') as string).split(',').map(benefit => benefit.trim()),
                             };
                             handleTierAction('add', newTier);
                         }}>
@@ -305,17 +216,17 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                                 name="tierName"
                                 className="mb-2"
                             />
-                            <Label htmlFor="tierDescription">Description</Label>
-                            <Input
-                                id="tierDescription"
-                                name="tierDescription"
-                                className="mb-2"
-                            />
                             <Label htmlFor="tierStampsRequired">Stamps Required</Label>
                             <Input
                                 id="tierStampsRequired"
                                 name="tierStampsRequired"
                                 type="number"
+                                className="mb-2"
+                            />
+                            <Label htmlFor="tierBenefits">Benefits (comma-separated)</Label>
+                            <Input
+                                id="tierBenefits"
+                                name="tierBenefits"
                                 className="mb-2"
                             />
                             <div className="flex justify-end">
@@ -324,6 +235,109 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                         </form>
                     </DialogContent>
                 </Dialog>
+                </div>
+                
+                {currProgram?.tiers?.map((tier: Tier) => (
+                    <div key={tier.id} className="mb-4 p-4 border rounded">
+                        <div className="flex justify-between">
+                            <h4 className="font-medium">{tier.name}</h4>
+                            <div className="text-sm">From {tier.stampsRequired} stamps</div>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                            <div className="text-gray-600 text-sm">
+                                <h5 className="font-medium mb-1">Benefits:</h5>
+                                <ul className="list-disc pl-5">
+                                    {tier.benefits.map((benefit, index) => (
+                                        <li key={index}>{benefit}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="mt-2">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" className="border-gray-500" size="sm">Edit</Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuItem onClick={() => setEditingTier(tier)} className="cursor-pointer">
+                                            <Dialog open={editingTier?.id === tier.id} onOpenChange={(open) => !open && setEditingTier(null)}>
+                                                <DialogTrigger asChild>
+                                                    <span>Edit details</span>
+                                                </DialogTrigger>
+                                                <DialogContent>
+                                                    <DialogHeader>
+                                                        <DialogTitle>Edit Tier</DialogTitle>
+                                                    </DialogHeader>
+                                                    <form onSubmit={(e) => {
+                                                        e.preventDefault();
+                                                        const formData = new FormData(e.target as HTMLFormElement);
+                                                        const updatedTier: Tier = {
+                                                            ...tier,
+                                                            name: formData.get('tierName') as string,
+                                                            stampsRequired: parseInt(formData.get('tierStampsRequired') as string),
+                                                            benefits: Array.from(formData.getAll('tierBenefits') as string[]),
+                                                        };
+                                                        handleTierAction('edit', updatedTier);
+                                                    }}>
+                                                        <Label htmlFor="tierName">Tier Name</Label>
+                                                        <Input
+                                                            id="tierName"
+                                                            name="tierName"
+                                                            defaultValue={tier.name}
+                                                            className="mb-2"
+                                                        />
+                                                        <Label htmlFor="tierStampsRequired">Stamps Required</Label>
+                                                        <Input
+                                                            id="tierStampsRequired"
+                                                            name="tierStampsRequired"
+                                                            type="number"
+                                                            defaultValue={tier.stampsRequired}
+                                                            className="mb-2"
+                                                        />
+                                                        <Label>Benefits</Label>
+                                                        {tier.benefits.map((benefit, index) => (
+                                                            <div key={index} className="flex items-center mb-2">
+                                                                <Input
+                                                                    name="tierBenefits"
+                                                                    defaultValue={benefit}
+                                                                    className="flex-grow"
+                                                                />
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        const newBenefits = [...tier.benefits];
+                                                                        newBenefits.splice(index, 1);
+                                                                        setEditingTier({ ...tier, benefits: newBenefits });
+                                                                    }}
+                                                                >
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => setEditingTier({ ...tier, benefits: [...tier.benefits, ''] })}
+                                                            className="mb-2"
+                                                        >
+                                                            <Plus className="h-4 w-4 mr-2" /> Add Benefit
+                                                        </Button>
+                                                        <div className="flex justify-end">
+                                                            <Button type="submit">Update Tier</Button>
+                                                        </div>
+                                                    </form>
+                                                </DialogContent>
+                                            </Dialog>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleTierAction('remove', tier)} className="cursor-pointer">Remove Tier</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );

@@ -53,11 +53,11 @@ module aptrewards_addr::AptRewardsEvents {
     }
 
     #[event]
-    struct AddTier has store, drop {
+    struct AddTier has drop, store {
         program_id: u64,
         tier_id: u64,
         name: String,
-        description: String,
+        benefits: vector<String>,
         stamps_required: u64,
     }
 
@@ -69,11 +69,11 @@ module aptrewards_addr::AptRewardsEvents {
     }
 
     #[event]
-    struct EditTier has store, drop {
+    struct EditTier has drop, store {
         program_id: u64,
         tier_id: u64,
         new_name: String,
-        new_description: String,
+        new_benefits: vector<String>,
         new_stamps_required: u64,
     }
 
@@ -174,14 +174,14 @@ module aptrewards_addr::AptRewardsEvents {
         program_id: u64,
         tier_id: u64,
         name: String,
-        description: String,
+        benefits: vector<String>,
         stamps_required: u64
     ) {
         event::emit(AddTier { 
             program_id,
             tier_id,
             name,
-            description,
+            benefits,
             stamps_required
         });
     }
@@ -202,14 +202,14 @@ module aptrewards_addr::AptRewardsEvents {
         program_id: u64,
         tier_id: u64,
         new_name: String,
-        new_description: String,
+        new_benefits: vector<String>,
         new_stamps_required: u64
     ) {
         event::emit(EditTier { 
             program_id,
             tier_id,
             new_name,
-            new_description,
+            new_benefits,
             new_stamps_required
         });
     }

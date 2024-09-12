@@ -12,8 +12,8 @@ export interface Coupon {
 export interface Tier {
   id: number;
   name: string;
-  description: string;
   stampsRequired: number;
+  benefits: string[];
 }
 
 export interface LoyaltyProgram {

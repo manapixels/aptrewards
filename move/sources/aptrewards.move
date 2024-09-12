@@ -21,8 +21,8 @@ module aptrewards_addr::AptRewardsMain {
     struct Tier has store, copy, drop {
         id: u64,
         name: String,
-        description: String,
         stamps_required: u64,
+        benefits: vector<String>,
     }
 
     struct LoyaltyProgram has store {
@@ -155,8 +155,8 @@ module aptrewards_addr::AptRewardsMain {
         sender: &signer,
         program_id: u64,
         name: String,
-        description: String,
-        stamps_required: u64
+        stamps_required: u64,
+        benefits: vector<String>
     ) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = table::borrow_mut(&mut factory.programs, program_id);
@@ -166,12 +166,12 @@ module aptrewards_addr::AptRewardsMain {
         let new_tier = Tier {
             id: tier_id,
             name,
-            description,
             stamps_required,
+            benefits,
         };
         vector::push_back(&mut program.tiers, new_tier);
 
-        AptRewardsEvents::emit_add_tier(program_id, tier_id, name, description, stamps_required);
+        AptRewardsEvents::emit_add_tier(program_id, tier_id, name, benefits, stamps_required);
     }
 
     public entry fun remove_tier(
@@ -193,8 +193,8 @@ module aptrewards_addr::AptRewardsMain {
         program_id: u64,
         tier_id: u64,
         new_name: String,
-        new_description: String,
-        new_stamps_required: u64
+        new_stamps_required: u64,
+        new_benefits: vector<String>
     ) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = table::borrow_mut(&mut factory.programs, program_id);
@@ -203,10 +203,10 @@ module aptrewards_addr::AptRewardsMain {
 
         let tier = vector::borrow_mut(&mut program.tiers, tier_id);
         tier.name = new_name;
-        tier.description = new_description;
         tier.stamps_required = new_stamps_required;
+        tier.benefits = new_benefits;
 
-        AptRewardsEvents::emit_edit_tier(program_id, tier_id, new_name, new_description, new_stamps_required);
+        AptRewardsEvents::emit_edit_tier(program_id, tier_id, new_name, new_benefits, new_stamps_required);
     }
 
     public entry fun earn_stamps(admin: &signer, program_id: u64, customer: address, amount: u64) acquires LoyaltyProgramFactory {
@@ -428,15 +428,20 @@ module aptrewards_addr::AptRewardsMain {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
-        add_tier(owner, 1, utf8(b"Bronze"), utf8(b"Entry level tier"), 100);
+        let benefits = vector::empty<String>();
+        vector::push_back(&mut benefits, utf8(b"Benefit 1"));
+        vector::push_back(&mut benefits, utf8(b"Benefit 2"));
+        add_tier(owner, 1, utf8(b"Bronze"), 100, benefits);
         
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = table::borrow(&factory.programs, 1);
         assert!(vector::length(&program.tiers) == 1, 0);
         let tier = vector::borrow(&program.tiers, 0);
         assert!(tier.name == utf8(b"Bronze"), 1);
-        assert!(tier.description == utf8(b"Entry level tier"), 2);
-        assert!(tier.stamps_required == 100, 3);
+        assert!(tier.stamps_required == 100, 2);
+        assert!(vector::length(&tier.benefits) == 2, 3);
+        assert!(*vector::borrow(&tier.benefits, 0) == utf8(b"Benefit 1"), 4);
+        assert!(*vector::borrow(&tier.benefits, 1) == utf8(b"Benefit 2"), 5);
     }
 
     #[test(fx = @aptos_framework, owner = @0x123)]
@@ -444,8 +449,11 @@ module aptrewards_addr::AptRewardsMain {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
-        add_tier(owner, 1, utf8(b"Bronze"), utf8(b"Entry level tier"), 100);
-        add_tier(owner, 1, utf8(b"Silver"), utf8(b"Mid level tier"), 200);
+        let benefits = vector::empty<String>();
+        vector::push_back(&mut benefits, utf8(b"Benefit 1"));
+        vector::push_back(&mut benefits, utf8(b"Benefit 2"));
+        add_tier(owner, 1, utf8(b"Bronze"), 100, benefits);
+        add_tier(owner, 1, utf8(b"Silver"), 200, benefits);
         
         remove_tier(owner, 1, 0);
         
@@ -461,16 +469,24 @@ module aptrewards_addr::AptRewardsMain {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
-        add_tier(owner, 1, utf8(b"Bronze"), utf8(b"Entry level tier"), 100);
+        let benefits = vector::empty<String>();
+        vector::push_back(&mut benefits, utf8(b"Benefit 1"));
+        vector::push_back(&mut benefits, utf8(b"Benefit 2"));
+        add_tier(owner, 1, utf8(b"Bronze"), 100, benefits);
         
-        edit_tier(owner, 1, 0, utf8(b"New Bronze"), utf8(b"Updated entry level"), 150);
+        let new_benefits = vector::empty<String>();
+        vector::push_back(&mut new_benefits, utf8(b"New Benefit 1"));
+        vector::push_back(&mut new_benefits, utf8(b"New Benefit 2"));
+        edit_tier(owner, 1, 0, utf8(b"New Bronze"), 150, new_benefits);
         
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = table::borrow(&factory.programs, 1);
         let tier = vector::borrow(&program.tiers, 0);
         assert!(tier.name == utf8(b"New Bronze"), 0);
-        assert!(tier.description == utf8(b"Updated entry level"), 1);
-        assert!(tier.stamps_required == 150, 2);
+        assert!(tier.stamps_required == 150, 1);
+        assert!(vector::length(&tier.benefits) == 2, 2);
+        assert!(*vector::borrow(&tier.benefits, 0) == utf8(b"New Benefit 1"), 3);
+        assert!(*vector::borrow(&tier.benefits, 1) == utf8(b"New Benefit 2"), 4);
     }
 
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]

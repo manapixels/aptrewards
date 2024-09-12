@@ -35,7 +35,6 @@ async function main() {
 
     console.log("Admin's address:", admin.accountAddress.toString());
 
-
     // Check if the module is deployed
     try {
         await aptos.getAccountModule({ accountAddress: MODULE_ADDRESS, moduleName: "AptRewardsMain" });
@@ -44,7 +43,6 @@ async function main() {
         console.error("Module is not deployed on the network.");
         return;
     }
-
 
     // Fund the admin account
     // await aptos.fundAccount({ accountAddress: admin.accountAddress, amount: 100_000_000 });
@@ -86,17 +84,31 @@ async function main() {
     const tiers = [
         {
             name: "Bronze",
-            description: "Welcome to our loyalty program! Enjoy basic perks and start earning rewards with every purchase.",
+            benefits: [
+                "5% discount on all purchases",
+                "Early access to new products",
+                "Birthday reward"
+            ],
             stamps: 100
         },
         {
             name: "Silver",
-            description: "You're a valued customer! Unlock exclusive discounts and priority service as a Silver member.",
+            benefits: [
+                "10% discount on all purchases",
+                "Exclusive member-only events",
+                "2x points on select products"
+            ],
             stamps: 500
         },
         {
             name: "Gold",
-            description: "Experience VIP treatment! As a Gold member, indulge in premium rewards, personalized offers, and exclusive events.",
+            benefits: [
+                "15% discount on all purchases",
+                "Priority customer service",
+                "Exclusive VIP events",
+                "Personalized offers",
+                "3x points on select products"
+            ],
             stamps: 1000
         }
     ];
@@ -107,7 +119,7 @@ async function main() {
             data: {
                 function: `${MODULE_ADDRESS}::AptRewardsMain::add_tier`,
                 typeArguments: [],
-                functionArguments: [programId, tier.name, tier.description, tier.stamps]
+                functionArguments: [programId, tier.name, tier.stamps, tier.benefits]
             },
         });
 
