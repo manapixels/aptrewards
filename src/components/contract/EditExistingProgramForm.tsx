@@ -15,8 +15,40 @@ import { Progress } from "@/components/ui/progress"
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/lib/utils';
 import { useProgramStore } from '@/store/programStore';
-import { Tier } from '@/types/aptrewards';
+import { Coupon, Tier } from '@/types/aptrewards';
 import { MoveString, MoveVector, U64 } from '@aptos-labs/ts-sdk';
+
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+
+const CouponRedemptionsTable = ({ coupons, couponsRedeemed }: { coupons: Coupon[] | undefined, couponsRedeemed: number[] | undefined }) => (
+    <Table>
+        <TableHeader>
+            <TableRow>
+                <TableHead>Coupon Description</TableHead>
+                <TableHead>Stamps Required</TableHead>
+                <TableHead>Expiration Date</TableHead>
+                <TableHead className="text-right">Redemptions</TableHead>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            {coupons?.map((coupon, index) => (
+                <TableRow key={coupon.id}>
+                    <TableCell className="font-medium">{coupon.description}</TableCell>
+                    <TableCell>{coupon.stampsRequired}</TableCell>
+                    <TableCell>{new Date(coupon.expirationDate * 1000).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-right">{couponsRedeemed?.[index] || 0}</TableCell>
+                </TableRow>
+            ))}
+        </TableBody>
+    </Table>
+);
 
 export default function EditExistingProgramForm({ programId }: { programId: string }) {
     const { toast } = useToast();
@@ -34,7 +66,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
     const [isEditTierDialogOpen, setIsEditTierDialogOpen] = useState(false);
 
     const [newTierBenefits, setNewTierBenefits] = useState<string[]>(['']);
-console.log(currProgram)
+
     useEffect(() => {
         fetchProgramDetails(programId);
     }, [programId, fetchProgramDetails]);
@@ -353,21 +385,10 @@ console.log(currProgram)
             {/* Coupon Redemptions */}
             <div className="bg-white shadow-sm border rounded-lg p-6">
                 <h3 className="font-semibold mb-4">Coupon Redemptions</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {currProgram?.coupons?.map((coupon, index) => (
-                        <button
-                            key={coupon.id}
-                            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-                        >
-                            <span className="text-xs text-muted-foreground">
-                                {coupon.description}
-                            </span>
-                            <span className="text-lg font-bold leading-none sm:text-3xl">
-                                {currProgram.couponsRedeemed?.[index] || 0}
-                            </span>
-                        </button>
-                    ))}
-                </div>
+                <CouponRedemptionsTable
+                    coupons={currProgram?.coupons}
+                    couponsRedeemed={currProgram?.couponsRedeemed}
+                />
             </div>
 
             <div className="bg-white shadow-sm border rounded-lg p-6">
