@@ -362,9 +362,14 @@ export default function EditProgramForm({ programId }: { programId: string }) {
 
     return (
         <div className="flex flex-col gap-4">
+            <div>
+            <div className="text-gray-500 text-sm">Rewards Program</div>
+            <h1 className="font-bold text-2xl ml-2 my-4"><div className="inline bg-gray-100 px-2 py-1 h-100 mr-2"></div>{currProgram?.name}</h1>
+            </div>
             <div className="bg-white shadow-sm border rounded-lg">
+                
                 <div className="flex justify-between items-center px-6 py-4 bg-gray-100">
-                    <h1 className="font-semibold text-xl">{currProgram?.name}</h1>
+                    <h3 className="font-semibold">Details</h3>
                     <Dialog open={isEditProgramOpen} onOpenChange={setIsEditProgramOpen}>
                         <DialogTrigger asChild>
                             <Button className="border-gray-600" variant="outline" size="sm">
