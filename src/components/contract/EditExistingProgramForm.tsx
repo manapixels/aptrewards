@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
-import { AlertCircle, Plus, X } from 'lucide-react';
+import { AlertCircle, PencilIcon, Plus, PlusIcon, User, X } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from '@/components/ui/button';
@@ -243,8 +243,8 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
         const maxStamps = sortedTiers[sortedTiers.length - 1].stampsRequired;
 
         return (
-            <div className="mb-6">
-                <h4 className="text-sm font-medium mb-2">Tier Progression</h4>
+            <div className="px-6 py-4">
+                <h4 className="text-sm font-medium mb-2">Progression</h4>
                 <div className="relative py-5">
                     <Progress value={100} className="h-2" />
                     {sortedTiers.map((tier, index) => (
@@ -273,18 +273,16 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
         if (!currProgram) return null;
 
         const stats = [
-            { label: "Total Customers", value: currProgram.numCustomers },
-            { label: "Total Stamps Issued", value: currProgram.totalStampsIssued },
-            { label: "Total Coupons", value: currProgram.coupons?.length },
-            { label: "Total Tiers", value: currProgram.tiers?.length },
+            { label: "Customers", value: currProgram.numCustomers },
+            { label: "Stamps Issued", value: currProgram.totalStampsIssued },
         ];
 
         return (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 border">
                 {stats.map((stat, index) => (
-                    <button
+                    <div
                         key={index}
-                        className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
+                        className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:px-8 sm:py-6"
                     >
                         <span className="text-xs text-muted-foreground">
                             {stat.label}
@@ -292,7 +290,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                         <span className="text-lg font-bold leading-none sm:text-3xl">
                             {stat.value || 'N/A'}
                         </span>
-                    </button>
+                    </div>
                 ))}
             </div>
         );
@@ -312,12 +310,14 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="bg-white shadow-sm border rounded-lg p-6">
-                <div className="flex justify-between items-center mb-4">
+            <div className="bg-white shadow-sm border rounded-lg">
+                <div className="flex justify-between items-center px-6 py-4 bg-gray-100">
                     <h1 className="font-semibold text-xl">{currProgram?.name}</h1>
                     <Dialog open={isEditProgramOpen} onOpenChange={setIsEditProgramOpen}>
                         <DialogTrigger asChild>
-                            <Button className="border-gray-600" variant="outline" size="sm">Edit</Button>
+                            <Button className="border-gray-600" variant="outline" size="sm">
+                                <PencilIcon className="w-4 h-4 stroke-gray-600" />
+                            </Button>
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
@@ -354,49 +354,27 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                     </Dialog>
                 </div>
                 {renderProgramStats()}
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label className="text-gray-600 text-xs">Stamp Validity Days:</Label>
-                        <p className="font-medium">{currProgram?.stampValidityDays || 'N/A'}</p>
-                    </div>
+                
+                <div className="px-6 py-4 text-sm">
+                    <div className="font-semibold">Options:</div>
+                    <ul className="list-disc pl-5">
+                        <li>
+                            <span className="text-gray-600">Stamp Validity Days:</span>
+                            <span className="ml-1">{currProgram?.stampValidityDays || 'N/A'}</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
-            {/* Tier Distribution */}
-            <div className="bg-white shadow-sm border rounded-lg p-6">
-                <h3 className="font-semibold mb-4">Tier Distribution</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {currProgram?.tiers?.map((tier, index) => (
-                        <button
-                            key={tier.id}
-                            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-                        >
-                            <span className="text-xs text-muted-foreground">
-                                {tier.name}
-                            </span>
-                            <span className="text-lg font-bold leading-none sm:text-3xl">
-                                {currProgram.customersPerTier?.[index] || 0}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Coupon Redemptions */}
-            <div className="bg-white shadow-sm border rounded-lg p-6">
-                <h3 className="font-semibold mb-4">Coupon Redemptions</h3>
-                <CouponRedemptionsTable
-                    coupons={currProgram?.coupons}
-                    couponsRedeemed={currProgram?.couponsRedeemed}
-                />
-            </div>
-
-            <div className="bg-white shadow-sm border rounded-lg p-6">
-                <div className="flex justify-between align-center mb-4">
-                    <h3 className="font-semibold">Manage Tiers</h3>
+            {/* Tiers */}
+            <div className="bg-white shadow-sm border rounded-lg">
+                <div className="flex justify-between items-center px-6 py-4 bg-gray-100">
+                    <h3 className="font-semibold leading-tight">Tiers</h3>
                     <Dialog open={isAddTierDialogOpen} onOpenChange={setIsAddTierDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button size="sm" variant="outline" className="border-gray-500">Add Tier</Button>
+                            <Button size="sm" variant="outline" className="border-gray-500">
+                                <PlusIcon className="w-4 h-4 stroke-gray-500" />
+                            </Button>
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
@@ -464,35 +442,67 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
 
                 {renderTierChart()}
 
-                {currProgram?.tiers?.map((tier: Tier) => (
-                    <div key={tier.id} className="mb-4 p-4 border rounded">
-                        <div className="flex justify-between">
-                            <h4 className="font-medium">{tier.name}</h4>
-                            <div className="text-sm">From {tier.stampsRequired} stamps</div>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                            <div className="text-gray-600 text-sm">
-                                <h5 className="font-medium mb-1">Benefits:</h5>
-                                <ul className="list-disc pl-5">
-                                    {tier.benefits.map((benefit, index) => (
-                                        <li key={index}>{benefit}</li>
-                                    ))}
-                                </ul>
+                <div className="divide-y">
+                    {currProgram?.tiers?.map((tier: Tier) => (
+                        <div key={tier.id} className="px-6 py-4">
+                            <div className="flex justify-between">
+                                <h4 className="font-medium">{tier.name}</h4>
+                                <div className="text-sm">From {tier.stampsRequired} stamps</div>
                             </div>
-                            <div className="mt-2">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="border-gray-500" size="sm">Edit</Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuItem onClick={() => openEditTierDialog(tier)} className="cursor-pointer">Edit</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleTierAction('remove', tier)} className="cursor-pointer">Remove</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                            <div className="flex justify-between gap-4">
+                                <div className="text-gray-600 text-sm">
+                                    <h5 className="font-medium mb-1">Benefits:</h5>
+                                    <ul className="list-disc pl-5">
+                                        {tier.benefits.map((benefit, index) => (
+                                            <li key={index}>{benefit}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="mt-2">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" className="border-gray-500" size="sm">
+                                                <PencilIcon className="w-4 h-4 stroke-gray-500" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuItem onClick={() => openEditTierDialog(tier)} className="cursor-pointer">Edit</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleTierAction('remove', tier)} className="cursor-pointer">Remove</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 border">
+                    {currProgram?.tiers?.map((tier, index) => (
+                        <div
+                            key={tier.id}
+                            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left [&:not(:first-child)]:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:px-8 sm:py-6"
+                        >
+                            <span className="text-xs text-muted-foreground">
+                                {tier.name}
+                            </span>
+                            <span className="text-lg font-bold leading-none sm:text-3xl">
+                                {currProgram.customersPerTier?.[index] || 0} <User className="w-4 h-4 inline-block stroke-gray-500" />
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Coupon Redemptions */}
+            <div className="bg-white shadow-sm border rounded-lg">
+                <div className="flex justify-between items-center px-6 py-4 bg-gray-100">
+                    <h3 className="font-semibold">Coupon Redemptions</h3>
+                    <Button size="sm" variant="outline" className="border-gray-500"><PlusIcon className="w-4 h-4 stroke-gray-500" /></Button>
+                </div>
+                <CouponRedemptionsTable
+                    coupons={currProgram?.coupons}
+                    couponsRedeemed={currProgram?.couponsRedeemed}
+                />
             </div>
 
             <Dialog open={isEditTierDialogOpen} onOpenChange={setIsEditTierDialogOpen}>
