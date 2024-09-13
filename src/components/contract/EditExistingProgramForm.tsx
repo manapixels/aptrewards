@@ -253,7 +253,7 @@ console.log(currProgram)
         <div className="flex flex-col gap-4">
             <div className="bg-white shadow-sm border rounded-lg p-6">
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold">Loyalty Program Details</h3>
+                    <h1 className="font-semibold text-xl">{currProgram?.name}</h1>
                     <Dialog open={isEditProgramOpen} onOpenChange={setIsEditProgramOpen}>
                         <DialogTrigger asChild>
                             <Button className="border-gray-600" variant="outline" size="sm">Edit</Button>
@@ -293,10 +293,6 @@ console.log(currProgram)
                     </Dialog>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label className="text-gray-600 text-xs">Name:</Label>
-                        <p className="font-medium">{currProgram?.name}</p>
-                    </div>
                     <div>
                         <Label className="text-gray-600 text-xs">Stamp Validity Days:</Label>
                         <p className="font-medium">{currProgram?.stampValidityDays || 'N/A'}</p>
