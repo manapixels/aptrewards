@@ -50,7 +50,7 @@ const CouponRedemptionsTable = ({ coupons, couponsRedeemed }: { coupons: Coupon[
     </Table>
 );
 
-export default function EditExistingProgramForm({ programId }: { programId: string }) {
+export default function EditProgramForm({ programId }: { programId: string }) {
     const { toast } = useToast();
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
@@ -66,6 +66,13 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
     const [isEditTierDialogOpen, setIsEditTierDialogOpen] = useState(false);
 
     const [newTierBenefits, setNewTierBenefits] = useState<string[]>(['']);
+
+    const [isAddCouponDialogOpen, setIsAddCouponDialogOpen] = useState(false);
+    const [newCoupon, setNewCoupon] = useState({
+        description: '',
+        stampsRequired: 0,
+        expirationDate: ''
+    });
 
     useEffect(() => {
         fetchProgramDetails(programId);
@@ -236,6 +243,51 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
         setNewTierBenefits(updatedBenefits);
     };
 
+    const handleAddCoupon = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setTransactionInProgress(true);
+            if (!account) throw new Error("No account connected");
+            if (!moduleAddress || !moduleName) throw new Error("No module address or name");
+
+            const expirationTimestamp = Math.floor(new Date(newCoupon.expirationDate).getTime() / 1000);
+
+            const response = await signAndSubmitTransaction({
+                sender: account.address,
+                data: {
+                    function: `${moduleAddress}::${moduleName}::create_coupon`,
+                    typeArguments: [],
+                    functionArguments: [
+                        new U64(parseInt(programId)),
+                        new MoveString(newCoupon.description),
+                        new U64(newCoupon.stampsRequired),
+                        new U64(expirationTimestamp),
+                    ],
+                },
+            });
+
+            await getAptosClient().waitForTransaction({ transactionHash: response.hash });
+
+            triggerRefetch();
+            fetchProgramDetails(programId);
+
+            toast({
+                title: 'Success',
+                description: 'Coupon created successfully',
+            });
+        } catch (error) {
+            console.error('Error creating coupon:', error);
+            toast({
+                title: 'Error',
+                description: 'Error creating coupon',
+                variant: 'destructive',
+            });
+        } finally {
+            setTransactionInProgress(false);
+            setIsAddCouponDialogOpen(false);
+        }
+    };
+
     const renderTierChart = () => {
         if (!currProgram?.tiers || currProgram.tiers.length === 0) return null;
 
@@ -354,7 +406,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                     </Dialog>
                 </div>
                 {renderProgramStats()}
-                
+
                 <div className="px-6 py-4 text-sm">
                     <div className="font-semibold">Options:</div>
                     <ul className="list-disc pl-5">
@@ -493,11 +545,52 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                 </div>
             </div>
 
-            {/* Coupon Redemptions */}
+            {/* Coupons */}
             <div className="bg-white shadow-sm border rounded-lg">
                 <div className="flex justify-between items-center px-6 py-4 bg-gray-100">
-                    <h3 className="font-semibold">Coupon Redemptions</h3>
-                    <Button size="sm" variant="outline" className="border-gray-500"><PlusIcon className="w-4 h-4 stroke-gray-500" /></Button>
+                    <h3 className="font-semibold">Coupons</h3>
+                    <Dialog open={isAddCouponDialogOpen} onOpenChange={setIsAddCouponDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button size="sm" variant="outline" className="border-gray-500">
+                                <PlusIcon className="w-4 h-4 stroke-gray-500" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Add New Coupon</DialogTitle>
+                            </DialogHeader>
+                            <form onSubmit={handleAddCoupon}>
+                                <Label htmlFor="couponDescription">Description</Label>
+                                <Input
+                                    id="couponDescription"
+                                    value={newCoupon.description}
+                                    onChange={(e) => setNewCoupon({...newCoupon, description: e.target.value})}
+                                    className="mb-2"
+                                />
+                                <Label htmlFor="couponStampsRequired">Stamps Required</Label>
+                                <Input
+                                    id="couponStampsRequired"
+                                    type="number"
+                                    value={newCoupon.stampsRequired}
+                                    onChange={(e) => setNewCoupon({...newCoupon, stampsRequired: parseInt(e.target.value)})}
+                                    className="mb-2"
+                                />
+                                <Label htmlFor="couponExpirationDate">Expiration Date</Label>
+                                <Input
+                                    id="couponExpirationDate"
+                                    type="date"
+                                    value={newCoupon.expirationDate}
+                                    onChange={(e) => setNewCoupon({...newCoupon, expirationDate: e.target.value})}
+                                    className="mb-2"
+                                />
+                                <div className="flex justify-end">
+                                    <Button type="submit" disabled={transactionInProgress}>
+                                        {transactionInProgress ? 'Creating...' : 'Create Coupon'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
                 </div>
                 <CouponRedemptionsTable
                     coupons={currProgram?.coupons}

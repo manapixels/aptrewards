@@ -1,10 +1,10 @@
-import EditExistingProgram from '@/components/contract/EditExistingProgramForm';
+import EditProgramForm from '@/components/contract/EditProgramForm';
 
-export default function EditExistingProgramPage({ params }: { params: { programId: string } }) {
-    const programId = parseInt(params.programId);
+export default function EditProgramPage({ params }: { params: { programId: string } }) {
+
     return (
         <div className="space-y-4">
-            <EditExistingProgram programId={programId} />
+            <EditProgramForm programId={params.programId} />
         </div>
     );
 }

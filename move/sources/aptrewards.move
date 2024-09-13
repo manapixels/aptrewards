@@ -119,36 +119,24 @@ module aptrewards_addr::AptRewardsMain {
     }
 
     public entry fun create_coupon(
-        sender: &signer,
+        account: &signer,
         program_id: u64,
-        stamps_required: u64,
         description: String,
-        is_monetary: bool,
-        value: u64,
-        expiration_date: u64,
-        max_redemptions: u64
-    ) acquires LoyaltyProgramFactory {
-        let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
-        let program = simple_map::borrow_mut(&mut factory.programs, &program_id);
-        assert!(program.owner == address_of(sender), E_NOT_OWNER);
-        
-        // Generate a new coupon ID
-        let coupon_id = program.coupon_count;
-        program.coupon_count = program.coupon_count + 1;
+        stamps_required: u64,
+        expiration_date: u64
+    ) acquires LoyaltyProgram {
+        let program = borrow_global_mut<LoyaltyProgram>(signer::address_of(account));
+        assert!(program.id == program_id, ERROR_NOT_PROGRAM_OWNER);
 
         let coupon = Coupon {
-            id: coupon_id,
-            stamps_required,
+            id: vector::length(&program.coupons),
             description,
-            is_monetary,
-            value,
-            expiration_date,
-            max_redemptions,
-            current_redemptions: 0,
+            stamps_required,
+            expiration_date
         };
-        vector::push_back(&mut program.coupons, coupon);
 
-        AptRewardsEvents::emit_create_coupon(program_id, coupon_id, stamps_required, description, is_monetary, value, expiration_date, max_redemptions);
+        vector::push_back(&mut program.coupons, coupon);
+        vector::push_back(&mut program.coupons_redeemed, 0);
     }
 
     public entry fun add_tier(
