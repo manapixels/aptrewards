@@ -398,6 +398,15 @@ module aptrewards_addr::AptRewardsMain {
         );
     }
 
+    #[view]
+    public fun get_program_customers(program_id: u64): vector<address> acquires LoyaltyProgramFactory {
+        let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
+        assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
+        
+        let program = simple_map::borrow(&factory.programs, &program_id);
+        simple_map::keys(&program.customer_stamps)
+    }
+
     /////////////////////////// Tests //////////////////////////////////
     #[test_only]
     use aptos_framework::account;

@@ -1,4 +1,4 @@
-import ProgramListSidebar from '@/components/contract/ProgramListSidebar';
+import ProgramListSidebar from '@/components/admin/ProgramListSidebar';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
 

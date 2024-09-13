@@ -1,4 +1,4 @@
-import EditProgramForm from '@/components/contract/EditProgramForm';
+import EditProgramForm from '@/components/admin/edit/EditProgramForm';
 
 export default function EditProgramPage({ params }: { params: { programId: string } }) {
 

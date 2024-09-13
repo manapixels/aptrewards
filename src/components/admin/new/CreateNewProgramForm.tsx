@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { FormControl, FormField, FormItem, FormLabel } from '../ui/form';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { FormControl, FormField, FormItem, FormLabel } from '../../ui/form';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useToast } from '@/components/ui/use-toast';
 import { moduleAddress, moduleName } from '@/constants';

@@ -11,6 +11,7 @@ type ProgramStore = {
     fetchPrograms: (address: string) => Promise<void>;
     fetchProgramDetails: (programId: string) => Promise<void>;
     triggerRefetch: () => void;
+    fetchProgramCustomers: (programId: string) => Promise<void>;
 };
 
 const getProgramsByAddress = async (address: string): Promise<LoyaltyProgram[]> => {
@@ -92,6 +93,20 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
     return transformedProgramDetails;
 };
 
+const getProgramCustomers = async (programId: string): Promise<string[]> => {
+    if (!moduleAddress || !moduleName) throw new Error("No module address or name");
+    const response = await getAptosClient().view({
+        payload: {
+            function: `${moduleAddress}::${moduleName}::get_program_customers`,
+            functionArguments: [programId],
+        },
+    });
+
+    if (!response) throw new Error("Failed to fetch program customers");
+    
+    return response as string[];
+};
+
 export const useProgramStore = create<ProgramStore>((set) => ({
     programs: [],
     shouldRefetch: false,
@@ -132,6 +147,21 @@ export const useProgramStore = create<ProgramStore>((set) => ({
         } catch (error) {
             console.error("Error fetching program details:", error);
             set({ isFetchingOneProgram: false });
+        }
+    },
+    fetchProgramCustomers: async (programId: string) => {
+        try {
+            const customers = await getProgramCustomers(programId);
+            set((state) => {
+                const updatedPrograms = state.programs.map(program => 
+                    program.id.toString() === programId.toString() 
+                        ? { ...program, customers } 
+                        : program
+                );
+                return { programs: updatedPrograms };
+            });
+        } catch (error) {
+            console.error("Error fetching program customers:", error);
         }
     },
     triggerRefetch: () => set({ shouldRefetch: true }),

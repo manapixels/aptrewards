@@ -1,4 +1,4 @@
-import CreateNewProgram from '@/components/contract/CreateNewProgramForm';
+import CreateNewProgram from '@/components/admin/new/CreateNewProgramForm';
 
 export default function CreateNewProgramPage() {
   return (

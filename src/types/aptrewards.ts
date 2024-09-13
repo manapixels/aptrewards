@@ -16,7 +16,7 @@ export type Tier = {
     benefits: string[];
 };
 
-export interface LoyaltyProgram {
+export type LoyaltyProgram = {
     id: string;
     name: string;
     owner?: string;
@@ -28,4 +28,5 @@ export interface LoyaltyProgram {
     customersPerTier?: number[];
     totalStampsIssued?: number;
     couponsRedeemed?: number[];
-}
+    customers?: string[];
+};
