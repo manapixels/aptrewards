@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Progress } from "@/components/ui/progress"
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/lib/utils';
 import { useProgramStore } from '@/store/programStore';
@@ -33,7 +34,7 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
     const [isEditTierDialogOpen, setIsEditTierDialogOpen] = useState(false);
 
     const [newTierBenefits, setNewTierBenefits] = useState<string[]>(['']);
-
+console.log(currProgram)
     useEffect(() => {
         fetchProgramDetails(programId);
     }, [programId, fetchProgramDetails]);
@@ -178,7 +179,6 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
     };
 
     const handleBenefitChange = (index: number, value: string) => {
-        console.log('handleBenefitChange', index, value);
         if (editingTier) {
             const newBenefits = [...editingTier.benefits];
             newBenefits[index] = value;
@@ -202,6 +202,39 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
         const updatedBenefits = [...newTierBenefits];
         updatedBenefits[index] = value;
         setNewTierBenefits(updatedBenefits);
+    };
+
+    const renderTierChart = () => {
+        if (!currProgram?.tiers || currProgram.tiers.length === 0) return null;
+
+        const sortedTiers = [...currProgram.tiers].sort((a, b) => a.stampsRequired - b.stampsRequired);
+        const maxStamps = sortedTiers[sortedTiers.length - 1].stampsRequired;
+
+        return (
+            <div className="mb-6">
+                <h4 className="text-sm font-medium mb-2">Tier Progression</h4>
+                <div className="relative py-5">
+                    <Progress value={100} className="h-2" />
+                    {sortedTiers.map((tier, index) => (
+                        <div
+                            key={tier.id}
+                            className="absolute transform -translate-x-3/4 translate-y-1/2 -top-1/2 flex flex-col items-center"
+                            style={{ left: `${(tier.stampsRequired / maxStamps) * 100}%` }}
+                        >
+                            <span className="text-xs font-medium block text-center whitespace-nowrap">
+                                {tier.name}
+                            </span>
+                            <div className="h-4 flex items-center">
+                                <div className="w-1 h-1 bg-white rounded-full mx-auto z-10" />
+                            </div>
+                            <span className="text-xs text-gray-500 block text-center">
+                                {tier.stampsRequired}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
     };
 
     if (!currProgram && !isFetchingOneProgram) {
@@ -341,6 +374,8 @@ export default function EditExistingProgramForm({ programId }: { programId: stri
                         </DialogContent>
                     </Dialog>
                 </div>
+
+                {renderTierChart()}
 
                 {currProgram?.tiers?.map((tier: Tier) => (
                     <div key={tier.id} className="mb-4 p-4 border rounded">
