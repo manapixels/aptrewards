@@ -83,6 +83,10 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
             stampsRequired: Number(tier.stamps_required),
             benefits: tier.benefits,
         })) || [],
+        numCustomers: Number(response[7]?.toString() || "0"),
+        customersPerTier: response[8] as number[] || [],
+        totalStampsIssued: Number(response[9]?.toString() || "0"),
+        couponsRedeemed: response[10] as number[] || [],
     };
 
     return transformedProgramDetails;

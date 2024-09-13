@@ -237,6 +237,35 @@ console.log(currProgram)
         );
     };
 
+    const renderProgramStats = () => {
+        if (!currProgram) return null;
+
+        const stats = [
+            { label: "Total Customers", value: currProgram.numCustomers },
+            { label: "Total Stamps Issued", value: currProgram.totalStampsIssued },
+            { label: "Total Coupons", value: currProgram.coupons?.length },
+            { label: "Total Tiers", value: currProgram.tiers?.length },
+        ];
+
+        return (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                {stats.map((stat, index) => (
+                    <button
+                        key={index}
+                        className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
+                    >
+                        <span className="text-xs text-muted-foreground">
+                            {stat.label}
+                        </span>
+                        <span className="text-lg font-bold leading-none sm:text-3xl">
+                            {stat.value || 'N/A'}
+                        </span>
+                    </button>
+                ))}
+            </div>
+        );
+    };
+
     if (!currProgram && !isFetchingOneProgram) {
         return (
             <Alert variant="destructive">
@@ -292,11 +321,52 @@ console.log(currProgram)
                         </DialogContent>
                     </Dialog>
                 </div>
+                {renderProgramStats()}
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <Label className="text-gray-600 text-xs">Stamp Validity Days:</Label>
                         <p className="font-medium">{currProgram?.stampValidityDays || 'N/A'}</p>
                     </div>
+                </div>
+            </div>
+
+            {/* Tier Distribution */}
+            <div className="bg-white shadow-sm border rounded-lg p-6">
+                <h3 className="font-semibold mb-4">Tier Distribution</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {currProgram?.tiers?.map((tier, index) => (
+                        <button
+                            key={tier.id}
+                            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
+                        >
+                            <span className="text-xs text-muted-foreground">
+                                {tier.name}
+                            </span>
+                            <span className="text-lg font-bold leading-none sm:text-3xl">
+                                {currProgram.customersPerTier?.[index] || 0}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Coupon Redemptions */}
+            <div className="bg-white shadow-sm border rounded-lg p-6">
+                <h3 className="font-semibold mb-4">Coupon Redemptions</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {currProgram?.coupons?.map((coupon, index) => (
+                        <button
+                            key={coupon.id}
+                            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
+                        >
+                            <span className="text-xs text-muted-foreground">
+                                {coupon.description}
+                            </span>
+                            <span className="text-lg font-bold leading-none sm:text-3xl">
+                                {currProgram.couponsRedeemed?.[index] || 0}
+                            </span>
+                        </button>
+                    ))}
                 </div>
             </div>
 

@@ -24,4 +24,8 @@ export interface LoyaltyProgram {
     coupons?: Coupon[];
     tiers?: Tier[];
     stampValidityDays?: number;
+    numCustomers?: number;
+    customersPerTier?: number[];
+    totalStampsIssued?: number;
+    couponsRedeemed?: number[];
 }
