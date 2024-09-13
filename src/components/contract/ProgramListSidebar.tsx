@@ -23,9 +23,9 @@ const ProgramListSidebar = () => {
         <div>
             <div className="flex justify-between items-center mb-4">
                 <div className="text-sm font-semibold">Your Programs</div>
-                {programs.length > 1 && (
+                {programs.length > 0 && (
                     <Link href="/admin/new">
-                        <Button variant="outline" className="w-full border-gray-500" size="sm">+</Button>
+                        <button className="w-full border border-gray-500 text-sm font-semibold px-2 py-1 rounded-md hover:bg-gray-100">+</button>
                     </Link>
                 )}
             </div>
