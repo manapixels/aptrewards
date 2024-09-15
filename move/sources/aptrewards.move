@@ -1,7 +1,7 @@
 module aptrewards_addr::AptRewardsMain {
     use std::vector;
     use aptrewards_addr::AptRewardsEvents::{Self, emit_create_loyalty_program};
-    use std::signer::address_of;
+    use std::signer::{address_of};
     use std::string::{String};
     use std::timestamp;
     use std::option::{Self, Option};
@@ -94,6 +94,33 @@ module aptrewards_addr::AptRewardsMain {
         emit_create_loyalty_program(program_id, owner_address, stamp_validity_days);
     }
 
+    public entry fun edit_loyalty_program(
+        sender: &signer,
+        program_id: u64,
+        new_name: Option<String>,
+        new_stamp_validity_days: Option<u64>
+    ) acquires LoyaltyProgramFactory {
+        let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
+        assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
+        
+        let program = simple_map::borrow_mut(&mut factory.programs, &program_id);
+        assert!(program.owner == address_of(sender), E_NOT_OWNER);
+
+        if (option::is_some(&new_name)) {
+            program.name = option::extract(&mut new_name);
+        };
+
+        if (option::is_some(&new_stamp_validity_days)) {
+            program.stamp_validity_days = option::extract(&mut new_stamp_validity_days);
+        };
+
+        AptRewardsEvents::emit_edit_loyalty_program(
+            program_id,
+            program.name,
+            program.stamp_validity_days
+        );
+    }
+
     public entry fun transfer_ownership(sender: &signer, program_id: u64, new_owner: address) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = simple_map::borrow_mut(&mut factory.programs, &program_id);
@@ -123,20 +150,32 @@ module aptrewards_addr::AptRewardsMain {
         program_id: u64,
         description: String,
         stamps_required: u64,
-        expiration_date: u64
-    ) acquires LoyaltyProgram {
-        let program = borrow_global_mut<LoyaltyProgram>(signer::address_of(account));
-        assert!(program.id == program_id, ERROR_NOT_PROGRAM_OWNER);
+        is_monetary: bool,
+        value: u64,
+        expiration_date: u64,
+        max_redemptions: u64
+    ) acquires LoyaltyProgramFactory {
+        let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
+        assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
+        
+        let program = simple_map::borrow_mut(&mut factory.programs, &program_id);
+        assert!(program.owner == address_of(account), E_NOT_OWNER);
 
         let coupon = Coupon {
-            id: vector::length(&program.coupons),
+            id: program.coupon_count,
             description,
             stamps_required,
-            expiration_date
+            is_monetary,
+            value,
+            expiration_date,
+            max_redemptions,
+            current_redemptions: 0,
         };
 
         vector::push_back(&mut program.coupons, coupon);
-        vector::push_back(&mut program.coupons_redeemed, 0);
+        program.coupon_count = program.coupon_count + 1;
+
+        AptRewardsEvents::emit_create_coupon(program_id, coupon.id, stamps_required, description, is_monetary, value, expiration_date, max_redemptions);
     }
 
     public entry fun add_tier(
@@ -266,7 +305,7 @@ module aptrewards_addr::AptRewardsMain {
     }
 
     #[view]
-    public fun get_loyalty_program_details(program_id: u64): (u64, String, address, u64, u64, vector<Coupon>, vector<Tier>, u64, vector<u64>, u64, vector<u64>) acquires LoyaltyProgramFactory {
+    public fun get_loyalty_program_details(program_id: u64): (u64, String, address, u64, u64, vector<Coupon>, vector<Tier>, u64, vector<u64>, u64, vector<u64>, vector<address>, vector<u64>) acquires LoyaltyProgramFactory {
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
         
@@ -275,6 +314,7 @@ module aptrewards_addr::AptRewardsMain {
         let num_stamps_issued = calculate_total_stamps(program);
         let customers_per_tier = calculate_customers_per_tier(program);
         let coupons_redeemed = calculate_coupons_redeemed(&program.coupons);
+        let (customers, stamps) = get_customers_with_stamps(program);
 
         (
             program.id,
@@ -287,7 +327,9 @@ module aptrewards_addr::AptRewardsMain {
             num_customers,
             customers_per_tier,
             num_stamps_issued,
-            coupons_redeemed
+            coupons_redeemed,
+            customers,
+            stamps
         )
     }
 
@@ -295,8 +337,8 @@ module aptrewards_addr::AptRewardsMain {
     fun calculate_total_stamps(program: &LoyaltyProgram): u64 {
         let total_stamps = 0u64;
         let keys = simple_map::keys(&program.customer_stamps);
-        let i = 0;
         let len = vector::length(&keys);
+        let i = 0;
         while (i < len) {
             let customer = vector::borrow(&keys, i);
             total_stamps = total_stamps + *simple_map::borrow(&program.customer_stamps, customer);
@@ -361,6 +403,24 @@ module aptrewards_addr::AptRewardsMain {
         coupons_redeemed
     }
 
+    // Helper function to get customers with their stamp counts
+    fun get_customers_with_stamps(program: &LoyaltyProgram): (vector<address>, vector<u64>) {
+        let customers = vector::empty<address>();
+        let stamps = vector::empty<u64>();
+        let keys = simple_map::keys(&program.customer_stamps);
+        let values = simple_map::values(&program.customer_stamps);
+        let i = 0;
+        let len = vector::length(&keys);
+        while (i < len) {
+            let customer = *vector::borrow(&keys, i);
+            let stamp_count = *vector::borrow(&values, i);
+            vector::push_back(&mut customers, customer);
+            vector::push_back(&mut stamps, stamp_count);
+            i = i + 1;
+        };
+        (customers, stamps)
+    }
+
     #[view]
     public fun get_owned_loyalty_programs(owner: address): vector<u64> acquires LoyaltyProgramFactory {
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
@@ -369,42 +429,6 @@ module aptrewards_addr::AptRewardsMain {
         } else {
             vector::empty<u64>()
         }
-    }
-
-    public entry fun edit_loyalty_program(
-        sender: &signer,
-        program_id: u64,
-        new_name: Option<String>,
-        new_stamp_validity_days: Option<u64>
-    ) acquires LoyaltyProgramFactory {
-        let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
-        assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
-        
-        let program = simple_map::borrow_mut(&mut factory.programs, &program_id);
-        assert!(program.owner == address_of(sender), E_NOT_OWNER);
-
-        if (option::is_some(&new_name)) {
-            program.name = option::extract(&mut new_name);
-        };
-
-        if (option::is_some(&new_stamp_validity_days)) {
-            program.stamp_validity_days = option::extract(&mut new_stamp_validity_days);
-        };
-
-        AptRewardsEvents::emit_edit_loyalty_program(
-            program_id,
-            program.name,
-            program.stamp_validity_days
-        );
-    }
-
-    #[view]
-    public fun get_program_customers(program_id: u64): vector<address> acquires LoyaltyProgramFactory {
-        let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
-        assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
-        
-        let program = simple_map::borrow(&factory.programs, &program_id);
-        simple_map::keys(&program.customer_stamps)
     }
 
     /////////////////////////// Tests //////////////////////////////////
@@ -472,7 +496,7 @@ module aptrewards_addr::AptRewardsMain {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
-        create_coupon(owner, 1, 10, utf8(b"Test Coupon"), true, 100, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
+        create_coupon(owner, 1, utf8(b"Test Coupon"), 10, true, 100, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
         
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = simple_map::borrow(&factory.programs, &1);
@@ -565,7 +589,7 @@ module aptrewards_addr::AptRewardsMain {
     public fun test_redeem_coupon(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
-        create_coupon(owner, 1, 10, utf8(b"Test Coupon"), true, 100, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
+        create_coupon(owner, 1, utf8(b"Test Coupon"), 10, true, 100, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
         
         account::create_account_for_test(address_of(customer));
         earn_stamps(owner, 1, address_of(customer), 10);
@@ -586,7 +610,7 @@ module aptrewards_addr::AptRewardsMain {
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
         let current_time = timestamp::now_seconds();
-        create_coupon(owner, 1, 10, utf8(b"Expired Coupon"), true, 100, current_time + 10, 1);
+        create_coupon(owner, 1, utf8(b"Expired Coupon"), 10, true, 100, current_time + 10, 1);
         
         account::create_account_for_test(address_of(customer));
         earn_stamps(owner, 1, address_of(customer), 10);        
@@ -606,7 +630,7 @@ module aptrewards_addr::AptRewardsMain {
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
         let current_time = timestamp::now_seconds();
-        create_coupon(owner, 1, 10, utf8(b"Limited Coupon"), true, 100, current_time + 3600, 1);
+        create_coupon(owner, 1, utf8(b"Limited Coupon"), 10, true, 100, current_time + 3600, 1);
         
         account::create_account_for_test(address_of(customer1));
         account::create_account_for_test(address_of(customer2));
@@ -708,5 +732,70 @@ module aptrewards_addr::AptRewardsMain {
             // Check if last_stamp_date was updated
             assert!(*simple_map::borrow(&program.customer_last_stamp_date, &address_of(customer)) == timestamp::now_seconds(), 1);
         };
+    }
+
+    #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
+    public fun test_get_loyalty_program_details(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), 30);
+        
+        // Create coupons
+        create_coupon(owner, 1, utf8(b"Coupon 1"), 10, true, 100, timestamp::now_seconds() + 60 * 60 * 24 * 7, 2);
+        create_coupon(owner, 1, utf8(b"Coupon 2"), 20, false, 0, timestamp::now_seconds() + 60 * 60 * 24 * 14, 1);
+        
+        // Add tiers
+        let benefits1 = vector::empty<String>();
+        vector::push_back(&mut benefits1, utf8(b"Benefit 1"));
+        add_tier(owner, 1, utf8(b"Bronze"), 50, benefits1);
+        
+        let benefits2 = vector::empty<String>();
+        vector::push_back(&mut benefits2, utf8(b"Benefit 2"));
+        vector::push_back(&mut benefits2, utf8(b"Benefit 3"));
+        add_tier(owner, 1, utf8(b"Silver"), 100, benefits2);
+        
+        // Earn stamps for customer
+        account::create_account_for_test(address_of(customer));
+        earn_stamps(owner, 1, address_of(customer), 75);
+        
+        // Redeem a coupon
+        redeem_coupon(owner, 1, address_of(customer), 0);
+        
+        // Get program details
+        let (
+            id,
+            name,
+            program_owner,
+            coupon_count,
+            stamp_validity_days,
+            coupons,
+            tiers,
+            num_customers,
+            customers_per_tier,
+            num_stamps_issued,
+            coupons_redeemed,
+            customers,
+            stamps
+        ) = get_loyalty_program_details(1);
+        
+        // Assert program details
+        assert!(id == 1, 0);
+        assert!(name == utf8(b"Test Program"), 1);
+        assert!(program_owner == address_of(owner), 2);
+        assert!(coupon_count == 2, 3);
+        assert!(stamp_validity_days == 30, 4);
+        assert!(vector::length(&coupons) == 2, 5);
+        assert!(vector::length(&tiers) == 2, 6);
+        assert!(num_customers == 1, 7);
+        assert!(vector::length(&customers_per_tier) == 2, 8);
+        assert!(*vector::borrow(&customers_per_tier, 0) == 0, 9); // No customers in Bronze tier
+        assert!(*vector::borrow(&customers_per_tier, 1) == 1, 10); // One customer in Silver tier
+        assert!(num_stamps_issued == 75, 11);
+        assert!(vector::length(&coupons_redeemed) == 2, 12);
+        assert!(*vector::borrow(&coupons_redeemed, 0) == 1, 13); // First coupon redeemed once
+        assert!(*vector::borrow(&coupons_redeemed, 1) == 0, 14); // Second coupon not redeemed
+        assert!(vector::length(&customers) == 1, 15);
+        assert!(*vector::borrow(&customers, 0) == address_of(customer), 16);
+        assert!(vector::length(&stamps) == 1, 17);
+        assert!(*vector::borrow(&stamps, 0) == 65, 18); // 75 earned - 10 redeemed = 65 remaining
     }
 }
