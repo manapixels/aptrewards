@@ -148,7 +148,15 @@ async function main() {
             data: {
                 function: `${MODULE_ADDRESS}::AptRewardsMain::create_coupon`,
                 typeArguments: [],
-                functionArguments: [programId, coupon.stamps, coupon.description, coupon.isMonetary, coupon.value, Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, coupon.maxRedemptions]
+                functionArguments: [
+                    programId,
+                    coupon.description,
+                    coupon.stamps,
+                    coupon.isMonetary,
+                    coupon.value,
+                    Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // Expiration date (30 days from now)
+                    coupon.maxRedemptions
+                ]
             }
         });
 

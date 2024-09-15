@@ -16,19 +16,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
-    const { fetchProgramCustomers } = useProgramStore();
+    const { fetchProgramDetails, getTierForCustomer } = useProgramStore();
 
     useEffect(() => {
         if (program.id) {
-            fetchProgramCustomers(program.id.toString());
+            fetchProgramDetails(program.id);
         }
     }, [program.id]);
 
     const { toast } = useToast();
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
-    const { triggerRefetch, fetchProgramDetails, programs, isFetchingOneProgram } = useProgramStore();
-    const currProgram = programs.find(program => program.id === program.id.toString());
+    const { triggerRefetch, programs, isFetchingOneProgram } = useProgramStore();
+    const currProgram = programs.find(p => p.id === program.id);
 
     const [name, setName] = useState('');
     const [stampValidityDays, setStampValidityDays] = useState(0);
@@ -37,11 +37,11 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
     const [isCustomersModalOpen, setIsCustomersModalOpen] = useState(false);
 
     useEffect(() => {
-        if (program) {
-            setName(program.name);
-            setStampValidityDays(program?.stampValidityDays || 0);
+        if (currProgram) {
+            setName(currProgram.name);
+            setStampValidityDays(currProgram.stampValidityDays);
         }
-    }, [program]);
+    }, [currProgram]);
 
     const handleEditProgram = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -118,7 +118,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
     };
 
     const renderCustomersTable = () => {
-        if (!program.customers) return null;
+        if (!currProgram || !currProgram.customers || !currProgram.customerStamps) return null;
 
         return (
             <ScrollArea className="h-[400px]">
@@ -132,12 +132,12 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {program.customers.map((customer, index) => (
+                        {currProgram.customers.map((customer, index) => (
                             <TableRow key={index}>
                                 <TableCell>{index + 1}</TableCell>
                                 <TableCell>{customer}</TableCell>
-                                {/* <TableCell>{program.customer_stamps?.[customer] || 0}</TableCell>
-                                <TableCell>{getTierForCustomer(customer)}</TableCell> */}
+                                <TableCell>{currProgram.customerStamps[index] || 0}</TableCell>
+                                <TableCell>{getTierForCustomer(currProgram, currProgram.customerStamps[index] || 0)}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -148,7 +148,6 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
 
     return (
         <div className="bg-white shadow-sm border rounded-lg">
-
             <div className="flex justify-between items-center px-6 py-4 bg-gray-100">
                 <h3 className="font-semibold">Details</h3>
                 <Dialog open={isEditProgramOpen} onOpenChange={setIsEditProgramOpen}>

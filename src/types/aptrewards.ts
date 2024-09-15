@@ -19,14 +19,15 @@ export type Tier = {
 export type LoyaltyProgram = {
     id: string;
     name: string;
-    owner?: string;
-    balance?: number;
-    coupons?: Coupon[];
-    tiers?: Tier[];
-    stampValidityDays?: number;
-    numCustomers?: number;
-    customersPerTier?: number[];
-    totalStampsIssued?: number;
-    couponsRedeemed?: number[];
-    customers?: string[];
+    owner: string;
+    coupons: Coupon[];
+    couponCount: number;
+    stampValidityDays: number;
+    tiers: Tier[];
+    numCustomers: number;
+    customersPerTier: number[];
+    totalStampsIssued: number;
+    couponsRedeemed: number[];
+    customers: string[];
+    customerStamps: number[];
 };

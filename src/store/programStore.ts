@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getAptosClient } from "@/lib/utils";
-import { Coupon, LoyaltyProgram, Tier } from "@/types/aptrewards";
+import { LoyaltyProgram } from "@/types/aptrewards";
 import { moduleAddress, moduleName } from "@/constants";
 
 type ProgramStore = {
@@ -11,7 +11,7 @@ type ProgramStore = {
     fetchPrograms: (address: string) => Promise<void>;
     fetchProgramDetails: (programId: string) => Promise<void>;
     triggerRefetch: () => void;
-    fetchProgramCustomers: (programId: string) => Promise<void>;
+    getTierForCustomer: (program: LoyaltyProgram, stamps: number) => string;
 };
 
 const getProgramsByAddress = async (address: string): Promise<LoyaltyProgram[]> => {
@@ -23,13 +23,15 @@ const getProgramsByAddress = async (address: string): Promise<LoyaltyProgram[]> 
         },
     });
 
-    if (!response || !response[0]) return [];
+    console.log(response)
 
+    if (!response || !response[0]) return [];
     const transformedPrograms: LoyaltyProgram[] = response.map((rawProgram: any) => ({
         id: rawProgram[0].toString(),
         name: rawProgram[1].toString(),
         stampValidityDays: Number(rawProgram[4].toString()),
         owner: rawProgram[2].toString(),
+        couponCount: Number(rawProgram[3].toString()),
         coupons: (rawProgram[5] as any[])?.map((coupon: any) => ({
             id: Number(coupon.id),
             stampsRequired: Number(coupon.stamps_required),
@@ -46,6 +48,12 @@ const getProgramsByAddress = async (address: string): Promise<LoyaltyProgram[]> 
             stampsRequired: Number(tier.stamps_required),
             benefits: tier.benefits,
         })) || [],
+        numCustomers: Number(rawProgram[7]?.toString() || "0"),
+        customersPerTier: rawProgram[8] as number[] || [],
+        totalStampsIssued: Number(rawProgram[9]?.toString() || "0"),
+        couponsRedeemed: rawProgram[10] as number[] || [],
+        customers: rawProgram[11] as string[] || [],
+        customerStamps: rawProgram[12] as number[] || [],
     }));
 
     return transformedPrograms;
@@ -60,6 +68,7 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
         },
     });
 
+    console.log(response)
     if (!response) throw new Error("Failed to fetch program details");
     
     // Transform the raw data to match the LoyaltyProgram type
@@ -67,6 +76,7 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
         id: response[0]?.toString() || "",
         name: response[1]?.toString() || "",
         owner: response[2]?.toString() || "",
+        couponCount: Number(response[3]?.toString() || "0"),
         stampValidityDays: Number(response[4]?.toString() || "0"),
         coupons: (response[5] as any[])?.map((coupon: any) => ({
             id: Number(coupon.id),
@@ -88,26 +98,27 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
         customersPerTier: response[8] as number[] || [],
         totalStampsIssued: Number(response[9]?.toString() || "0"),
         couponsRedeemed: response[10] as number[] || [],
+        customers: response[11] as string[] || [],
+        customerStamps: response[12] as number[] || [],
     };
 
     return transformedProgramDetails;
 };
 
-const getProgramCustomers = async (programId: string): Promise<string[]> => {
-    if (!moduleAddress || !moduleName) throw new Error("No module address or name");
-    const response = await getAptosClient().view({
-        payload: {
-            function: `${moduleAddress}::${moduleName}::get_program_customers`,
-            functionArguments: [programId],
-        },
-    });
-
-    if (!response) throw new Error("Failed to fetch program customers");
+// Add this helper function to determine the customer's tier
+const getTierForCustomer = (program: LoyaltyProgram, stamps: number): string => {
+    if (!program.tiers || program.tiers.length === 0) return 'No Tier';
     
-    return response as string[];
+    for (let i = program.tiers.length - 1; i >= 0; i--) {
+        if (stamps >= program.tiers[i].stampsRequired) {
+            return program.tiers[i].name;
+        }
+    }
+    
+    return 'No Tier';
 };
 
-export const useProgramStore = create<ProgramStore>((set) => ({
+export const useProgramStore = create<ProgramStore>((set, get) => ({
     programs: [],
     shouldRefetch: false,
     isFetchingAllPrograms: false,
@@ -149,20 +160,8 @@ export const useProgramStore = create<ProgramStore>((set) => ({
             set({ isFetchingOneProgram: false });
         }
     },
-    fetchProgramCustomers: async (programId: string) => {
-        try {
-            const customers = await getProgramCustomers(programId);
-            set((state) => {
-                const updatedPrograms = state.programs.map(program => 
-                    program.id.toString() === programId.toString() 
-                        ? { ...program, customers } 
-                        : program
-                );
-                return { programs: updatedPrograms };
-            });
-        } catch (error) {
-            console.error("Error fetching program customers:", error);
-        }
-    },
     triggerRefetch: () => set({ shouldRefetch: true }),
+    getTierForCustomer: (program: LoyaltyProgram, stamps: number) => {
+        return getTierForCustomer(program, stamps);
+    },
 }));
