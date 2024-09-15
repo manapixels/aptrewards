@@ -789,7 +789,7 @@ module aptrewards_addr::AptRewardsMain {
         assert!(vector::length(&customers_per_tier) == 2, 8);
         assert!(*vector::borrow(&customers_per_tier, 0) == 0, 9); // No customers in Bronze tier
         assert!(*vector::borrow(&customers_per_tier, 1) == 1, 10); // One customer in Silver tier
-        assert!(num_stamps_issued == 75, 11);
+        assert!(num_stamps_issued == 65, 11); // after deducting 10x stamp from coupon redemption
         assert!(vector::length(&coupons_redeemed) == 2, 12);
         assert!(*vector::borrow(&coupons_redeemed, 0) == 1, 13); // First coupon redeemed once
         assert!(*vector::borrow(&coupons_redeemed, 1) == 0, 14); // Second coupon not redeemed
