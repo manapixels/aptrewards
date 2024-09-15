@@ -85,38 +85,6 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
         }
     };
 
-    const renderProgramStats = () => {
-        if (!currProgram) return null;
-
-        const stats = [
-            { label: "Customers", value: currProgram.numCustomers },
-            { label: "Stamps Issued", value: currProgram.totalStampsIssued },
-        ];
-
-        return (
-            <div className="grid grid-cols-2 border">
-                {stats.map((stat, index) => (
-                    <button
-                        key={index}
-                        onClick={() => {
-                            if (stat.label === "Customers") {
-                                setIsCustomersModalOpen(true);
-                            }
-                        }}
-                        className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:px-8 sm:py-6"
-                    >
-                        <span className="text-xs text-muted-foreground">
-                            {stat.label}
-                        </span>
-                        <span className="text-lg font-bold leading-none sm:text-3xl">
-                            {stat.value || 'N/A'}
-                        </span>
-                    </button>
-                ))}
-            </div>
-        );
-    };
-
     const renderCustomersTable = () => {
         if (!currProgram || !currProgram.customers || !currProgram.customerStamps) return null;
 
@@ -190,7 +158,29 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                     </DialogContent>
                 </Dialog>
             </div>
-            {renderProgramStats()}
+            <div className="grid grid-cols-2 border">
+                <button
+                    onClick={() => setIsCustomersModalOpen(true)}
+                    className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:px-8 sm:py-6 hover:bg-gray-100"
+                >
+                    <span className="text-xs text-muted-foreground">
+                        Customers
+                    </span>
+                    <span className="text-lg font-bold leading-none sm:text-3xl">
+                        {currProgram?.numCustomers || 'N/A'}
+                    </span>
+                </button>
+                <div
+                    className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:px-8 sm:py-6"
+                >
+                    <span className="text-xs text-muted-foreground">
+                        Stamps Issued
+                    </span>
+                    <span className="text-lg font-bold leading-none sm:text-3xl">
+                        {currProgram?.totalStampsIssued || 'N/A'}
+                    </span>
+                </div>
+            </div>
 
             <Dialog open={isCustomersModalOpen} onOpenChange={setIsCustomersModalOpen}>
                 <DialogContent className="max-w-3xl">
