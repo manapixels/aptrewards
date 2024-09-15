@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
-import { PencilIcon } from 'lucide-react';
+import { Copy, PencilIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import { useProgramStore } from '@/store/programStore';
 import { LoyaltyProgram } from '@/types/aptrewards';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { truncateAddress } from '@/utils/addressUtils';
 
 const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
     const { fetchProgramDetails, getTierForCustomer } = useProgramStore();
@@ -85,6 +86,14 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
         }
     };
 
+    const handleCopyAddress = (address: string) => {
+        navigator.clipboard.writeText(address);
+        toast({
+            title: 'Copied',
+            description: 'Address copied to clipboard',
+        });
+    };
+
     const renderCustomersTable = () => {
         if (!currProgram || !currProgram.customers || !currProgram.customerStamps) return null;
 
@@ -103,7 +112,13 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                         {currProgram.customers.map((customer, index) => (
                             <TableRow key={index}>
                                 <TableCell>{index + 1}</TableCell>
-                                <TableCell>{customer}</TableCell>
+                                <TableCell className="flex items-center gap-1">
+                                    {truncateAddress(customer)} 
+                                    <Copy 
+                                        className="w-4 h-4 stroke-gray-600 cursor-pointer" 
+                                        onClick={() => handleCopyAddress(customer)} 
+                                    />
+                                </TableCell>
                                 <TableCell>{currProgram.customerStamps[index] || 0}</TableCell>
                                 <TableCell>{getTierForCustomer(currProgram, currProgram.customerStamps[index] || 0)}</TableCell>
                             </TableRow>
