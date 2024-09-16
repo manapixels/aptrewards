@@ -165,8 +165,8 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                     {program.tiers.map((tier, index) => (
                         <div
                             key={tier.id}
-                            className="absolute transform -translate-x-3/4 translate-y-1/2 -top-1/2 flex flex-col items-center"
-                            style={{ left: `${(tier.stampsRequired / maxStamps) * 100}%` }}
+                            className="absolute transform translate-y-1/2 -top-1/2 flex flex-col items-center"
+                            style={{ left: `${(tier.stampsRequired / maxStamps) * 80}%` }}
                         >
                             <span className="text-xs font-medium block text-center whitespace-nowrap">
                                 {tier.name}
