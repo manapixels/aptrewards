@@ -32,8 +32,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
     const { toast } = useToast();
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
-    const { triggerRefetch, programs, isFetchingOneProgram } = useProgramStore();
-    const currProgram = programs.find(p => p.id === program.id);
+    const { triggerRefetch } = useProgramStore();
 
     const [name, setName] = useState('');
     const [stampValidityDays, setStampValidityDays] = useState(0);
@@ -45,11 +44,11 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
     useEffect(() => {
-        if (currProgram) {
-            setName(currProgram.name);
-            setStampValidityDays(currProgram.stampValidityDays || 0);
+        if (program) {
+            setName(program.name);
+            setStampValidityDays(program.stampValidityDays || 0);
         }
-    }, [currProgram]);
+    }, [program]);
 
     const handleEditProgram = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -109,12 +108,12 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
     };
 
     const filteredAndSortedCustomers = () => {
-        if (!currProgram) return [];
+        if (!program) return [];
 
-        let customers = currProgram?.customersWithStamps?.map((customer, index) => ({
+        let customers = program?.customersWithStamps?.map((customer, index) => ({
             address: customer.customer,
             stamps: customer.stamps,
-            tier: getTierForCustomer(currProgram, customer.stamps),
+            tier: getTierForCustomer(program, customer.stamps),
         }));
 
         if (filterTiers.length) {
@@ -181,7 +180,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                             <Checkbox checked={filterTiers.length === 0} className="mr-2" />
                             All
                         </DropdownMenuItem>
-                        {currProgram?.tiers?.map((tier, index) => (
+                        {program?.tiers?.map((tier, index) => (
                             <DropdownMenuItem key={index} onClick={() => handleTierChange(tier.name)} className="cursor-pointer">
                                 <Checkbox checked={filterTiers.includes(tier.name)} className="mr-2" />
                                 {tier.name}
@@ -262,7 +261,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                         Customers
                     </span>
                     <span className="text-lg font-bold leading-none sm:text-3xl">
-                        {currProgram?.customersWithStamps?.length || 'N/A'}
+                        {program?.customersWithStamps?.length || 'N/A'}
                     </span>
                 </button>
                 <div
@@ -272,7 +271,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                         Stamps Issued
                     </span>
                     <span className="text-lg font-bold leading-none sm:text-3xl">
-                        {currProgram?.totalStampsIssued || 'N/A'}
+                        {program?.totalStampsIssued || 'N/A'}
                     </span>
                 </div>
             </div>
@@ -291,7 +290,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                 <ul className="list-disc pl-5">
                     <li>
                         <span className="text-gray-600">Stamp Validity Days:</span>
-                        <span className="ml-1">{currProgram?.stampValidityDays || 'N/A'}</span>
+                        <span className="ml-1">{program?.stampValidityDays || 'N/A'}</span>
                     </li>
                 </ul>
             </div>

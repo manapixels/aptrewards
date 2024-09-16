@@ -370,10 +370,23 @@ module aptrewards_addr::AptRewardsMain {
         let keys = simple_map::keys(&program.customer_stamps);
         let len = vector::length(&keys);
         let i = 0;
+        let next_tier_stamps = option::none();
+
+        // Find the next tier's stamp requirement
+        let j = 0;
+        while (j < vector::length(&program.tiers)) {
+            let tier = vector::borrow(&program.tiers, j);
+            if (tier.stamps_required > tier_stamps) {
+                next_tier_stamps = option::some(tier.stamps_required);
+                break
+            };
+            j = j + 1;
+        };
+
         while (i < len) {
             let customer = vector::borrow(&keys, i);
             let stamps = *simple_map::borrow(&program.customer_stamps, customer);
-            if (stamps >= tier_stamps) {
+            if (stamps >= tier_stamps && (option::is_none(&next_tier_stamps) || stamps < *option::borrow(&next_tier_stamps))) {
                 count = count + 1;
             };
             i = i + 1;
@@ -746,6 +759,35 @@ module aptrewards_addr::AptRewardsMain {
             // Check if last_stamp_date was updated
             assert!(*simple_map::borrow(&program.customer_last_stamp_date, &address_of(customer)) == timestamp::now_seconds(), 1);
         };
+    }
+
+    #[test(fx = @aptos_framework, owner = @0x123, customer1 = @0x456, customer2 = @0x789, customer3 = @0x987)]
+    public fun test_count_customers_in_tier(fx: &signer, owner: &signer, customer1: &signer, customer2: &signer, customer3: &signer) acquires LoyaltyProgramFactory {
+        setup_test(fx, owner);
+        create_loyalty_program(owner, utf8(b"Test Program"), 30);
+        
+        // Add tiers
+        let benefits = vector::empty<String>();
+        add_tier(owner, 1, utf8(b"Bronze"), 100, benefits);
+        add_tier(owner, 1, utf8(b"Silver"), 300, benefits);
+        add_tier(owner, 1, utf8(b"Gold"), 500, benefits);
+        
+        // Add customers and earn stamps
+        account::create_account_for_test(address_of(customer1));
+        account::create_account_for_test(address_of(customer2));
+        account::create_account_for_test(address_of(customer3));
+        
+        earn_stamps(owner, 1, address_of(customer1), 150); // Bronze
+        earn_stamps(owner, 1, address_of(customer2), 350); // Silver
+        earn_stamps(owner, 1, address_of(customer3), 550); // Gold
+        
+        // Get program details
+        let (_, _, _, _, _, tiers, _, _) = get_loyalty_program_details(1);
+        
+        // Check tier counts
+        assert!(vector::borrow(&tiers, 0).customer_count == 1, 0); // Bronze: 1 customer
+        assert!(vector::borrow(&tiers, 1).customer_count == 1, 1); // Silver: 1 customer
+        assert!(vector::borrow(&tiers, 2).customer_count == 1, 2); // Gold: 1 customer
     }
 
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]

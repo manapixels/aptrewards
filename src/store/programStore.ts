@@ -23,8 +23,6 @@ const getProgramsByAddress = async (address: string): Promise<LoyaltyProgramSumm
         },
     });
 
-    console.log(response);
-
     if (!response || !response[0]) return [];
     const transformedPrograms: LoyaltyProgramSummary[] = response.map((rawProgram: any) => ({
         id: Number(rawProgram.id),
@@ -44,7 +42,7 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
             functionArguments: [programId],
         },
     });
-    console.log(response);
+    
     if (!response) throw new Error("Failed to fetch program details");
     
     // Transform the raw data to match the LoyaltyProgram type
