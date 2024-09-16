@@ -69,7 +69,7 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
             stampsRequired: Number(tier.stamps_required),
             benefits: tier.benefits,
             customerCount: Number(tier.customer_count),
-        })) as Tier[] || [],
+        })).sort((a, b) => a.stampsRequired - b.stampsRequired) as Tier[] || [],
         totalStampsIssued: Number(response[6]),
         customersWithStamps: response[7] as CustomerWithStamps[],
     };

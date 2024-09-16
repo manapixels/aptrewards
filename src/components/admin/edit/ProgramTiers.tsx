@@ -155,15 +155,14 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
     const renderTierChart = () => {
         if (!program?.tiers || program.tiers.length === 0) return null;
 
-        const sortedTiers = [...program.tiers].sort((a, b) => a.stampsRequired - b.stampsRequired);
-        const maxStamps = sortedTiers[sortedTiers.length - 1].stampsRequired;
+        const maxStamps = program.tiers[program.tiers.length - 1].stampsRequired;
 
         return (
             <div className="px-6 py-4">
                 <h4 className="text-sm font-medium mb-2">Progression</h4>
                 <div className="relative py-5">
                     <Progress value={100} className="h-2" />
-                    {sortedTiers.map((tier, index) => (
+                    {program.tiers.map((tier, index) => (
                         <div
                             key={tier.id}
                             className="absolute transform -translate-x-3/4 translate-y-1/2 -top-1/2 flex flex-col items-center"
