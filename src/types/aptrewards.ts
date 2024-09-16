@@ -10,8 +10,10 @@ export type Coupon = {
 };
 
 export interface Tier {
-    name: string; // Ensure the tier has a name property that is a string
+    id: number;
+    name: string;
     stampsRequired: number;
+    benefits: string[];
 }
 
 export interface LoyaltyProgram {

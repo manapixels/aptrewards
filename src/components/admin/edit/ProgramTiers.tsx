@@ -16,19 +16,25 @@ import { getAptosClient } from '@/lib/utils';
 import { useProgramStore } from '@/store/programStore';
 import { LoyaltyProgram, Tier } from '@/types/aptrewards';
 import { MoveString, MoveVector, U64 } from '@aptos-labs/ts-sdk';
-
+import { CustomerTable } from '@/components/admin/CustomerTable';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { truncateAddress } from '@/utils/addressUtils';
+import { ColumnDef } from '@tanstack/react-table';
 
 const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
 
     const { toast } = useToast();
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
-    const { fetchProgramDetails } = useProgramStore();
+    const { fetchProgramDetails, getTierForCustomer } = useProgramStore();
 
     const [isAddTierDialogOpen, setIsAddTierDialogOpen] = useState(false);
     const [editingTier, setEditingTier] = useState<Tier | null>(null);
     const [isEditTierDialogOpen, setIsEditTierDialogOpen] = useState(false);
     const [newTierBenefits, setNewTierBenefits] = useState<string[]>(['']);
+
+    const [isTierCustomersDialogOpen, setIsTierCustomersDialogOpen] = useState(false);
+    const [selectedTier, setSelectedTier] = useState<string | null>(null);
 
     const handleTierAction = async (action: 'add' | 'edit' | 'remove', tier: Tier) => {
         try {
@@ -179,6 +185,59 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
         );
     };
 
+    const handleTierButtonClick = (tierName: string) => {
+        setSelectedTier(tierName);
+        setIsTierCustomersDialogOpen(true);
+    };
+
+    const renderCustomersTable = () => {
+        if (!program || !selectedTier) return null;
+
+        const customers = program?.customers
+            ?.map((customer, index) => ({
+                address: customer,
+                stamps: program?.customerStamps?.[index] || 0,
+                tier: getTierForCustomer(program, program?.customerStamps?.[index] || 0),
+            }))
+            ?.filter(customer => customer.tier === selectedTier);
+
+        const columns: ColumnDef<any>[] = [
+            {
+                accessorKey: 'index',
+                header: '#',
+                cell: info => info.row.index + 1,
+            },
+            {
+                accessorKey: 'address',
+                header: 'Address',
+                cell: ({ row: { original: customer } }) => (
+                    <div className="flex items-center gap-1">
+                        {truncateAddress(customer.address)}
+                    </div>
+                ),
+            },
+            {
+                accessorKey: 'stamps',
+                header: 'Stamps',
+                cell: info => info.getValue(),
+            },
+            {
+                accessorKey: 'tier',
+                header: 'Tier',
+                cell: info => info.getValue(),
+            },
+        ];
+
+        return (
+            <ScrollArea className="h-[400px]">
+                <CustomerTable
+                    columns={columns}
+                    data={customers || []}
+                />
+            </ScrollArea>
+        );
+    };
+
     return (
         <div>
             <div className="bg-white shadow-sm border rounded-lg">
@@ -292,9 +351,10 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 border">
                     {program?.tiers?.map((tier, index) => (
-                        <div
+                        <button
                             key={tier.id}
-                            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left [&:not(:first-child)]:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:px-8 sm:py-6"
+                            onClick={() => handleTierButtonClick(tier.name)}
+                            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left [&:not(:first-child)]:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:px-8 sm:py-6 hover:bg-gray-100"
                         >
                             <span className="text-xs text-muted-foreground">
                                 {tier.name}
@@ -302,7 +362,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                             <span className="text-lg font-bold leading-none sm:text-3xl">
                                 {program.customersPerTier?.[index] || 0} <User className="w-4 h-4 inline-block stroke-gray-500" />
                             </span>
-                        </div>
+                        </button>
                     ))}
                 </div>
             </div>
@@ -370,6 +430,15 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                             </Button>
                         </div>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isTierCustomersDialogOpen} onOpenChange={setIsTierCustomersDialogOpen}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Customers in {selectedTier} Tier</DialogTitle>
+                    </DialogHeader>
+                    {renderCustomersTable()}
                 </DialogContent>
             </Dialog>
         </div>
