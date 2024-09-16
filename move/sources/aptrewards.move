@@ -422,13 +422,32 @@ module aptrewards_addr::AptRewardsMain {
     }
 
     #[view]
-    public fun get_owned_loyalty_programs(owner: address): vector<u64> acquires LoyaltyProgramFactory {
+    public fun get_owned_loyalty_programs(owner: address): vector<(u64, String, address, u64)> acquires LoyaltyProgramFactory {
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
+        let programs = vector::empty<(u64, String, address, u64)>();
+
         if (simple_map::contains_key(&factory.user_programs, &owner)) {
-            *simple_map::borrow(&factory.user_programs, &owner)
-        } else {
-            vector::empty<u64>()
+            let program_ids = *simple_map::borrow(&factory.user_programs, &owner);
+            let len = vector::length(&program_ids);
+            let i = 0;
+            while (i < len) {
+                let program_id = *vector::borrow(&program_ids, i);
+                let program = simple_map::borrow(&factory.programs, &program_id);
+                let num_customers = simple_map::length(&program.customer_stamps);
+
+                vector::push_back(
+                    &mut programs,
+                    (
+                        program.id,
+                        program.name,
+                        program.owner,
+                        num_customers
+                    )
+                );
+                i = i + 1;
+            }
         }
+        programs
     }
 
     /////////////////////////// Tests //////////////////////////////////

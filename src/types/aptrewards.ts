@@ -9,25 +9,23 @@ export type Coupon = {
     currentRedemptions: number;
 };
 
-export type Tier = {
-    id: number;
-    name: string;
+export interface Tier {
+    name: string; // Ensure the tier has a name property that is a string
     stampsRequired: number;
-    benefits: string[];
-};
+}
 
-export type LoyaltyProgram = {
+export interface LoyaltyProgram {
     id: string;
     name: string;
     owner: string;
-    coupons: Coupon[];
-    couponCount: number;
-    stampValidityDays: number;
-    tiers: Tier[];
-    numCustomers: number;
-    customersPerTier: number[];
-    totalStampsIssued: number;
-    couponsRedeemed: number[];
-    customers: string[];
-    customerStamps: number[];
+    coupons?: Coupon[];
+    couponCount?: number;
+    stampValidityDays?: number;
+    tiers?: Tier[]; // Ensure tiers are of type Tier
+    numCustomers?: number;
+    customersPerTier?: number[];
+    totalStampsIssued?: number;
+    couponsRedeemed?: number[];
+    customers?: string[];
+    customerStamps?: number[];
 };

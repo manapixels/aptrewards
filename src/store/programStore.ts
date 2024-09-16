@@ -27,31 +27,8 @@ const getProgramsByAddress = async (address: string): Promise<LoyaltyProgram[]> 
     const transformedPrograms: LoyaltyProgram[] = response.map((rawProgram: any) => ({
         id: rawProgram[0].toString(),
         name: rawProgram[1].toString(),
-        stampValidityDays: Number(rawProgram[4].toString()),
         owner: rawProgram[2].toString(),
-        couponCount: Number(rawProgram[3].toString()),
-        coupons: (rawProgram[5] as any[])?.map((coupon: any) => ({
-            id: Number(coupon.id),
-            stampsRequired: Number(coupon.stamps_required),
-            description: coupon.description,
-            isMonetary: coupon.is_monetary,
-            value: Number(coupon.value),
-            expirationDate: Number(coupon.expiration_date),
-            maxRedemptions: Number(coupon.max_redemptions),
-            currentRedemptions: Number(coupon.current_redemptions),
-        })) || [],
-        tiers: (rawProgram[6] as any[])?.map((tier: any) => ({
-            id: Number(tier.id),
-            name: tier.name,
-            stampsRequired: Number(tier.stamps_required),
-            benefits: tier.benefits,
-        })) || [],
-        numCustomers: Number(rawProgram[7]?.toString() || "0"),
-        customersPerTier: rawProgram[8] as number[] || [],
-        totalStampsIssued: Number(rawProgram[9]?.toString() || "0"),
-        couponsRedeemed: rawProgram[10] as number[] || [],
-        customers: rawProgram[11] as string[] || [],
-        customerStamps: rawProgram[12] as number[] || [],
+        numCustomers: Number(rawProgram[3]?.toString() || "0"),
     }));
 
     return transformedPrograms;
