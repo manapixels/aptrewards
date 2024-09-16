@@ -19,28 +19,20 @@ import {
     TableRow,
 } from "@/components/ui/table"
 
-import { Button } from "@/components/ui/button"
 import { DataTablePagination } from "@/components/admin/DataTablePagination"
 import React from "react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Checkbox } from "@/components/ui/checkbox"
 
 interface CustomerTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
-    tiers: string[] // Add tiers as a prop
-    onFilterTier: (tiers: string[]) => void // Update filter callback to accept multiple tiers
 }
 
 export function CustomerTable<TData, TValue>({
     columns,
     data,
-    tiers,
-    onFilterTier,
 }: CustomerTableProps<TData, TValue>) {
 
     const [sorting, setSorting] = React.useState<SortingState>([])
-    const [selectedTiers, setSelectedTiers] = React.useState<string[]>([])
 
     const table = useReactTable({
         data,
@@ -53,14 +45,6 @@ export function CustomerTable<TData, TValue>({
             sorting,
         },
     })
-
-    const handleTierChange = (tier: string) => {
-        setSelectedTiers(prev => {
-            const newTiers = prev.includes(tier) ? prev.filter(t => t !== tier) : [...prev, tier]
-            onFilterTier(newTiers)
-            return newTiers
-        })
-    }
 
     return (
         <div>

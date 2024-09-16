@@ -212,8 +212,6 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                 <CustomerTable
                     columns={columns}
                     data={customers}
-                    tiers={currProgram?.tiers?.map(tier => tier.name) || []}
-                    onFilterTier={setFilterTiers}
                 />
             </ScrollArea>
         );
