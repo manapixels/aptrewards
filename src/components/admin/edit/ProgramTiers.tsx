@@ -162,7 +162,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                 <h4 className="text-sm font-medium mb-2">Progression</h4>
                 <div className="relative py-5">
                     <Progress value={100} className="h-2" />
-                    {program.tiers.map((tier, index) => (
+                    {program.tiers.map((tier) => (
                         <div
                             key={tier.id}
                             className="absolute transform translate-y-1/2 -top-1/2 flex flex-col items-center"

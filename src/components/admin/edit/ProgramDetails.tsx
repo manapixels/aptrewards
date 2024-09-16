@@ -101,14 +101,6 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
         });
     };
 
-    const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setFilterTiers(e.target.value ? [e.target.value] : []);
-    };
-
-    const handleSortChange = () => {
-        setSortOrder(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc'));
-    };
-
     const handleTierChange = (tier: string) => {
         setFilterTiers(prev => {
             const newTiers = prev.includes(tier) ? prev.filter(t => t !== tier) : [...prev, tier];

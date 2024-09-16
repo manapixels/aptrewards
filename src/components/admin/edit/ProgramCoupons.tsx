@@ -47,7 +47,6 @@ export default function ProgramCoupons({ program }: { program: LoyaltyProgram })
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
     const { triggerRefetch, fetchProgramDetails, programs } = useProgramStore();
-    const currProgram = programs.find(program => program.id === program.id.toString());
     const [isAddCouponDialogOpen, setIsAddCouponDialogOpen] = useState(false);
     const [newCoupon, setNewCoupon] = useState({
         description: '',
@@ -152,8 +151,8 @@ export default function ProgramCoupons({ program }: { program: LoyaltyProgram })
                 </Dialog>
             </div>
             <CouponRedemptionsTable
-                coupons={currProgram?.coupons}
-                couponsRedeemed={currProgram?.couponsRedeemed}
+                coupons={program?.coupons}
+                couponsRedeemed={program?.coupons?.map(coupon => coupon.redemptions) || []}
             />
         </div>
     )
