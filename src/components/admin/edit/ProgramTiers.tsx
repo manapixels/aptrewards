@@ -14,7 +14,7 @@ import { Progress } from "@/components/ui/progress"
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/lib/utils';
 import { useProgramStore } from '@/store/programStore';
-import { LoyaltyProgram, Tier } from '@/types/aptrewards';
+import { CustomerWithStamps, LoyaltyProgram, Tier } from '@/types/aptrewards';
 import { MoveString, MoveVector, U64 } from '@aptos-labs/ts-sdk';
 import { CustomerTable } from '@/components/admin/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -193,13 +193,13 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
     const renderCustomersTable = () => {
         if (!program || !selectedTier) return null;
 
-        const customers = program?.customers
-            ?.map((customer, index) => ({
-                address: customer,
-                stamps: program?.customerStamps?.[index] || 0,
-                tier: getTierForCustomer(program, program?.customerStamps?.[index] || 0),
+        const customers = program?.customersWithStamps
+            ?.map((customer: CustomerWithStamps, index: number) => ({
+                address: customer.customer,
+                stamps: customer.stamps,
+                tier: getTierForCustomer(program, customer.stamps),
             }))
-            ?.filter(customer => customer.tier === selectedTier);
+            ?.filter((customer: { tier: string }) => customer.tier === selectedTier);
 
         const columns: ColumnDef<any>[] = [
             {
@@ -350,7 +350,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 border">
-                    {program?.tiers?.map((tier, index) => (
+                    {program?.tiers?.map((tier: Tier) => (
                         <button
                             key={tier.id}
                             onClick={() => handleTierButtonClick(tier.name)}
@@ -360,7 +360,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                                 {tier.name}
                             </span>
                             <span className="text-lg font-bold leading-none sm:text-3xl">
-                                {program.customersPerTier?.[index] || 0} <User className="w-4 h-4 inline-block stroke-gray-500" />
+                                {tier?.customerCount || 0} <User className="w-4 h-4 inline-block stroke-gray-500" />
                             </span>
                         </button>
                     ))}

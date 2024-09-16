@@ -6,7 +6,7 @@ export type Coupon = {
     value: number;
     expirationDate: number;
     maxRedemptions: number;
-    currentRedemptions: number;
+    redemptions: number;
 };
 
 export interface Tier {
@@ -14,6 +14,7 @@ export interface Tier {
     name: string;
     stampsRequired: number;
     benefits: string[];
+    customerCount?: number;
 }
 
 export interface LoyaltyProgram {
@@ -23,11 +24,19 @@ export interface LoyaltyProgram {
     coupons?: Coupon[];
     couponCount?: number;
     stampValidityDays?: number;
-    tiers?: Tier[]; // Ensure tiers are of type Tier
-    numCustomers?: number;
-    customersPerTier?: number[];
+    tiers?: Tier[];
     totalStampsIssued?: number;
-    couponsRedeemed?: number[];
-    customers?: string[];
-    customerStamps?: number[];
+    customersWithStamps?: CustomerWithStamps[];
 };
+
+export interface LoyaltyProgramSummary {
+    id: number;
+    name: string;
+    owner: string;
+    customerCount: number;
+}
+
+export interface CustomerWithStamps {
+    customer: string;
+    stamps: number;
+}

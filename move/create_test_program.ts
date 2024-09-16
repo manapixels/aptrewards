@@ -58,12 +58,13 @@ async function main() {
 
     // Create a new loyalty program
     const programName = generateRandomProgramName();
+    const stampValidityDays = 30; // 30 days stamp validity
     const createProgramTxn = await aptos.transaction.build.simple({
         sender: admin.accountAddress,
         data: {
             function: `${MODULE_ADDRESS}::AptRewardsMain::create_loyalty_program`,
             typeArguments: [],
-            functionArguments: [programName, 30] // 30 days stamp validity
+            functionArguments: [programName, stampValidityDays]
         },
     });
 
@@ -89,7 +90,7 @@ async function main() {
                 "Early access to new products",
                 "Birthday reward"
             ],
-            stamps: 100
+            stamps: 0
         },
         {
             name: "Silver",
@@ -98,7 +99,7 @@ async function main() {
                 "Exclusive member-only events",
                 "2x points on select products"
             ],
-            stamps: 500
+            stamps: 100
         },
         {
             name: "Gold",
@@ -109,7 +110,7 @@ async function main() {
                 "Personalized offers",
                 "3x points on select products"
             ],
-            stamps: 1000
+            stamps: 500
         }
     ];
 
@@ -175,7 +176,7 @@ async function main() {
         const customer = Account.generate();
         await aptos.fundAccount({ accountAddress: customer.accountAddress, amount: 10_000_000 });
 
-        const stamps = Math.floor(Math.random() * 1000) + 1; // Random stamps between 1 and 1000
+        const stamps = Math.floor(Math.random() * 500) + 1; // Random stamps between 1 and 500
 
         const earnStampsTxn = await aptos.transaction.build.simple({
             sender: admin.accountAddress,

@@ -119,10 +119,10 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
     const filteredAndSortedCustomers = () => {
         if (!currProgram) return [];
 
-        let customers = currProgram?.customers?.map((customer, index) => ({
-            address: customer,
-            stamps: currProgram?.customerStamps?.[index] || 0,
-            tier: getTierForCustomer(currProgram, currProgram?.customerStamps?.[index] || 0),
+        let customers = currProgram?.customersWithStamps?.map((customer, index) => ({
+            address: customer.customer,
+            stamps: customer.stamps,
+            tier: getTierForCustomer(currProgram, customer.stamps),
         }));
 
         if (filterTiers.length) {
@@ -270,7 +270,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                         Customers
                     </span>
                     <span className="text-lg font-bold leading-none sm:text-3xl">
-                        {currProgram?.numCustomers || 'N/A'}
+                        {currProgram?.customersWithStamps?.length || 'N/A'}
                     </span>
                 </button>
                 <div

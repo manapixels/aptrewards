@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getAptosClient } from "@/lib/utils";
-import { LoyaltyProgram } from "@/types/aptrewards";
+import { LoyaltyProgram, Tier, LoyaltyProgramSummary, CustomerWithStamps } from "@/types/aptrewards";
 import { moduleAddress, moduleName } from "@/constants";
 
 type ProgramStore = {
@@ -14,7 +14,7 @@ type ProgramStore = {
     getTierForCustomer: (program: LoyaltyProgram, stamps: number) => string;
 };
 
-const getProgramsByAddress = async (address: string): Promise<LoyaltyProgram[]> => {
+const getProgramsByAddress = async (address: string): Promise<LoyaltyProgramSummary[]> => {
     if (!moduleAddress || !moduleName) throw new Error("No module address or name");
     const response = await getAptosClient().view({
         payload: {
@@ -23,12 +23,14 @@ const getProgramsByAddress = async (address: string): Promise<LoyaltyProgram[]> 
         },
     });
 
+    console.log(response);
+
     if (!response || !response[0]) return [];
-    const transformedPrograms: LoyaltyProgram[] = response.map((rawProgram: any) => ({
-        id: rawProgram[0].toString(),
-        name: rawProgram[1].toString(),
-        owner: rawProgram[2].toString(),
-        numCustomers: Number(rawProgram[3]?.toString() || "0"),
+    const transformedPrograms: LoyaltyProgramSummary[] = response.map((rawProgram: any) => ({
+        id: Number(rawProgram.id),
+        name: rawProgram.name,
+        owner: rawProgram.owner,
+        customerCount: Number(rawProgram.customer_count),
     }));
 
     return transformedPrograms;
@@ -42,17 +44,16 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
             functionArguments: [programId],
         },
     });
-
+    console.log(response);
     if (!response) throw new Error("Failed to fetch program details");
     
     // Transform the raw data to match the LoyaltyProgram type
     const transformedProgramDetails: LoyaltyProgram = {
-        id: response[0]?.toString() || "",
-        name: response[1]?.toString() || "",
-        owner: response[2]?.toString() || "",
-        couponCount: Number(response[3]?.toString() || "0"),
-        stampValidityDays: Number(response[4]?.toString() || "0"),
-        coupons: (response[5] as any[])?.map((coupon: any) => ({
+        id: response[0]?.toString() || '',
+        name: response[1]?.toString() || '',
+        owner: response[2]?.toString() || '',
+        stampValidityDays: Number(response[3]),
+        coupons: (response[4] as any[])?.map((coupon: any) => ({
             id: Number(coupon.id),
             stampsRequired: Number(coupon.stamps_required),
             description: coupon.description,
@@ -60,20 +61,17 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
             value: Number(coupon.value),
             expirationDate: Number(coupon.expiration_date),
             maxRedemptions: Number(coupon.max_redemptions),
-            currentRedemptions: Number(coupon.current_redemptions),
+            redemptions: Number(coupon.redemptions),
         })) || [],
-        tiers: (response[6] as any[])?.map((tier: any) => ({
+        tiers: (response[5] as any[])?.map((tier: any) => ({
             id: Number(tier.id),
             name: tier.name,
             stampsRequired: Number(tier.stamps_required),
             benefits: tier.benefits,
-        })) || [],
-        numCustomers: Number(response[7]?.toString() || "0"),
-        customersPerTier: response[8] as number[] || [],
-        totalStampsIssued: Number(response[9]?.toString() || "0"),
-        couponsRedeemed: response[10] as number[] || [],
-        customers: response[11] as string[] || [],
-        customerStamps: response[12] as number[] || [],
+            customerCount: Number(tier.customer_count),
+        })) as Tier[] || [],
+        totalStampsIssued: Number(response[6]),
+        customersWithStamps: response[7] as CustomerWithStamps[],
     };
 
     return transformedProgramDetails;
@@ -104,8 +102,8 @@ export const useProgramStore = create<ProgramStore>((set, get) => ({
             
             set((state) => {
                 const mergedPrograms = fetchedPrograms.map(fetchedProgram => {
-                    const existingProgram = state.programs.find(p => p.id.toString() === fetchedProgram.id.toString());
-                    return existingProgram ? { ...existingProgram, ...fetchedProgram } : fetchedProgram;
+                    const existingProgram = state.programs.find(p => p.id === fetchedProgram.id.toString());
+                    return existingProgram ? { ...existingProgram, ...fetchedProgram, id: fetchedProgram.id.toString() } : { ...fetchedProgram, id: fetchedProgram.id.toString() };
                 });
 
                 return { programs: mergedPrograms, shouldRefetch: false, isFetchingAllPrograms: false };
@@ -120,7 +118,7 @@ export const useProgramStore = create<ProgramStore>((set, get) => ({
         try {
             const programDetails = await getProgramDetails(programId);
             set((state) => {
-                const index = state.programs.findIndex((program) => program.id.toString() === programId.toString());
+                const index = state.programs.findIndex((program) => program.id === programId);
                 if (index === -1) {
                     return { programs: [...state.programs, programDetails], isFetchingOneProgram: false };
                 } else {
