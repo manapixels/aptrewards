@@ -12,7 +12,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { moduleAddress, moduleName } from '@/constants';
-import { getAptosClient } from '@/lib/utils';
+import { getAptosClient } from '@/utils/aptos';
 import { useProgramStore } from '@/store/programStore';
 import { Coupon, Tier } from '@/types/aptrewards';
 import { LoyaltyProgram } from "@/types/aptrewards";

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAptosClient } from "@/lib/utils";
+import { getAptosClient } from "@/utils/aptos";
 import { LoyaltyProgram, Tier, LoyaltyProgramSummary, CustomerWithStamps } from "@/types/aptrewards";
 import { moduleAddress, moduleName } from "@/constants";
 

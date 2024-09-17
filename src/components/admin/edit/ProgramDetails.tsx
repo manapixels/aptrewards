@@ -13,10 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CustomerTable } from '@/components/admin/CustomerTable';
 import { moduleAddress, moduleName } from '@/constants';
-import { getAptosClient } from '@/lib/utils';
+import { getAptosClient } from '@/utils/aptos';
 import { useProgramStore } from '@/store/programStore';
 import { LoyaltyProgram } from '@/types/aptrewards';
-import { truncateAddress } from '@/utils/addressUtils';
+import { truncateAddress } from '@/utils/address';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 

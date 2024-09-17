@@ -12,13 +12,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress"
 import { moduleAddress, moduleName } from '@/constants';
-import { getAptosClient } from '@/lib/utils';
+import { getAptosClient } from '@/utils/aptos';
 import { useProgramStore } from '@/store/programStore';
 import { CustomerWithStamps, LoyaltyProgram, Tier } from '@/types/aptrewards';
 import { MoveString, MoveVector, U64 } from '@aptos-labs/ts-sdk';
 import { CustomerTable } from '@/components/admin/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { truncateAddress } from '@/utils/addressUtils';
+import { truncateAddress } from '@/utils/address';
 import { ColumnDef } from '@tanstack/react-table';
 
 const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {

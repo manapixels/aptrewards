@@ -3,7 +3,7 @@
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { truncateAddress } from '@/utils/addressUtils';
+import { truncateAddress } from '@/utils/address';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';

@@ -10,7 +10,7 @@ import { FormControl, FormField, FormItem, FormLabel } from '../../ui/form';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useToast } from '@/components/ui/use-toast';
 import { moduleAddress, moduleName } from '@/constants';
-import { getAptosClient } from '@/lib/utils';
+import { getAptosClient } from '@/utils/aptos';
 import { Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useProgramStore } from '@/store/programStore';
