@@ -106,7 +106,7 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
               asChild
             >
               <Link href={`/co/${program.program_id}`}>
-                <div className="aspect-square w-10 h-10 rounded-md bg-green-400"></div>
+                <div className="aspect-square w-10 h-10 rounded-md bg-green-600"></div>
                 <div>
                   <h3 className="text-gray-500">{program.program_name}</h3>
                   {program.current_tier && (

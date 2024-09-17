@@ -7,12 +7,19 @@ import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 
 import { truncateAddress } from '@/utils/address';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RedemptionItem from '@/components/customer/RedemptionItem';
 import { getAptosClient } from '@/utils/aptos';
 import { moduleAddress, moduleName } from "@/constants";
-import { Copy } from 'lucide-react';
-
+import { ArrowRight, Copy } from 'lucide-react';
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 interface UserProgramDetails {
     programName: string;
@@ -82,6 +89,10 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
         return <div>Loading...</div>;
     }
 
+    const redeemableCoupons = userDetails.allCoupons.filter(coupon => 
+        !userDetails.ownedCoupons.some(owned => owned.id === coupon.id)
+    );
+
     return (
         <div className="space-y-4 -mt-4">
             <div className="relative flex justify-center ">
@@ -117,44 +128,46 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 </div>
             </div>
             <hr className="my-8" />
-            <Tabs defaultValue="owned-vouchers">
-                <TabsList className="grid w-full grid-cols-3 p-0 h-auto">
-                    <TabsTrigger value="owned-vouchers">
-                        Owned Vouchers ({userDetails.ownedCoupons.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="available-vouchers">
-                        Available Vouchers ({userDetails.allCoupons.length})
-                    </TabsTrigger>
-                </TabsList>
-                <TabsContent value="owned-vouchers">
-                    <div className="space-y-4">
-                        {userDetails.ownedCoupons.map((coupon, index) => (
-                            <RedemptionItem
-                                key={index}
-                                voucherId={coupon.id.toString()}
-                                name={coupon.description}
-                                description="Owned"
-                                expiryDate={new Date(Number(coupon.expiration_date) * 1000).toLocaleDateString()}
-                                termsAndConditions={`Max redemptions: ${coupon.max_redemptions}, Current redemptions: ${coupon.redemptions}`}
-                            />
-                        ))}
-                    </div>
-                </TabsContent>
-                <TabsContent value="available-vouchers">
-                    <div className="space-y-4">
-                        {userDetails.allCoupons.map((coupon, index) => (
-                            <RedemptionItem
-                                key={index}
-                                voucherId={coupon.id.toString()}
-                                name={coupon.description}
-                                description={`Requires ${coupon.stamps_required} stamps`}
-                                expiryDate={new Date(Number(coupon.expiration_date) * 1000).toLocaleDateString()}
-                                termsAndConditions={`Max redemptions: ${coupon.max_redemptions}, Current redemptions: ${coupon.redemptions}`}
-                            />
-                        ))}
-                    </div>
-                </TabsContent>
-            </Tabs>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Your Coupons ({userDetails.ownedCoupons.length})</h2>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">View Redeemable Coupons <ArrowRight className="w-4 h-4 ml-1" /></Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Redeemable Coupons</DialogTitle>
+                            <DialogDescription>
+                                Coupons you can earn in this program.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                            {redeemableCoupons.map((coupon, index) => (
+                                <RedemptionItem
+                                    key={index}
+                                    voucherId={coupon.id.toString()}
+                                    name={coupon.description}
+                                    description={`Requires ${coupon.stamps_required} stamps`}
+                                    expiryDate={new Date(Number(coupon.expiration_date) * 1000).toLocaleDateString()}
+                                    termsAndConditions={`Max redemptions: ${coupon.max_redemptions}, Current redemptions: ${coupon.redemptions}`}
+                                />
+                            ))}
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            </div>
+            <div className="space-y-4">
+                {userDetails.ownedCoupons.map((coupon, index) => (
+                    <RedemptionItem
+                        key={index}
+                        voucherId={coupon.id.toString()}
+                        name={coupon.description}
+                        description="Ready to use"
+                        expiryDate={new Date(Number(coupon.expiration_date) * 1000).toLocaleDateString()}
+                        termsAndConditions={`Max redemptions: ${coupon.max_redemptions}, Current redemptions: ${coupon.redemptions}`}
+                    />
+                ))}
+            </div>
         </div>
     );
 }
