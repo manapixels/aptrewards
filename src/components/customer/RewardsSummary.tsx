@@ -4,14 +4,13 @@ import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { U64, AccountAddress } from '@aptos-labs/ts-sdk';
 import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+
 import { truncateAddress } from '@/utils/address';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import RedemptionItem from './RedemptionItem';
-import { AptosClient } from 'aptos';
+import RedemptionItem from '@/components/customer/RedemptionItem';
+import { getAptosClient } from '@/utils/aptos';
+import { moduleAddress, moduleName } from "@/constants";
 
-const MODULE_ADDRESS = "aptrewards_addr";
-const NODE_URL = "https://fullnode.devnet.aptoslabs.com";
-const client = new AptosClient(NODE_URL);
 
 interface UserProgramDetails {
     programName: string;
@@ -33,18 +32,19 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
             if (!account?.address) return;
 
             try {
-                const resource = await client.view({
-                    function: `${MODULE_ADDRESS}::AptRewardsMain::get_user_program_details`,
-                    type_arguments: [],
-                    arguments: [
-                        new U64(parseInt(loyaltyProgramId)),
-                        AccountAddress.fromString('0x3eff8f929e7f170661d0cf17fb51a7a8726b91361d96b68be095639d5eff8db6')
-                    ],
+                const resource = await getAptosClient().view({
+                    payload: {
+                        function: `${moduleAddress}::${moduleName}::get_user_program_details`,
+                        functionArguments: [
+                            new U64(parseInt(loyaltyProgramId)),
+                            AccountAddress.fromString('0x3eff8f929e7f170661d0cf17fb51a7a8726b91361d96b68be095639d5eff8db6')
+                        ],
+                    }
                 });
 
                 const [programName, userStamps, stampValidity, ownedCoupons, allCoupons, tiers] = resource as [string, number, number, any[], any[], any[]];
 
-                const currentTier = tiers.reduce((prev, current) => 
+                const currentTier = tiers.reduce((prev, current) =>
                     userStamps >= current.stamps_required ? current : prev
                 );
 
