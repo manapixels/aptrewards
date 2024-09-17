@@ -4,17 +4,17 @@ import { useState, useEffect } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { MoveString, U64 } from '@aptos-labs/ts-sdk';
 import { PlusIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/utils/aptos';
 import { useProgramStore } from '@/store/programStore';
-import { Coupon, Tier } from '@/types/aptrewards';
+import { Coupon } from '@/types/aptrewards';
 import { LoyaltyProgram } from "@/types/aptrewards";
 
 
@@ -43,7 +43,6 @@ const CouponRedemptionsTable = ({ coupons, couponsRedeemed }: { coupons: Coupon[
 
 export default function ProgramCoupons({ program }: { program: LoyaltyProgram }) {
 
-    const { toast } = useToast();
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
     const { triggerRefetch, fetchProgramDetails, programs } = useProgramStore();
@@ -82,17 +81,10 @@ export default function ProgramCoupons({ program }: { program: LoyaltyProgram })
             triggerRefetch();
             fetchProgramDetails(program.id);
 
-            toast({
-                title: 'Success',
-                description: 'Coupon created successfully',
-            });
+            toast.success('Coupon created successfully');
         } catch (error) {
             console.error('Error creating coupon:', error);
-            toast({
-                title: 'Error',
-                description: 'Error creating coupon',
-                variant: 'destructive',
-            });
+            toast.error('Error creating coupon');
         } finally {
             setTransactionInProgress(false);
             setIsAddCouponDialogOpen(false);

@@ -7,7 +7,6 @@ import { PencilIcon, Plus, PlusIcon, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress"
@@ -20,10 +19,10 @@ import { CustomerTable } from '@/components/admin/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { truncateAddress } from '@/utils/address';
 import { ColumnDef } from '@tanstack/react-table';
+import toast from 'react-hot-toast';
 
 const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
 
-    const { toast } = useToast();
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
     const { fetchProgramDetails, getTierForCustomer } = useProgramStore();
@@ -76,19 +75,12 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
             });
             await getAptosClient().waitForTransaction({ transactionHash: response.hash });
 
-            toast({
-                title: 'Success',
-                description: `${action.charAt(0).toUpperCase() + action.slice(1)} tier successfully`,
-            });
+            toast.success(`${action.charAt(0).toUpperCase() + action.slice(1)} tier successfully`);
 
             fetchProgramDetails(program.id);
         } catch (error) {
             console.error(`Error: ${action} tier:`, error);
-            toast({
-                title: 'Error',
-                description: `Failed to ${action} tier`,
-                variant: 'destructive',
-            });
+            toast.error(`Failed to ${action} tier`);
         } finally {
             setTransactionInProgress(false);
             if (action === 'add') {

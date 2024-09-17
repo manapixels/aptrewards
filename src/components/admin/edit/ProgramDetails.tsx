@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { ArrowDownNarrowWide, ArrowDownWideNarrow, ArrowUpDown, Copy, Filter, PencilIcon } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
+import toast from 'react-hot-toast';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CustomerTable } from '@/components/admin/CustomerTable';
@@ -20,6 +20,7 @@ import { truncateAddress } from '@/utils/address';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 
+
 const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
     const { fetchProgramDetails, getTierForCustomer } = useProgramStore();
 
@@ -29,7 +30,6 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
         }
     }, [program.id]);
 
-    const { toast } = useToast();
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
     const { triggerRefetch } = useProgramStore();
@@ -75,17 +75,10 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
             triggerRefetch();
             fetchProgramDetails(program.id);
 
-            toast({
-                title: 'Success',
-                description: 'Program updated successfully',
-            });
+            toast.success('Program updated successfully');
         } catch (error) {
             console.error('Error updating program:', error);
-            toast({
-                title: 'Error',
-                description: 'Error updating program',
-                variant: 'destructive',
-            });
+            toast.error('Error updating program');
         } finally {
             setTransactionInProgress(false);
             setIsEditProgramOpen(false);
@@ -94,10 +87,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
 
     const handleCopyAddress = (address: string) => {
         navigator.clipboard.writeText(address);
-        toast({
-            title: 'Copied',
-            description: 'Address copied to clipboard',
-        });
+        toast.success('Address copied to clipboard');
     };
 
     const handleTierChange = (tier: string) => {

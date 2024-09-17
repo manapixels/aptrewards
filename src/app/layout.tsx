@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import Image from 'next/image';
 import dotenv from 'dotenv';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -45,7 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <CardContent className="p-6">{children}</CardContent>
                 </Card>
               </div>
-              <Toaster />
+              <Toaster position="bottom-right" />
             </WalletProvider>
           </AutoConnectProvider>
         </ThemeProvider>

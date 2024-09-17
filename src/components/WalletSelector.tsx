@@ -17,12 +17,12 @@ import {
 import { AccountAddress } from '@aptos-labs/ts-sdk';
 import { ArrowLeft, ArrowRight, ChevronDown, Copy, LogOut, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { useToast } from './ui/use-toast';
 import { getAptosClient } from '@/utils/aptos';
 import { moduleAddress, moduleName } from '@/constants';
 
@@ -31,7 +31,6 @@ import Link from 'next/link';
 
 export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
   const { account, connected, disconnect, wallet, network } = useWallet();
-  const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [userDetails, setUserDetails] = useState<UserProgramDetails[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -42,18 +41,11 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
     if (!account?.address) return;
     try {
       await navigator.clipboard.writeText(account.address);
-      toast({
-        title: 'Success',
-        description: 'Copied wallet address to clipboard.',
-      });
+      toast.success('Copied wallet address to clipboard.');
     } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to copy wallet address.',
-      });
+      toast.error('Failed to copy wallet address.');
     }
-  }, [account?.address, toast]);
+  }, [account?.address]);
 
   useEffect(() => {
     const fetchUserDetails = async () => {

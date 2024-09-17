@@ -4,6 +4,7 @@ import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { U64, AccountAddress } from '@aptos-labs/ts-sdk';
 import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import toast from 'react-hot-toast';
 
 import { truncateAddress } from '@/utils/address';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -64,6 +65,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 setUserDetails(userDetails);
             } catch (error) {
                 console.error("Error fetching user program details:", error);
+                toast.error("Failed to fetch user program details");
             }
         };
 

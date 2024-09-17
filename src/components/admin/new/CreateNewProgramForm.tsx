@@ -8,12 +8,12 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { FormControl, FormField, FormItem, FormLabel } from '../../ui/form';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
-import { useToast } from '@/components/ui/use-toast';
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/utils/aptos';
 import { Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useProgramStore } from '@/store/programStore';
+import toast from 'react-hot-toast';
 
 const initializeFormSchema = z.object({
     name: z.string().min(2).max(50),
@@ -24,7 +24,6 @@ const initializeFormSchema = z.object({
 export default function CreateNewProgramForm() {
 
     const router = useRouter();
-    const { toast } = useToast();
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
     const [success, setSuccess] = useState<boolean>(false);
@@ -72,19 +71,11 @@ export default function CreateNewProgramForm() {
 
             // Handle successful transaction
             setSuccess(true);
-            toast({
-                title: 'Success',
-                description: 'Loyalty program created successfully',
-            });
-
-
+            toast.success('Loyalty program created successfully');
 
         } catch (error) {
             console.error('Error creating loyalty program:', error);
-            toast({
-                title: 'Error',
-                description: 'Error creating loyalty program',
-            });
+            toast.error('Error creating loyalty program');
         } finally {
             setTransactionInProgress(false);
         }
