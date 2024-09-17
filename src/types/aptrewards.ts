@@ -40,3 +40,24 @@ export interface CustomerWithStamps {
     customer: string;
     stamps: number;
 }
+
+export interface UserProgramDetails {
+    program_id: number;
+    program_name: string;
+    stamps: number;
+    lifetime_stamps: number;
+    owned_coupons: Coupon[];
+    current_tier: {
+      id: number;
+      name: string;
+      stamps_required: number;
+      benefits: string[];
+    } | null;
+    next_tier: {
+      id: number;
+      name: string;
+      stamps_required: number;
+      benefits: string[];
+    } | null;
+    stamps_to_next_tier: number;
+}

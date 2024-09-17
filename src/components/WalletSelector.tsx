@@ -14,6 +14,7 @@ import {
   WalletItem,
   WalletSortingOptions,
 } from '@aptos-labs/wallet-adapter-react';
+import { AccountAddress } from '@aptos-labs/ts-sdk';
 import { ArrowLeft, ArrowRight, ChevronDown, Copy, LogOut, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -22,11 +23,18 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useToast } from './ui/use-toast';
+import { getAptosClient } from '@/utils/aptos';
+import { moduleAddress, moduleName } from '@/constants';
+
+import { UserProgramDetails } from '@/types/aptrewards';
+import Link from 'next/link';
 
 export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
   const { account, connected, disconnect, wallet, network } = useWallet();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [userDetails, setUserDetails] = useState<UserProgramDetails[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const closeDialog = useCallback(() => setIsDialogOpen(false), []);
 
@@ -47,32 +55,89 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
     }
   }, [account?.address, toast]);
 
-  // useEffect(() => {
-  //   console.log(network?.name.toLowerCase(), process.env.NEXT_PUBLIC_NETWORK)
-  //   if (network?.name.toLowerCase() !== process.env.NEXT_PUBLIC_NETWORK) {
-  //     console.log('network not supported')
-  //     toast({
-  //       title: 'Network not supported',
-  //       description: 'Please connect to the ' + process.env.NEXT_PUBLIC_NETWORK + ' network',
-  //     })
-  //     // changeNetwork(process.env.NEXT_PUBLIC_NETWORK as Network)
-  //   }
-  // }, [network])
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      if (!account?.address) return;
+
+      try {
+        const resource = await getAptosClient().view({
+          payload: {
+            function: `${moduleAddress}::${moduleName}::get_user_details`,
+            functionArguments: [AccountAddress.fromString('0x3eff8f929e7f170661d0cf17fb51a7a8726b91361d96b68be095639d5eff8db6')],
+          }
+        });
+
+        const rawDataArray = resource[0] as any[];
+        const formattedUserDetails: UserProgramDetails[] = rawDataArray.map(rawData => ({
+          program_id: rawData.program_id,
+          program_name: rawData.program_name,
+          stamps: rawData.stamps,
+          lifetime_stamps: rawData.lifetime_stamps,
+          stamps_to_next_tier: rawData.stamps_to_next_tier,
+          current_tier: rawData.current_tier?.vec[0],
+          next_tier: rawData.next_tier?.vec[0],
+          owned_coupons: rawData.owned_coupons,
+        }));
+
+        setUserDetails(formattedUserDetails);
+      } catch (error) {
+        console.error("Error fetching user program details:", error);
+      }
+    };
+
+    fetchUserDetails();
+  }, [account]);
 
   const networkSupported = network?.name.toLowerCase() === process.env.NEXT_PUBLIC_NETWORK
-  let displayText = 'Welcome, ' + (account?.ansName || truncateAddress(account?.address) || 'Unknown') + '!';
+  const userDisplayName = account?.ansName || truncateAddress(account?.address) || ''
+  let displayText = 'Welcome, ' + userDisplayName || 'Unknown' + '!';
   if (!networkSupported) {
     displayText = 'Network not supported. Change to ' + process.env.NEXT_PUBLIC_NETWORK
   }
 
+  console.log(userDetails);
+
   return connected ? (
-    <DropdownMenu>
+    <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
       <DropdownMenuTrigger asChild>
         <Button>{displayText}</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <div className="py-2">
+          <div className="text-lg font-semibold my-3 px-4">{userDisplayName}</div>
+          {userDetails.map((program) => (
+            <Button
+              variant="ghost"
+              key={program.program_id}
+              className="py-2 h-auto w-full text-left flex items-center justify-start gap-2"
+              asChild
+            >
+              <Link href={`/co/${program.program_id}`}>
+                <div className="aspect-square w-10 h-10 rounded-md bg-gray-200"></div>
+                <div>
+                  <h3 className="text-gray-500">{program.program_name}</h3>
+                  {program.current_tier && (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500 text-xs">Status</span>
+                        <span className="font-semibold text-sm">{program.current_tier.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500 text-xs">Points</span>
+                        <span className="font-semibold text-sm">{program.stamps}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </Link>
+            </Button>
+          ))}
+        </div>
         <DropdownMenuItem onSelect={copyAddress} className="gap-2">
           <Copy className="h-4 w-4" /> Copy address
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+
         </DropdownMenuItem>
         {wallet && isAptosConnectWallet(wallet) && (
           <DropdownMenuItem asChild>
