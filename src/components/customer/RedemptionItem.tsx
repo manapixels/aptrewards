@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Forward } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { formatDate } from '@/utils/dateFormatter';
 
 interface RedemptionItemProps {
     name: string;
@@ -62,7 +63,7 @@ const RedemptionItem: React.FC<RedemptionItemProps> = ({
                         </div>
                         <div className="flex-grow flex flex-col justify-center p-4">
                             <h3 className="font-bold text-lg">{name}</h3>
-                            <p className="text-sm text-gray-500">Valid until {expiryDate}</p>
+                            <p className="text-sm text-gray-500">Valid until {formatDate(expiryDate)}</p>
                             <div className="mt-3 flex items-center">
                                 <Dialog open={isTransferOpen} onOpenChange={setIsTransferOpen}>
                                     <DialogTrigger asChild>
@@ -110,7 +111,7 @@ const RedemptionItem: React.FC<RedemptionItemProps> = ({
                                                     )}
                                                     {!imageUrl && <div className="w-full h-48 bg-gray-200"></div>}
                                                     <p>{description}</p>
-                                                    <p className="text-sm text-gray-500">Valid until {expiryDate}</p>
+                                                    <p className="text-sm text-gray-500">Valid until {formatDate(expiryDate)}</p>
                                                     <Accordion type="single" collapsible>
                                                         <AccordionItem value="terms">
                                                             <AccordionTrigger>Terms and Conditions</AccordionTrigger>

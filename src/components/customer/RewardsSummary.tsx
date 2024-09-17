@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { formatDate } from '@/utils/dateFormatter';
 
 interface UserProgramDetails {
     programName: string;
@@ -117,7 +118,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                     </div>
                     {userDetails.nextTier && (
                         <>
-                            <div className="text-sm text-gray-600">Expiring {new Date(Date.now() + Number(userDetails.stampValidity) * 24 * 60 * 60 * 1000).toLocaleDateString()}</div>
+                            <div className="text-sm text-gray-600">Expiring {formatDate(new Date(Date.now() + Number(userDetails.stampValidity) * 24 * 60 * 60 * 1000).toLocaleDateString())}</div>
                             <div className="text-sm text-gray-600">{userDetails.stampsToNextTier} more points to unlock {userDetails.nextTier}</div>
                         </>
                     )}
