@@ -23,16 +23,8 @@ module aptrewards_addr::AptRewardsEvents {
         coupon_id: u64,
         stamps_required: u64,
         description: String,
-        is_monetary: bool,
-        value: u64,
         expiration_date: u64,
         max_redemptions: u64,
-    }
-
-    #[event]
-    struct SetTierThresholds has store, drop {
-        program_id: u64,
-        thresholds: vector<u64>,
     }
 
     #[event]
@@ -49,7 +41,6 @@ module aptrewards_addr::AptRewardsEvents {
         coupon_id: u64,
         current_redemptions: u64,
         description: String,
-        value: u64,
     }
 
     #[event]
@@ -113,8 +104,6 @@ module aptrewards_addr::AptRewardsEvents {
         coupon_id: u64,
         stamps_required: u64,
         description: String,
-        is_monetary: bool,
-        value: u64,
         expiration_date: u64,
         max_redemptions: u64
     ) {
@@ -123,20 +112,8 @@ module aptrewards_addr::AptRewardsEvents {
             coupon_id,
             stamps_required,
             description,
-            is_monetary,
-            value,
             expiration_date,
             max_redemptions
-        });
-    }
-
-    public(friend) fun emit_set_tier_thresholds(
-        program_id: u64,
-        thresholds: vector<u64>
-    ) {
-        event::emit(SetTierThresholds { 
-            program_id,
-            thresholds
         });
     }
 
@@ -157,16 +134,14 @@ module aptrewards_addr::AptRewardsEvents {
         customer: address, 
         coupon_id: u64,
         current_redemptions: u64,
-        description: String,
-        value: u64
+        description: String
     ) {
         event::emit(RedeemCoupon { 
             program_id, 
             customer, 
             coupon_id,
             current_redemptions,
-            description,
-            value
+            description
         });
     }
 

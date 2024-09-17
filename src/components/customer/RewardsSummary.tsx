@@ -1,71 +1,139 @@
 'use client'
 
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
-import { useEffect } from 'react';
+import { U64, AccountAddress } from '@aptos-labs/ts-sdk';
+import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { truncateAddress } from '@/utils/address';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import RedemptionItem from './RedemptionItem';
+import { AptosClient } from 'aptos';
+
+const MODULE_ADDRESS = "aptrewards_addr";
+const NODE_URL = "https://fullnode.devnet.aptoslabs.com";
+const client = new AptosClient(NODE_URL);
+
+interface UserProgramDetails {
+    programName: string;
+    userStamps: number;
+    stampValidity: number;
+    userTier: string;
+    nextTier: string | null;
+    stampsToNextTier: number | null;
+    ownedCoupons: any[];
+    allCoupons: any[];
+}
 
 const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
     const { account } = useWallet();
+    const [userDetails, setUserDetails] = useState<UserProgramDetails | null>(null);
 
     useEffect(() => {
-        console.log(loyaltyProgramId)
-    }, [loyaltyProgramId])
+        const fetchUserProgramDetails = async () => {
+            if (!account?.address) return;
+
+            try {
+                const resource = await client.view({
+                    function: `${MODULE_ADDRESS}::AptRewardsMain::get_user_program_details`,
+                    type_arguments: [],
+                    arguments: [
+                        new U64(parseInt(loyaltyProgramId)),
+                        AccountAddress.fromString('0x3eff8f929e7f170661d0cf17fb51a7a8726b91361d96b68be095639d5eff8db6')
+                    ],
+                });
+
+                const [programName, userStamps, stampValidity, ownedCoupons, allCoupons, tiers] = resource as [string, number, number, any[], any[], any[]];
+
+                const currentTier = tiers.reduce((prev, current) => 
+                    userStamps >= current.stamps_required ? current : prev
+                );
+
+                const nextTier = tiers.find(tier => tier.stamps_required > userStamps);
+
+                const userDetails: UserProgramDetails = {
+                    programName,
+                    userStamps,
+                    stampValidity,
+                    userTier: currentTier?.name || 'No Tier',
+                    nextTier: nextTier?.name || null,
+                    stampsToNextTier: nextTier ? nextTier.stamps_required - userStamps : null,
+                    ownedCoupons,
+                    allCoupons,
+                };
+
+                setUserDetails(userDetails);
+            } catch (error) {
+                console.error("Error fetching user program details:", error);
+            }
+        };
+
+        fetchUserProgramDetails();
+    }, [loyaltyProgramId, account]);
+
+    if (!userDetails) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div className="space-y-4">
             <div className="flex items-center space-x-4 justify-between">
                 <div>
-                    <img src="/path/to/rewards-card-image.jpg" alt="" className="w-24 h-24" />
-                    <div className="text-xl font-bold">Mr. Beelzeloo</div>
-                    <div className="text-red-500 text-lg">Current Points: 5</div>
-                    <div>(expiring on 25 Aug 2025)</div>
+                    <div className="text-xl font-bold">{userDetails.programName}</div>
+                    <div className="text-red-500 text-lg">Current Points: {userDetails.userStamps}</div>
+                    <div>(expiring in {userDetails.stampValidity} days)</div>
                     <div>Membership ID: {truncateAddress(account?.address)}</div>
                 </div>
                 <QRCodeSVG value={account?.address || ''} size={150} />
             </div>
             <hr className="my-8" />
-            <Tabs defaultValue="card">
-                <TabsList className="grid w-full grid-cols-2 p-0 h-auto">
-                    <TabsTrigger value="card" className="text-md font-semibold px-12 py-4 rounded-none border-b-4 border-transparent data-[state=active]:border-gray-800">Rewards Card</TabsTrigger>
-                    <TabsTrigger value="vouchers" className="text-md font-semibold px-12 py-4 rounded-none border-b-4 border-transparent data-[state=active]:border-gray-800"><span className="font-bold text-red-500 pr-1">3</span>Vouchers</TabsTrigger>
+            <Tabs defaultValue="status">
+                <TabsList className="grid w-full grid-cols-3 p-0 h-auto">
+                    <TabsTrigger value="status">Status</TabsTrigger>
+                    <TabsTrigger value="owned-vouchers">
+                        Owned Vouchers ({userDetails.ownedCoupons.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="available-vouchers">
+                        Available Vouchers ({userDetails.allCoupons.length})
+                    </TabsTrigger>
                 </TabsList>
-                <TabsContent value="card">
+                <TabsContent value="status">
                     <div className="text-center">
-                        <div className="text-lg font-bold">Your Status</div>
-                        <div>(through 25 Aug 2024)</div>
-                        <div className="text-xl">5/1000 points</div>
-                        <div>to unlock next level</div>
+                        <div className="text-lg font-bold">Your Status: {userDetails.userTier}</div>
+                        {userDetails.nextTier && (
+                            <>
+                                <div>(through {new Date(Date.now() + Number(userDetails.stampValidity) * 24 * 60 * 60 * 1000).toLocaleDateString()})</div>
+                                <div className="text-xl">{userDetails.stampsToNextTier} more points</div>
+                                <div>to unlock {userDetails.nextTier}</div>
+                            </>
+                        )}
                     </div>
                 </TabsContent>
-                <TabsContent value="vouchers">
+                <TabsContent value="owned-vouchers">
                     <div className="space-y-4">
-                        <RedemptionItem
-                            voucherId="1"
-                            name="10% off next purchase"
-                            description="Get 10% off your next purchase at our store."
-                            expiryDate="31 Dec 2023"
-                            termsAndConditions="Valid for one-time use only. Cannot be combined with other offers."
-                        />
-                        <RedemptionItem
-                            voucherId="2"
-                            name="Free Coffee"
-                            description="Enjoy a free coffee of your choice."
-                            expiryDate="15 Jan 2024"
-                            termsAndConditions="Valid for one standard coffee. Upgrades may incur additional charges."
-                        />
-                        <RedemptionItem
-                            voucherId="3"
-                            name="$5 off purchase over $50"
-                            description="Save $5 on your purchase when you spend $50 or more."
-                            expiryDate="28 Feb 2024"
-                            termsAndConditions="Minimum purchase of $50 required. Excludes gift cards and sale items."
-                        />
+                        {userDetails.ownedCoupons.map((coupon, index) => (
+                            <RedemptionItem
+                                key={index}
+                                voucherId={coupon.id.toString()}
+                                name={coupon.description}
+                                description="Owned"
+                                expiryDate={new Date(Number(coupon.expiration_date) * 1000).toLocaleDateString()}
+                                termsAndConditions={`Max redemptions: ${coupon.max_redemptions}, Current redemptions: ${coupon.redemptions}`}
+                            />
+                        ))}
+                    </div>
+                </TabsContent>
+                <TabsContent value="available-vouchers">
+                    <div className="space-y-4">
+                        {userDetails.allCoupons.map((coupon, index) => (
+                            <RedemptionItem
+                                key={index}
+                                voucherId={coupon.id.toString()}
+                                name={coupon.description}
+                                description={`Requires ${coupon.stamps_required} stamps`}
+                                expiryDate={new Date(Number(coupon.expiration_date) * 1000).toLocaleDateString()}
+                                termsAndConditions={`Max redemptions: ${coupon.max_redemptions}, Current redemptions: ${coupon.redemptions}`}
+                            />
+                        ))}
                     </div>
                 </TabsContent>
             </Tabs>

@@ -136,11 +136,11 @@ async function main() {
 
     // Create coupons
     const coupons = [
-        { stamps: 50, description: "10% off", isMonetary: false, value: 10, maxRedemptions: 100 },
-        { stamps: 100, description: "$5 off", isMonetary: true, value: 500, maxRedemptions: 50 },
-        { stamps: 200, description: "Free item", isMonetary: false, value: 0, maxRedemptions: 25 },
-        { stamps: 300, description: "$10 off", isMonetary: true, value: 1000, maxRedemptions: 20 },
-        { stamps: 500, description: "VIP experience", isMonetary: false, value: 0, maxRedemptions: 10 }
+        { stamps: 50, description: "10% off", maxRedemptions: 100 },
+        { stamps: 100, description: "$5 off", maxRedemptions: 50 },
+        { stamps: 200, description: "Free item", maxRedemptions: 25 },
+        { stamps: 300, description: "$10 off", maxRedemptions: 20 },
+        { stamps: 500, description: "VIP experience", maxRedemptions: 10 }
     ];
 
     for (const coupon of coupons) {
@@ -153,8 +153,6 @@ async function main() {
                     programId,
                     coupon.description,
                     coupon.stamps,
-                    coupon.isMonetary,
-                    coupon.value,
                     Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // Expiration date (30 days from now)
                     coupon.maxRedemptions
                 ]
@@ -172,8 +170,10 @@ async function main() {
     }
 
     // Create 5 random customer accounts and assign stamps
+    const customers: Account[] = [];
     for (let i = 0; i < 5; i++) {
         const customer = Account.generate();
+        customers.push(customer);
         await aptos.fundAccount({ accountAddress: customer.accountAddress, amount: 10_000_000 });
 
         const stamps = Math.floor(Math.random() * 500) + 1; // Random stamps between 1 and 500
@@ -222,7 +222,82 @@ async function main() {
         }
     }
 
-    console.log("Test program setup completed successfully!");
+    console.log("First test program setup completed successfully!");
+
+    // Create a second loyalty program
+    const secondProgramName = generateRandomProgramName();
+    const secondStampValidityDays = 60; // 60 days stamp validity for the second program
+    const createSecondProgramTxn = await aptos.transaction.build.simple({
+        sender: admin.accountAddress,
+        data: {
+            function: `${MODULE_ADDRESS}::AptRewardsMain::create_loyalty_program`,
+            typeArguments: [],
+            functionArguments: [secondProgramName, secondStampValidityDays]
+        },
+    });
+
+    const createSecondProgramResult = await aptos.signAndSubmitTransaction({
+        signer: admin,
+        transaction: createSecondProgramTxn
+    });
+
+    const confirmedSecondTxn = await aptos.waitForTransaction({ transactionHash: createSecondProgramResult.hash });
+
+    // @ts-ignore
+    const secondProgramId = confirmedSecondTxn?.events?.find(event => event.type.includes("CreateLoyaltyProgram"))?.data?.program_id;
+
+    console.log(`Created 2nd loyalty program "${secondProgramName}" with ID:`, secondProgramId);
+
+    // Create tiers for the second program
+    const secondTiers = [
+        { name: "Basic", benefits: ["2% cashback on purchases"], stamps: 0 },
+        { name: "Premium", benefits: ["5% cashback on purchases", "Free shipping"], stamps: 200 },
+        { name: "Elite", benefits: ["10% cashback on purchases", "Free shipping", "24/7 support"], stamps: 1000 }
+    ];
+
+    for (const tier of secondTiers) {
+        const createTierTxn = await aptos.transaction.build.simple({
+            sender: admin.accountAddress,
+            data: {
+                function: `${MODULE_ADDRESS}::AptRewardsMain::add_tier`,
+                typeArguments: [],
+                functionArguments: [secondProgramId, tier.name, tier.stamps, tier.benefits]
+            },
+        });
+
+        const createTierResult = await aptos.signAndSubmitTransaction({
+            signer: admin,
+            transaction: createTierTxn
+        });
+
+        const confirmedTierTxn = await aptos.waitForTransaction({ transactionHash: createTierResult.hash });
+        // @ts-ignore
+        console.log(`Created tier "${tier.name}" with ID:`, confirmedTierTxn?.events?.find(event => event.type.includes("AddTier"))?.data?.tier_id);
+    }
+
+    // Award stamps to one of the users from the first program
+    const selectedCustomerIndex = Math.floor(Math.random() * 5); // Randomly select one of the 5 customers
+    const selectedCustomerAddress = customers[selectedCustomerIndex].accountAddress.toString();
+    const stampsToAward = 300; // Award 300 stamps to the selected customer
+
+    const earnStampsTxn = await aptos.transaction.build.simple({
+        sender: admin.accountAddress,
+        data: {
+            function: `${MODULE_ADDRESS}::AptRewardsMain::earn_stamps`,
+            typeArguments: [],
+            functionArguments: [secondProgramId, selectedCustomerAddress, stampsToAward]
+        }
+    });
+
+    const earnStampsResult = await aptos.signAndSubmitTransaction({
+        signer: admin,
+        transaction: earnStampsTxn
+    });
+
+    await aptos.waitForTransaction({ transactionHash: earnStampsResult.hash });
+    console.log(`Customer ${selectedCustomerIndex + 1} (${selectedCustomerAddress}) earned ${stampsToAward} stamps in the second program`);
+
+    console.log("Second test program setup completed successfully!");
 }
 
 main().catch(console.error);
