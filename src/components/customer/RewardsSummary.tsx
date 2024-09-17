@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RedemptionItem from '@/components/customer/RedemptionItem';
 import { getAptosClient } from '@/utils/aptos';
 import { moduleAddress, moduleName } from "@/constants";
+import { Copy } from 'lucide-react';
 
 
 interface UserProgramDetails {
@@ -72,25 +73,52 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
         fetchUserProgramDetails();
     }, [loyaltyProgramId, account]);
 
+    const handleCopyAddress = (address: string) => {
+        navigator.clipboard.writeText(address);
+        toast.success('Address copied to clipboard');
+    };
+
     if (!userDetails) {
         return <div>Loading...</div>;
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 -mt-4">
+            <div className="relative flex justify-center ">
+                <div className="absolute top-[50%] translate-y-[-50%] left-0 border-t border-gray-200 w-full"></div>
+                <div className="text-md font-semibold text-gray-400 italic px-4 py-2 rounded-md tracking-wider bg-white relative z-10">
+                    {userDetails.programName}
+                </div>
+            </div>
             <div className="flex items-center space-x-4 justify-between">
                 <div>
-                    <div className="text-xl font-bold">{userDetails.programName}</div>
-                    <div className="text-red-500 text-lg">Current Points: {userDetails.userStamps}</div>
-                    <div>(expiring in {userDetails.stampValidity} days)</div>
-                    <div>Membership ID: {truncateAddress(account?.address)}</div>
+                    <div className="text-2xl text-gray-700 font-bold tracking-wider flex items-center gap-1">
+                        {truncateAddress(account?.address)}
+                        <Copy
+                            className="w-4 h-4 stroke-gray-600 cursor-pointer"
+                            onClick={() => handleCopyAddress(account?.address || '')}
+                        />
+                    </div>
+                    <div className="flex flex-row items-center gap-2 text-green-600 mt-1 mb-2">
+                        <span className="text-lg font-semibold">{userDetails.userStamps} stamps</span>
+                        <div className="w-[1px] h-4 bg-green-600"></div>
+                        <span className="text-lg font-semibold ">{userDetails.userTier}</span>
+                    </div>
+                    {userDetails.nextTier && (
+                        <>
+                            <div className="text-sm text-gray-600">Expiring {new Date(Date.now() + Number(userDetails.stampValidity) * 24 * 60 * 60 * 1000).toLocaleDateString()}</div>
+                            <div className="text-sm text-gray-600">{userDetails.stampsToNextTier} more points to unlock {userDetails.nextTier}</div>
+                        </>
+                    )}
                 </div>
-                <QRCodeSVG value={account?.address || ''} size={150} />
+                <div className="flex flex-col items-center gap-2 pl-8 border-l border-gray-200">
+                    <span className="text-lg font-semibold">Scan to earn stamps</span>
+                    <QRCodeSVG value={account?.address || ''} size={150} />
+                </div>
             </div>
             <hr className="my-8" />
-            <Tabs defaultValue="status">
+            <Tabs defaultValue="owned-vouchers">
                 <TabsList className="grid w-full grid-cols-3 p-0 h-auto">
-                    <TabsTrigger value="status">Status</TabsTrigger>
                     <TabsTrigger value="owned-vouchers">
                         Owned Vouchers ({userDetails.ownedCoupons.length})
                     </TabsTrigger>
@@ -98,18 +126,6 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                         Available Vouchers ({userDetails.allCoupons.length})
                     </TabsTrigger>
                 </TabsList>
-                <TabsContent value="status">
-                    <div className="text-center">
-                        <div className="text-lg font-bold">Your Status: {userDetails.userTier}</div>
-                        {userDetails.nextTier && (
-                            <>
-                                <div>(through {new Date(Date.now() + Number(userDetails.stampValidity) * 24 * 60 * 60 * 1000).toLocaleDateString()})</div>
-                                <div className="text-xl">{userDetails.stampsToNextTier} more points</div>
-                                <div>to unlock {userDetails.nextTier}</div>
-                            </>
-                        )}
-                    </div>
-                </TabsContent>
                 <TabsContent value="owned-vouchers">
                     <div className="space-y-4">
                         {userDetails.ownedCoupons.map((coupon, index) => (

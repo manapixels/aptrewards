@@ -97,15 +97,16 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
       <DropdownMenuContent align="end">
         <div className="py-2">
           <div className="text-lg font-semibold my-3 px-4">{userDisplayName}</div>
+          <div className="bg-gray-100 rounded-md p-1.5 flex flex-col gap-2">
           {userDetails.map((program) => (
             <Button
               variant="ghost"
               key={program.program_id}
-              className="py-2 h-auto w-full text-left flex items-center justify-start gap-2"
+              className="py-2 h-auto w-full text-left flex items-center justify-start gap-3 border border-transparent bg-white hover:bg-white hover:border-gray-900"
               asChild
             >
               <Link href={`/co/${program.program_id}`}>
-                <div className="aspect-square w-10 h-10 rounded-md bg-gray-200"></div>
+                <div className="aspect-square w-10 h-10 rounded-md bg-green-400"></div>
                 <div>
                   <h3 className="text-gray-500">{program.program_name}</h3>
                   {program.current_tier && (
@@ -124,6 +125,7 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
               </Link>
             </Button>
           ))}
+          </div>
         </div>
         <DropdownMenuItem onSelect={copyAddress} className="gap-2">
           <Copy className="h-4 w-4" /> Copy address
