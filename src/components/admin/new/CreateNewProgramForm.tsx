@@ -18,7 +18,7 @@ import toast from 'react-hot-toast';
 const initializeFormSchema = z.object({
     name: z.string().min(2).max(50),
     // luckySpinEnabled: z.boolean(),
-    stampValidityDays: z.number().min(1).max(365),
+    pointValidityDays: z.number().min(1).max(365),
 })
 
 export default function CreateNewProgramForm() {
@@ -34,7 +34,7 @@ export default function CreateNewProgramForm() {
         defaultValues: {
             name: "",
             // luckySpinEnabled: true,
-            stampValidityDays: 365,
+            pointValidityDays: 365,
         },
     })
 
@@ -49,7 +49,7 @@ export default function CreateNewProgramForm() {
                 data: {
                     function: `${moduleAddress}::${moduleName}::create_loyalty_program`,
                     typeArguments: [],
-                    functionArguments: [data.name, data.stampValidityDays]
+                    functionArguments: [data.name, data.pointValidityDays]
                 },
 
             });

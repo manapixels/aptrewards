@@ -25,11 +25,11 @@ import { formatDate } from '@/utils/dateFormatter';
 
 interface UserProgramDetails {
     programName: string;
-    userStamps: number;
-    stampValidity: number;
+    userPoints: number;
+    pointValidity: number;
     userTier: string;
     nextTier: string | null;
-    stampsToNextTier: number | null;
+    pointsToNextTier: number | null;
     ownedVouchers: any[];
     allVouchers: any[];
 }
@@ -53,21 +53,21 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                     }
                 });
 
-                const [programName, userStamps, stampValidity, ownedVouchers, allVouchers, tiers] = resource as [string, number, number, any[], any[], any[]];
+                const [programName, userPoints, pointValidity, ownedVouchers, allVouchers, tiers] = resource as [string, number, number, any[], any[], any[]];
 
                 const currentTier = tiers.reduce((prev, current) =>
-                    userStamps >= current.stamps_required ? current : prev
+                    userPoints >= current.points_required ? current : prev
                 );
 
-                const nextTier = tiers.find(tier => tier.stamps_required > userStamps);
+                const nextTier = tiers.find(tier => tier.points_required > userPoints);
 
                 const userDetails: UserProgramDetails = {
                     programName,
-                    userStamps,
-                    stampValidity,
+                    userPoints,
+                    pointValidity,
                     userTier: currentTier?.name || 'No Tier',
                     nextTier: nextTier?.name || null,
-                    stampsToNextTier: nextTier ? nextTier.stamps_required - userStamps : null,
+                    pointsToNextTier: nextTier ? nextTier.points_required - userPoints : null,
                     ownedVouchers,
                     allVouchers,
                 };
@@ -113,19 +113,19 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                         />
                     </div>
                     <div className="flex flex-row items-center gap-2 text-green-600 mt-1 mb-2">
-                        <span className="text-lg font-semibold">{userDetails.userStamps} stamps</span>
+                        <span className="text-lg font-semibold">{userDetails.userPoints} points</span>
                         <div className="w-[1px] h-4 bg-green-600"></div>
                         <span className="text-lg font-semibold ">{userDetails.userTier}</span>
                     </div>
                     {userDetails.nextTier && (
                         <>
-                            <div className="text-sm text-gray-600">Expiring {formatDate(new Date(Date.now() + Number(userDetails.stampValidity) * 24 * 60 * 60 * 1000).toLocaleDateString())}</div>
-                            <div className="text-sm text-gray-600">{userDetails.stampsToNextTier} more points to unlock {userDetails.nextTier}</div>
+                            <div className="text-sm text-gray-600">Expiring {formatDate(new Date(Date.now() + Number(userDetails.pointValidity) * 24 * 60 * 60 * 1000).toLocaleDateString())}</div>
+                            <div className="text-sm text-gray-600">{userDetails.pointsToNextTier} more points to unlock {userDetails.nextTier}</div>
                         </>
                     )}
                 </div>
                 <div className="flex flex-col items-center gap-2 pl-8 border-l border-gray-200">
-                    <span className="text-lg font-semibold">Scan to earn stamps</span>
+                    <span className="text-lg font-semibold">Scan to earn points</span>
                     <QRCodeSVG value={account?.address || ''} size={150} />
                 </div>
             </div>
@@ -149,7 +149,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                                     key={index}
                                     voucherId={voucher.id.toString()}
                                     name={voucher.description}
-                                    description={`Requires ${voucher.stamps_required} stamps`}
+                                    description={`Requires ${voucher.points_required} points`}
                                     expiryDate={new Date(Number(voucher.expiration_date) * 1000).toLocaleDateString()}
                                     termsAndConditions={`Max redemptions: ${voucher.max_redemptions}, Current redemptions: ${voucher.redemptions}`}
                                 />

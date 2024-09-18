@@ -1,6 +1,6 @@
 export type Voucher = {
     id: number;
-    stampsRequired: number;
+    pointsRequired: number;
     description: string;
     isMonetary: boolean;
     value: number;
@@ -12,7 +12,7 @@ export type Voucher = {
 export interface Tier {
     id: number;
     name: string;
-    stampsRequired: number;
+    pointsRequired: number;
     benefits: string[];
     customerCount?: number;
 }
@@ -23,10 +23,10 @@ export interface LoyaltyProgram {
     owner: string;
     vouchers?: Voucher[];
     voucherCount?: number;
-    stampValidityDays?: number;
+    pointValidityDays?: number;
     tiers?: Tier[];
-    totalStampsIssued?: number;
-    customersWithStamps?: CustomerWithStamps[];
+    totalPointsIssued?: number;
+    customersWithPoints?: CustomerWithPoints[];
 };
 
 export interface LoyaltyProgramSummary {
@@ -36,28 +36,28 @@ export interface LoyaltyProgramSummary {
     customerCount: number;
 }
 
-export interface CustomerWithStamps {
+export interface CustomerWithPoints {
     customer: string;
-    stamps: number;
+    points: number;
 }
 
 export interface UserProgramDetails {
     program_id: number;
     program_name: string;
-    stamps: number;
-    lifetime_stamps: number;
+    points: number;
+    lifetime_points: number;
     owned_vouchers: Voucher[];
     current_tier: {
       id: number;
       name: string;
-      stamps_required: number;
+      points_required: number;
       benefits: string[];
     } | null;
     next_tier: {
       id: number;
       name: string;
-      stamps_required: number;
+      points_required: number;
       benefits: string[];
     } | null;
-    stamps_to_next_tier: number;
+    points_to_next_tier: number;
 }

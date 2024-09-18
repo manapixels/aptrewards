@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export default function CustomerPanel() {
-    const [action, setAction] = useState('earnStamps');
+    const [action, setAction] = useState('earnPoints');
     const [params, setParams] = useState({});
     const [message, setMessage] = useState('');
 
@@ -34,7 +34,7 @@ export default function CustomerPanel() {
                 <label>
                     Action:
                     <select value={action} onChange={(e) => setAction(e.target.value)}>
-                        <option value="earnStamps">Earn Stamps</option>
+                        <option value="earnPoints">Earn Points</option>
                         <option value="redeemVoucher">Redeem Voucher</option>
                         <option value="luckySpin">Lucky Spin</option>
                         <option value="getCustomerTier">Get Customer Tier</option>

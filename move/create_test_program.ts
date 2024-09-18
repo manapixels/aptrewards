@@ -58,13 +58,13 @@ async function main() {
 
     // Create a new loyalty program
     const programName = generateRandomProgramName();
-    const stampValidityDays = 30; // 30 days stamp validity
+    const pointValidityDays = 30; // 30 days point validity
     const createProgramTxn = await aptos.transaction.build.simple({
         sender: admin.accountAddress,
         data: {
             function: `${MODULE_ADDRESS}::AptRewardsMain::create_loyalty_program`,
             typeArguments: [],
-            functionArguments: [programName, stampValidityDays]
+            functionArguments: [programName, pointValidityDays]
         },
     });
 
@@ -90,7 +90,7 @@ async function main() {
                 "Early access to new products",
                 "Birthday reward"
             ],
-            stamps: 0
+            points: 0
         },
         {
             name: "Silver",
@@ -99,7 +99,7 @@ async function main() {
                 "Exclusive member-only events",
                 "2x points on select products"
             ],
-            stamps: 100
+            points: 100
         },
         {
             name: "Gold",
@@ -110,7 +110,7 @@ async function main() {
                 "Personalized offers",
                 "3x points on select products"
             ],
-            stamps: 500
+            points: 500
         }
     ];
 
@@ -120,7 +120,7 @@ async function main() {
             data: {
                 function: `${MODULE_ADDRESS}::AptRewardsMain::add_tier`,
                 typeArguments: [],
-                functionArguments: [programId, tier.name, tier.stamps, tier.benefits]
+                functionArguments: [programId, tier.name, tier.points, tier.benefits]
             },
         });
 
@@ -136,11 +136,11 @@ async function main() {
 
     // Create vouchers
     const vouchers = [
-        { stamps: 50, description: "10% off", maxRedemptions: 100 },
-        { stamps: 100, description: "$5 off", maxRedemptions: 50 },
-        { stamps: 200, description: "Free item", maxRedemptions: 25 },
-        { stamps: 300, description: "$10 off", maxRedemptions: 20 },
-        { stamps: 500, description: "VIP experience", maxRedemptions: 10 }
+        { points: 50, description: "10% off", maxRedemptions: 100 },
+        { points: 100, description: "$5 off", maxRedemptions: 50 },
+        { points: 200, description: "Free item", maxRedemptions: 25 },
+        { points: 300, description: "$10 off", maxRedemptions: 20 },
+        { points: 500, description: "VIP experience", maxRedemptions: 10 }
     ];
 
     for (const voucher of vouchers) {
@@ -152,7 +152,7 @@ async function main() {
                 functionArguments: [
                     programId,
                     voucher.description,
-                    voucher.stamps,
+                    voucher.points,
                     Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // Expiration date (30 days from now)
                     voucher.maxRedemptions
                 ]
@@ -169,34 +169,34 @@ async function main() {
         console.log(`Created voucher "${voucher.description}" with ID:`, confirmedVoucherTxn?.events?.find(event => event.type.includes("CreateVoucher"))?.data?.voucher_id);
     }
 
-    // Create 5 random customer accounts and assign stamps
+    // Create 5 random customer accounts and assign points
     const customers: Account[] = [];
     for (let i = 0; i < 5; i++) {
         const customer = Account.generate();
         customers.push(customer);
         await aptos.fundAccount({ accountAddress: customer.accountAddress, amount: 10_000_000 });
 
-        const stamps = Math.floor(Math.random() * 500) + 1; // Random stamps between 1 and 500
+        const points = Math.floor(Math.random() * 500) + 1; // Random points between 1 and 500
 
-        const earnStampsTxn = await aptos.transaction.build.simple({
+        const earnPointsTxn = await aptos.transaction.build.simple({
             sender: admin.accountAddress,
             data: {
-                function: `${MODULE_ADDRESS}::AptRewardsMain::earn_stamps`,
+                function: `${MODULE_ADDRESS}::AptRewardsMain::earn_points`,
                 typeArguments: [],
-                functionArguments: [programId, customer.accountAddress.toString(), stamps]
+                functionArguments: [programId, customer.accountAddress.toString(), points]
             }
         });
 
-        const earnStampsResult = await aptos.signAndSubmitTransaction({
+        const earnPointsResult = await aptos.signAndSubmitTransaction({
             signer: admin,
-            transaction: earnStampsTxn
+            transaction: earnPointsTxn
         })
 
-        await aptos.waitForTransaction({ transactionHash: earnStampsResult.hash });
-        console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) earned ${stamps} stamps`);
+        await aptos.waitForTransaction({ transactionHash: earnPointsResult.hash });
+        console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) earned ${points} points`);
 
-        // Find a voucher that the customer has enough stamps for
-        const availableVouchers = vouchers.filter(voucher => voucher.stamps <= stamps);
+        // Find a voucher that the customer has enough points for
+        const availableVouchers = vouchers.filter(voucher => voucher.points <= points);
         if (availableVouchers.length > 0) {
             const randomVoucher = availableVouchers[Math.floor(Math.random() * availableVouchers.length)];
             const voucherIndex = vouchers.indexOf(randomVoucher);
@@ -218,7 +218,7 @@ async function main() {
             await aptos.waitForTransaction({ transactionHash: redeemVoucherResult.hash });
             console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) redeemed voucher ${voucherIndex} (${randomVoucher.description})`);
         } else {
-            console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) doesn't have enough stamps to redeem any vouchers`);
+            console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) doesn't have enough points to redeem any vouchers`);
         }
     }
 
@@ -226,13 +226,13 @@ async function main() {
 
     // Create a second loyalty program
     const secondProgramName = generateRandomProgramName();
-    const secondStampValidityDays = 60; // 60 days stamp validity for the second program
+    const secondPointValidityDays = 60; // 60 days point validity for the second program
     const createSecondProgramTxn = await aptos.transaction.build.simple({
         sender: admin.accountAddress,
         data: {
             function: `${MODULE_ADDRESS}::AptRewardsMain::create_loyalty_program`,
             typeArguments: [],
-            functionArguments: [secondProgramName, secondStampValidityDays]
+            functionArguments: [secondProgramName, secondPointValidityDays]
         },
     });
 
@@ -250,9 +250,9 @@ async function main() {
 
     // Create tiers for the second program
     const secondTiers = [
-        { name: "Basic", benefits: ["2% cashback on purchases"], stamps: 0 },
-        { name: "Premium", benefits: ["5% cashback on purchases", "Free shipping"], stamps: 200 },
-        { name: "Elite", benefits: ["10% cashback on purchases", "Free shipping", "24/7 support"], stamps: 1000 }
+        { name: "Basic", benefits: ["2% cashback on purchases"], points: 0 },
+        { name: "Premium", benefits: ["5% cashback on purchases", "Free shipping"], points: 200 },
+        { name: "Elite", benefits: ["10% cashback on purchases", "Free shipping", "24/7 support"], points: 1000 }
     ];
 
     for (const tier of secondTiers) {
@@ -261,7 +261,7 @@ async function main() {
             data: {
                 function: `${MODULE_ADDRESS}::AptRewardsMain::add_tier`,
                 typeArguments: [],
-                functionArguments: [secondProgramId, tier.name, tier.stamps, tier.benefits]
+                functionArguments: [secondProgramId, tier.name, tier.points, tier.benefits]
             },
         });
 
@@ -275,27 +275,27 @@ async function main() {
         console.log(`Created tier "${tier.name}" with ID:`, confirmedTierTxn?.events?.find(event => event.type.includes("AddTier"))?.data?.tier_id);
     }
 
-    // Award stamps to one of the users from the first program
+    // Award points to one of the users from the first program
     const selectedCustomerIndex = Math.floor(Math.random() * 5); // Randomly select one of the 5 customers
     const selectedCustomerAddress = customers[selectedCustomerIndex].accountAddress.toString();
-    const stampsToAward = 300; // Award 300 stamps to the selected customer
+    const pointsToAward = 300; // Award 300 points to the selected customer
 
-    const earnStampsTxn = await aptos.transaction.build.simple({
+    const earnPointsTxn = await aptos.transaction.build.simple({
         sender: admin.accountAddress,
         data: {
-            function: `${MODULE_ADDRESS}::AptRewardsMain::earn_stamps`,
+            function: `${MODULE_ADDRESS}::AptRewardsMain::earn_points`,
             typeArguments: [],
-            functionArguments: [secondProgramId, selectedCustomerAddress, stampsToAward]
+            functionArguments: [secondProgramId, selectedCustomerAddress, pointsToAward]
         }
     });
 
-    const earnStampsResult = await aptos.signAndSubmitTransaction({
+    const earnPointsResult = await aptos.signAndSubmitTransaction({
         signer: admin,
-        transaction: earnStampsTxn
+        transaction: earnPointsTxn
     });
 
-    await aptos.waitForTransaction({ transactionHash: earnStampsResult.hash });
-    console.log(`Customer ${selectedCustomerIndex + 1} (${selectedCustomerAddress}) earned ${stampsToAward} stamps in the second program`);
+    await aptos.waitForTransaction({ transactionHash: earnPointsResult.hash });
+    console.log(`Customer ${selectedCustomerIndex + 1} (${selectedCustomerAddress}) earned ${pointsToAward} points in the second program`);
 
     console.log("Second test program setup completed successfully!");
 }

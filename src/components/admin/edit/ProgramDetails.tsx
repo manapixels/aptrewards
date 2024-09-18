@@ -35,7 +35,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
     const { triggerRefetch } = useProgramStore();
 
     const [name, setName] = useState('');
-    const [stampValidityDays, setStampValidityDays] = useState(0);
+    const [pointValidityDays, setPointValidityDays] = useState(0);
 
     const [isEditProgramOpen, setIsEditProgramOpen] = useState(false);
     const [isCustomersModalOpen, setIsCustomersModalOpen] = useState(false);
@@ -46,7 +46,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
     useEffect(() => {
         if (program) {
             setName(program.name);
-            setStampValidityDays(program.stampValidityDays || 0);
+            setPointValidityDays(program.pointValidityDays || 0);
         }
     }, [program]);
 
@@ -65,7 +65,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                     functionArguments: [
                         program.id,
                         name,
-                        stampValidityDays,
+                        pointValidityDays,
                     ],
                 },
             });
@@ -100,10 +100,10 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
     const filteredAndSortedCustomers = () => {
         if (!program) return [];
 
-        let customers = program?.customersWithStamps?.map((customer, index) => ({
+        let customers = program?.customersWithPoints?.map((customer, index) => ({
             address: customer.customer,
-            stamps: customer.stamps,
-            tier: getTierForCustomer(program, customer.stamps),
+            points: customer.points,
+            tier: getTierForCustomer(program, customer.points),
         }));
 
         if (filterTiers.length) {
@@ -112,9 +112,9 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
 
         customers?.sort((a, b) => {
             if (sortOrder === 'asc') {
-                return a.stamps - b.stamps;
+                return a.points - b.points;
             } else {
-                return b.stamps - a.stamps;
+                return b.points - a.points;
             }
         });
 
@@ -141,14 +141,14 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
             ),
         },
         {
-            accessorKey: 'stamps',
+            accessorKey: 'points',
             header: ({ column }) => {
                 return (
                     <Button
                         variant="ghost"
                         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                     >
-                        Stamps
+                        Points
                         {column.getIsSorted() === "asc" ? <ArrowDownNarrowWide className="ml-2 h-4 w-4" /> : <ArrowDownWideNarrow className="ml-2 h-4 w-4" />}
                     </Button>
                 )
@@ -223,13 +223,13 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                                     className="mb-2"
                                 />
                             </Label>
-                            <Label htmlFor="stampValidityDays">
-                                Stamp Validity Days:
+                            <Label htmlFor="pointValidityDays">
+                                Point Validity Days:
                                 <Input
                                     type="number"
-                                    id="stampValidityDays"
-                                    value={stampValidityDays}
-                                    onChange={(e) => setStampValidityDays(Number(e.target.value))}
+                                    id="pointValidityDays"
+                                    value={pointValidityDays}
+                                    onChange={(e) => setPointValidityDays(Number(e.target.value))}
                                     className="mb-2"
                                 />
                             </Label>
@@ -251,17 +251,17 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                         Customers
                     </span>
                     <span className="text-lg font-bold leading-none sm:text-3xl">
-                        {program?.customersWithStamps?.length || 'N/A'}
+                        {program?.customersWithPoints?.length || 'N/A'}
                     </span>
                 </button>
                 <div
                     className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:px-8 sm:py-6"
                 >
                     <span className="text-xs text-muted-foreground">
-                        Stamps Issued
+                        Points Issued
                     </span>
                     <span className="text-lg font-bold leading-none sm:text-3xl">
-                        {program?.totalStampsIssued || 'N/A'}
+                        {program?.totalPointsIssued || 'N/A'}
                     </span>
                 </div>
             </div>
@@ -279,8 +279,8 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                 <div className="font-semibold">Options:</div>
                 <ul className="list-disc pl-5">
                     <li>
-                        <span className="text-gray-600">Stamp Validity Days:</span>
-                        <span className="ml-1">{program?.stampValidityDays || 'N/A'}</span>
+                        <span className="text-gray-600">Point Validity Days:</span>
+                        <span className="ml-1">{program?.pointValidityDays || 'N/A'}</span>
                     </li>
                 </ul>
             </div>

@@ -23,7 +23,7 @@ const VoucherRedemptionsTable = ({ vouchers, vouchersRedeemed }: { vouchers: Vou
         <TableHeader>
             <TableRow>
                 <TableHead>Voucher Description</TableHead>
-                <TableHead>Stamps Required</TableHead>
+                <TableHead>Points Required</TableHead>
                 <TableHead>Expiration Date</TableHead>
                 <TableHead className="text-right">Redemptions</TableHead>
             </TableRow>
@@ -32,7 +32,7 @@ const VoucherRedemptionsTable = ({ vouchers, vouchersRedeemed }: { vouchers: Vou
             {vouchers?.map((voucher, index) => (
                 <TableRow key={voucher.id}>
                     <TableCell className="font-medium">{voucher.description}</TableCell>
-                    <TableCell>{voucher.stampsRequired}</TableCell>
+                    <TableCell>{voucher.pointsRequired}</TableCell>
                     <TableCell>{new Date(voucher.expirationDate * 1000).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">{vouchersRedeemed?.[index] || 0}</TableCell>
                 </TableRow>
@@ -49,7 +49,7 @@ export default function ProgramVouchers({ program }: { program: LoyaltyProgram }
     const [isAddVoucherDialogOpen, setIsAddVoucherDialogOpen] = useState(false);
     const [newVoucher, setNewVoucher] = useState({
         description: '',
-        stampsRequired: 0,
+        pointsRequired: 0,
         expirationDate: ''
     });
 
@@ -60,7 +60,7 @@ export default function ProgramVouchers({ program }: { program: LoyaltyProgram }
             if (!account) throw new Error("No account connected");
             if (!moduleAddress || !moduleName) throw new Error("No module address or name");
 
-            const expirationTimestamp = Math.floor(new Date(newVoucher.expirationDate).getTime() / 1000);
+            const expirationTimepoint = Math.floor(new Date(newVoucher.expirationDate).getTime() / 1000);
 
             const response = await signAndSubmitTransaction({
                 sender: account.address,
@@ -70,8 +70,8 @@ export default function ProgramVouchers({ program }: { program: LoyaltyProgram }
                     functionArguments: [
                         new U64(parseInt(program.id)),
                         new MoveString(newVoucher.description),
-                        new U64(newVoucher.stampsRequired),
-                        new U64(expirationTimestamp),
+                        new U64(newVoucher.pointsRequired),
+                        new U64(expirationTimepoint),
                     ],
                 },
             });
@@ -117,12 +117,12 @@ export default function ProgramVouchers({ program }: { program: LoyaltyProgram }
                                 onChange={(e) => setNewVoucher({ ...newVoucher, description: e.target.value })}
                                 className="mb-2"
                             />
-                            <Label htmlFor="voucherStampsRequired">Stamps Required</Label>
+                            <Label htmlFor="voucherPointsRequired">Points Required</Label>
                             <Input
-                                id="voucherStampsRequired"
+                                id="voucherPointsRequired"
                                 type="number"
-                                value={newVoucher.stampsRequired}
-                                onChange={(e) => setNewVoucher({ ...newVoucher, stampsRequired: parseInt(e.target.value) })}
+                                value={newVoucher.pointsRequired}
+                                onChange={(e) => setNewVoucher({ ...newVoucher, pointsRequired: parseInt(e.target.value) })}
                                 className="mb-2"
                             />
                             <Label htmlFor="voucherExpirationDate">Expiration Date</Label>

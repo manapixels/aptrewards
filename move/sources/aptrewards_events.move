@@ -7,7 +7,7 @@ module aptrewards_addr::AptRewardsEvents {
     struct CreateLoyaltyProgram has store, drop {
         program_id: u64,
         owner: address,
-        stamp_validity_days: u64
+        point_validity_days: u64
     }
 
     #[event]
@@ -21,14 +21,14 @@ module aptrewards_addr::AptRewardsEvents {
     struct CreateVoucher has store, drop {
         program_id: u64,
         voucher_id: u64,
-        stamps_required: u64,
+        points_required: u64,
         description: String,
         expiration_date: u64,
         max_redemptions: u64,
     }
 
     #[event]
-    struct EarnStamps has store, drop {
+    struct EarnPoints has store, drop {
         program_id: u64,
         customer: address,
         amount: u64,
@@ -49,7 +49,7 @@ module aptrewards_addr::AptRewardsEvents {
         tier_id: u64,
         name: String,
         benefits: vector<String>,
-        stamps_required: u64,
+        points_required: u64,
     }
 
     #[event]
@@ -65,25 +65,25 @@ module aptrewards_addr::AptRewardsEvents {
         tier_id: u64,
         new_name: String,
         new_benefits: vector<String>,
-        new_stamps_required: u64,
+        new_points_required: u64,
     }
 
     #[event]
     struct EditLoyaltyProgram has store, drop {
         program_id: u64,
         new_name: String,
-        new_stamp_validity_days: u64,
+        new_point_validity_days: u64,
     }
 
     public(friend) fun emit_create_loyalty_program(
         program_id: u64, 
         owner: address,
-        stamp_validity_days: u64
+        point_validity_days: u64
     ) {
         event::emit(CreateLoyaltyProgram { 
             program_id,
             owner,
-            stamp_validity_days
+            point_validity_days
         });
     }
 
@@ -102,7 +102,7 @@ module aptrewards_addr::AptRewardsEvents {
     public(friend) fun emit_create_voucher(
         program_id: u64, 
         voucher_id: u64,
-        stamps_required: u64,
+        points_required: u64,
         description: String,
         expiration_date: u64,
         max_redemptions: u64
@@ -110,19 +110,19 @@ module aptrewards_addr::AptRewardsEvents {
         event::emit(CreateVoucher { 
             program_id, 
             voucher_id,
-            stamps_required,
+            points_required,
             description,
             expiration_date,
             max_redemptions
         });
     }
 
-    public(friend) fun emit_earn_stamps(
+    public(friend) fun emit_earn_points(
         program_id: u64, 
         customer: address, 
         amount: u64
     ) {
-        event::emit(EarnStamps { 
+        event::emit(EarnPoints { 
             program_id, 
             customer, 
             amount 
@@ -150,14 +150,14 @@ module aptrewards_addr::AptRewardsEvents {
         tier_id: u64,
         name: String,
         benefits: vector<String>,
-        stamps_required: u64
+        points_required: u64
     ) {
         event::emit(AddTier { 
             program_id,
             tier_id,
             name,
             benefits,
-            stamps_required
+            points_required
         });
     }
 
@@ -178,26 +178,26 @@ module aptrewards_addr::AptRewardsEvents {
         tier_id: u64,
         new_name: String,
         new_benefits: vector<String>,
-        new_stamps_required: u64
+        new_points_required: u64
     ) {
         event::emit(EditTier { 
             program_id,
             tier_id,
             new_name,
             new_benefits,
-            new_stamps_required
+            new_points_required
         });
     }
 
     public(friend) fun emit_edit_loyalty_program(
         program_id: u64,
         new_name: String,
-        new_stamp_validity_days: u64
+        new_point_validity_days: u64
     ) {
         event::emit(EditLoyaltyProgram {
             program_id,
             new_name,
-            new_stamp_validity_days
+            new_point_validity_days
         });
     }
 }

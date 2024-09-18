@@ -63,9 +63,9 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
         const formattedUserDetails: UserProgramDetails[] = rawDataArray.map(rawData => ({
           program_id: rawData.program_id,
           program_name: rawData.program_name,
-          stamps: rawData.stamps,
-          lifetime_stamps: rawData.lifetime_stamps,
-          stamps_to_next_tier: rawData.stamps_to_next_tier,
+          points: rawData.points,
+          lifetime_points: rawData.lifetime_points,
+          points_to_next_tier: rawData.points_to_next_tier,
           current_tier: rawData.current_tier?.vec[0],
           next_tier: rawData.next_tier?.vec[0],
           owned_vouchers: rawData.owned_vouchers,
@@ -117,7 +117,7 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-gray-500 text-xs">Points</span>
-                        <span className="font-semibold text-sm">{program.stamps}</span>
+                        <span className="font-semibold text-sm">{program.points}</span>
                       </div>
                     </>
                   )}

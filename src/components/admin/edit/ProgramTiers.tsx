@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress"
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/utils/aptos';
 import { useProgramStore } from '@/store/programStore';
-import { CustomerWithStamps, LoyaltyProgram, Tier } from '@/types/aptrewards';
+import { CustomerWithPoints, LoyaltyProgram, Tier } from '@/types/aptrewards';
 import { MoveString, MoveVector, U64 } from '@aptos-labs/ts-sdk';
 import { CustomerTable } from '@/components/admin/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -47,7 +47,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                 functionArguments = [
                     new U64(parseInt(program?.id)),
                     new MoveString(tier.name),
-                    new U64(tier.stampsRequired),
+                    new U64(tier.pointsRequired),
                     MoveVector.MoveString(tier.benefits),
                 ];
             } else if (action === 'edit') {
@@ -55,7 +55,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                     new U64(parseInt(program?.id)),
                     new U64(tier.id),
                     new MoveString(tier.name),
-                    new U64(tier.stampsRequired),
+                    new U64(tier.pointsRequired),
                     MoveVector.MoveString(tier.benefits),
                 ];
             } else if (action === 'remove') {
@@ -147,7 +147,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
     const renderTierChart = () => {
         if (!program?.tiers || program.tiers.length === 0) return null;
 
-        const maxStamps = program.tiers[program.tiers.length - 1].stampsRequired;
+        const maxPoints = program.tiers[program.tiers.length - 1].pointsRequired;
 
         return (
             <div className="px-6 py-4">
@@ -158,7 +158,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                         <div
                             key={tier.id}
                             className="absolute transform translate-y-1/2 -top-1/2 flex flex-col items-center"
-                            style={{ left: `${(tier.stampsRequired / maxStamps) * 80}%` }}
+                            style={{ left: `${(tier.pointsRequired / maxPoints) * 80}%` }}
                         >
                             <span className="text-xs font-medium block text-center whitespace-nowrap">
                                 {tier.name}
@@ -167,7 +167,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                                 <div className="w-1 h-1 bg-white rounded-full mx-auto z-10" />
                             </div>
                             <span className="text-xs text-gray-500 block text-center">
-                                {tier.stampsRequired}
+                                {tier.pointsRequired}
                             </span>
                         </div>
                     ))}
@@ -184,11 +184,11 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
     const renderCustomersTable = () => {
         if (!program || !selectedTier) return null;
 
-        const customers = program?.customersWithStamps
-            ?.map((customer: CustomerWithStamps, index: number) => ({
+        const customers = program?.customersWithPoints
+            ?.map((customer: CustomerWithPoints, index: number) => ({
                 address: customer.customer,
-                stamps: customer.stamps,
-                tier: getTierForCustomer(program, customer.stamps),
+                points: customer.points,
+                tier: getTierForCustomer(program, customer.points),
             }))
             ?.filter((customer: { tier: string }) => customer.tier === selectedTier);
 
@@ -208,8 +208,8 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                 ),
             },
             {
-                accessorKey: 'stamps',
-                header: 'Stamps',
+                accessorKey: 'points',
+                header: 'Points',
                 cell: info => info.getValue(),
             },
             {
@@ -250,7 +250,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                                 const newTier: Tier = {
                                     id: 0,
                                     name: formData.get('tierName') as string,
-                                    stampsRequired: parseInt(formData.get('tierStampsRequired') as string),
+                                    pointsRequired: parseInt(formData.get('tierPointsRequired') as string),
                                     benefits: newTierBenefits.filter(benefit => benefit.trim() !== ''),
                                 };
                                 handleTierAction('add', newTier);
@@ -262,10 +262,10 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                                     autoComplete="off"
                                     className="mb-2"
                                 />
-                                <Label htmlFor="tierStampsRequired">Stamps Required</Label>
+                                <Label htmlFor="tierPointsRequired">Points Required</Label>
                                 <Input
-                                    id="tierStampsRequired"
-                                    name="tierStampsRequired"
+                                    id="tierPointsRequired"
+                                    name="tierPointsRequired"
                                     type="number"
                                     className="mb-2"
                                 />
@@ -311,7 +311,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                         <div key={tier.id} className="px-6 py-4">
                             <div className="flex justify-between">
                                 <h4 className="font-medium">{tier.name}</h4>
-                                <div className="text-sm">From {tier.stampsRequired} stamps</div>
+                                <div className="text-sm">From {tier.pointsRequired} points</div>
                             </div>
                             <div className="flex justify-between gap-4">
                                 <div className="text-gray-600 text-sm">
@@ -378,13 +378,13 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                             onChange={(e) => setEditingTier(prev => prev ? { ...prev, name: e.target.value } : null)}
                             className="mb-2"
                         />
-                        <Label htmlFor="tierStampsRequired">Stamps Required</Label>
+                        <Label htmlFor="tierPointsRequired">Points Required</Label>
                         <Input
-                            id="tierStampsRequired"
-                            name="tierStampsRequired"
+                            id="tierPointsRequired"
+                            name="tierPointsRequired"
                             type="number"
-                            value={editingTier?.stampsRequired || 0}
-                            onChange={(e) => setEditingTier(prev => prev ? { ...prev, stampsRequired: parseInt(e.target.value) } : null)}
+                            value={editingTier?.pointsRequired || 0}
+                            onChange={(e) => setEditingTier(prev => prev ? { ...prev, pointsRequired: parseInt(e.target.value) } : null)}
                             className="mb-2"
                         />
                         <Label>Benefits</Label>

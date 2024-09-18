@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getAptosClient } from "@/utils/aptos";
-import { LoyaltyProgram, Tier, LoyaltyProgramSummary, CustomerWithStamps } from "@/types/aptrewards";
+import { LoyaltyProgram, Tier, LoyaltyProgramSummary, CustomerWithPoints } from "@/types/aptrewards";
 import { moduleAddress, moduleName } from "@/constants";
 
 type ProgramStore = {
@@ -11,7 +11,7 @@ type ProgramStore = {
     fetchPrograms: (address: string) => Promise<void>;
     fetchProgramDetails: (programId: string) => Promise<void>;
     triggerRefetch: () => void;
-    getTierForCustomer: (program: LoyaltyProgram, stamps: number) => string;
+    getTierForCustomer: (program: LoyaltyProgram, points: number) => string;
 };
 
 const getProgramsByAddress = async (address: string): Promise<LoyaltyProgramSummary[]> => {
@@ -50,10 +50,10 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
         id: response[0]?.toString() || '',
         name: response[1]?.toString() || '',
         owner: response[2]?.toString() || '',
-        stampValidityDays: Number(response[3]),
+        pointValidityDays: Number(response[3]),
         vouchers: (response[4] as any[])?.map((voucher: any) => ({
             id: Number(voucher.id),
-            stampsRequired: Number(voucher.stamps_required),
+            pointsRequired: Number(voucher.points_required),
             description: voucher.description,
             isMonetary: voucher.is_monetary,
             value: Number(voucher.value),
@@ -64,23 +64,23 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
         tiers: (response[5] as any[])?.map((tier: any) => ({
             id: Number(tier.id),
             name: tier.name,
-            stampsRequired: Number(tier.stamps_required),
+            pointsRequired: Number(tier.points_required),
             benefits: tier.benefits,
             customerCount: Number(tier.customer_count),
-        })).sort((a, b) => a.stampsRequired - b.stampsRequired) as Tier[] || [],
-        totalStampsIssued: Number(response[6]),
-        customersWithStamps: response[7] as CustomerWithStamps[],
+        })).sort((a, b) => a.pointsRequired - b.pointsRequired) as Tier[] || [],
+        totalPointsIssued: Number(response[6]),
+        customersWithPoints: response[7] as CustomerWithPoints[],
     };
 
     return transformedProgramDetails;
 };
 
 // Add this helper function to determine the customer's tier
-const getTierForCustomer = (program: LoyaltyProgram, stamps: number): string => {
+const getTierForCustomer = (program: LoyaltyProgram, points: number): string => {
     if (!program.tiers || program.tiers.length === 0) return 'No Tier';
     
     for (let i = program.tiers.length - 1; i >= 0; i--) {
-        if (stamps >= program.tiers[i].stampsRequired) {
+        if (points >= program.tiers[i].pointsRequired) {
             return program.tiers[i].name;
         }
     }
@@ -131,7 +131,7 @@ export const useProgramStore = create<ProgramStore>((set, get) => ({
         }
     },
     triggerRefetch: () => set({ shouldRefetch: true }),
-    getTierForCustomer: (program: LoyaltyProgram, stamps: number) => {
-        return getTierForCustomer(program, stamps);
+    getTierForCustomer: (program: LoyaltyProgram, points: number) => {
+        return getTierForCustomer(program, points);
     },
 }));
