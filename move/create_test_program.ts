@@ -99,7 +99,7 @@ async function main() {
                 "Exclusive member-only events",
                 "2x points on select products"
             ],
-            points: 100
+            points: 10000
         },
         {
             name: "Gold",
@@ -110,7 +110,7 @@ async function main() {
                 "Personalized offers",
                 "3x points on select products"
             ],
-            points: 500
+            points: 50000
         }
     ];
 
@@ -136,11 +136,11 @@ async function main() {
 
     // Create vouchers
     const vouchers = [
-        { points: 50, description: "10% off", maxRedemptions: 100 },
-        { points: 100, description: "$5 off", maxRedemptions: 50 },
-        { points: 200, description: "Free item", maxRedemptions: 25 },
-        { points: 300, description: "$10 off", maxRedemptions: 20 },
-        { points: 500, description: "VIP experience", maxRedemptions: 10 }
+        { points: 5000, description: "10% off", maxRedemptions: 100 },
+        { points: 10000, description: "$5 off", maxRedemptions: 50 },
+        { points: 20000, description: "Free item", maxRedemptions: 25 },
+        { points: 30000, description: "$10 off", maxRedemptions: 20 },
+        { points: 50000, description: "VIP experience", maxRedemptions: 10 }
     ];
 
     for (const voucher of vouchers) {
@@ -176,7 +176,7 @@ async function main() {
         customers.push(customer);
         await aptos.fundAccount({ accountAddress: customer.accountAddress, amount: 10_000_000 });
 
-        const points = Math.floor(Math.random() * 500) + 1; // Random points between 1 and 500
+        const points = Math.floor(Math.random() * 50000) + 1000; // Random points between 1000 and 50000
 
         const earnPointsTxn = await aptos.transaction.build.simple({
             sender: admin.accountAddress,
@@ -251,8 +251,8 @@ async function main() {
     // Create tiers for the second program
     const secondTiers = [
         { name: "Basic", benefits: ["2% cashback on purchases"], points: 0 },
-        { name: "Premium", benefits: ["5% cashback on purchases", "Free shipping"], points: 200 },
-        { name: "Elite", benefits: ["10% cashback on purchases", "Free shipping", "24/7 support"], points: 1000 }
+        { name: "Premium", benefits: ["5% cashback on purchases", "Free shipping"], points: 20000 },
+        { name: "Elite", benefits: ["10% cashback on purchases", "Free shipping", "24/7 support"], points: 100000 }
     ];
 
     for (const tier of secondTiers) {
@@ -278,7 +278,7 @@ async function main() {
     // Award points to one of the users from the first program
     const selectedCustomerIndex = Math.floor(Math.random() * 5); // Randomly select one of the 5 customers
     const selectedCustomerAddress = customers[selectedCustomerIndex].accountAddress.toString();
-    const pointsToAward = 300; // Award 300 points to the selected customer
+    const pointsToAward = 30000; // Award 30000 points to the selected customer
 
     const earnPointsTxn = await aptos.transaction.build.simple({
         sender: admin.accountAddress,
