@@ -7,7 +7,7 @@ module aptrewards_addr::AptRewardsMain {
     use std::option::{Self, Option};
     use std::simple_map::{SimpleMap,Self};
 
-    struct Coupon has store, drop, copy {
+    struct Voucher has store, drop, copy {
         id: u64,
         stamps_required: u64,
         description: String,
@@ -28,8 +28,8 @@ module aptrewards_addr::AptRewardsMain {
         id: u64,
         name: String,
         owner: address,
-        coupons: vector<Coupon>,
-        coupon_count: u64,
+        vouchers: vector<Voucher>,
+        voucher_count: u64,
         customer_stamps: SimpleMap<address, u64>,
         customer_lifetime_stamps: SimpleMap<address, u64>,
         customer_last_stamp_date: SimpleMap<address, u64>,
@@ -73,8 +73,8 @@ module aptrewards_addr::AptRewardsMain {
             id: program_id,
             name,
             owner: owner_address,
-            coupons: vector::empty(),
-            coupon_count: 0,
+            vouchers: vector::empty(),
+            voucher_count: 0,
             customer_stamps: simple_map::create<address, u64>(),
             customer_lifetime_stamps: simple_map::create<address, u64>(),
             customer_last_stamp_date: simple_map::create<address, u64>(),
@@ -145,7 +145,7 @@ module aptrewards_addr::AptRewardsMain {
         AptRewardsEvents::emit_transfer_ownership(program_id, old_owner, new_owner);
     }
 
-    public entry fun create_coupon(
+    public entry fun create_voucher(
         account: &signer,
         program_id: u64,
         description: String,
@@ -159,8 +159,8 @@ module aptrewards_addr::AptRewardsMain {
         let program = simple_map::borrow_mut(&mut factory.programs, &program_id);
         assert!(program.owner == address_of(account), E_NOT_OWNER);
 
-        let coupon = Coupon {
-            id: program.coupon_count,
+        let voucher = Voucher {
+            id: program.voucher_count,
             description,
             stamps_required,
             expiration_date,
@@ -169,10 +169,10 @@ module aptrewards_addr::AptRewardsMain {
             is_used: false,
         };
 
-        vector::push_back(&mut program.coupons, coupon);
-        program.coupon_count = program.coupon_count + 1;
+        vector::push_back(&mut program.vouchers, voucher);
+        program.voucher_count = program.voucher_count + 1;
 
-        AptRewardsEvents::emit_create_coupon(program_id, coupon.id, stamps_required, description, expiration_date, max_redemptions);
+        AptRewardsEvents::emit_create_voucher(program_id, voucher.id, stamps_required, description, expiration_date, max_redemptions);
     }
 
     public entry fun add_tier(
@@ -270,22 +270,22 @@ module aptrewards_addr::AptRewardsMain {
         AptRewardsEvents::emit_earn_stamps(program_id, customer, amount);
     }
 
-    public entry fun redeem_coupon(sender: &signer, program_id: u64, customer: address, coupon_id: u64) acquires LoyaltyProgramFactory {
+    public entry fun redeem_voucher(sender: &signer, program_id: u64, customer: address, voucher_id: u64) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
         assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
         
         let program = simple_map::borrow_mut(&mut factory.programs, &program_id);
-        assert!(vector::length(&program.coupons) > coupon_id, E_COUPON_NOT_FOUND);
+        assert!(vector::length(&program.vouchers) > voucher_id, E_COUPON_NOT_FOUND);
         
         let sender_address = address_of(sender);
         assert!(sender_address == program.owner || sender_address == customer, E_NOT_AUTHORIZED);
         
         assert!(simple_map::contains_key(&program.customer_stamps, &customer), E_CUSTOMER_NOT_FOUND);
         
-        let coupon = vector::borrow_mut(&mut program.coupons, coupon_id);
-        assert!(vector::length(&coupon.redeemed_by) < coupon.max_redemptions, E_COUPON_LIMIT_REACHED);
-        assert!(timestamp::now_seconds() <= coupon.expiration_date, E_COUPON_EXPIRED);
-        assert!(!vector::contains(&coupon.redeemed_by, &customer), E_COUPON_ALREADY_REDEEMED);
+        let voucher = vector::borrow_mut(&mut program.vouchers, voucher_id);
+        assert!(vector::length(&voucher.redeemed_by) < voucher.max_redemptions, E_COUPON_LIMIT_REACHED);
+        assert!(timestamp::now_seconds() <= voucher.expiration_date, E_COUPON_EXPIRED);
+        assert!(!vector::contains(&voucher.redeemed_by, &customer), E_COUPON_ALREADY_REDEEMED);
         
         // Check for expired stamps before redemption
         let customer_stamps = simple_map::borrow_mut(&mut program.customer_stamps, &customer);
@@ -294,12 +294,12 @@ module aptrewards_addr::AptRewardsMain {
             *customer_stamps = 0;
         };
         
-        assert!(*customer_stamps >= coupon.stamps_required, E_INSUFFICIENT_STAMPS);
+        assert!(*customer_stamps >= voucher.stamps_required, E_INSUFFICIENT_STAMPS);
         
-        *customer_stamps = *customer_stamps - coupon.stamps_required;
-        vector::push_back(&mut coupon.redeemed_by, customer);
+        *customer_stamps = *customer_stamps - voucher.stamps_required;
+        vector::push_back(&mut voucher.redeemed_by, customer);
         
-        AptRewardsEvents::emit_redeem_coupon(program_id, customer, coupon_id, vector::length(&coupon.redeemed_by), coupon.description);
+        AptRewardsEvents::emit_redeem_voucher(program_id, customer, voucher_id, vector::length(&voucher.redeemed_by), voucher.description);
     }
 
     struct TierWithCustomerCount has drop, store {
@@ -321,7 +321,7 @@ module aptrewards_addr::AptRewardsMain {
         String, // name
         address, // owner
         u64, // stamp_validity_days
-        vector<Coupon>,
+        vector<Voucher>,
         vector<TierWithCustomerCount>,
         u64, // total_stamps_issued
         vector<CustomerWithStamps> // customers_with_stamps
@@ -355,7 +355,7 @@ module aptrewards_addr::AptRewardsMain {
             program.name,
             program.owner,
             program.stamp_validity_days,
-            *&program.coupons,
+            *&program.vouchers,
             tiers_with_customer_count,
             total_stamps_issued,
             customers_with_stamps
@@ -457,7 +457,7 @@ module aptrewards_addr::AptRewardsMain {
     }
 
     #[view]
-    public fun get_user_program_details(program_id: u64, user_address: address): (String, u64, u64, vector<Coupon>, vector<Coupon>, vector<Tier>) acquires LoyaltyProgramFactory {
+    public fun get_user_program_details(program_id: u64, user_address: address): (String, u64, u64, vector<Voucher>, vector<Voucher>, vector<Tier>) acquires LoyaltyProgramFactory {
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
         
@@ -468,32 +468,32 @@ module aptrewards_addr::AptRewardsMain {
             0
         };
 
-        let owned_coupons = get_user_owned_coupons(program, user_address);
+        let owned_vouchers = get_user_owned_vouchers(program, user_address);
 
         (
             program.name,
             user_stamps,
             program.stamp_validity_days,
-            owned_coupons,
-            program.coupons,
+            owned_vouchers,
+            program.vouchers,
             program.tiers
         )
     }
 
-    fun get_user_owned_coupons(program: &LoyaltyProgram, user_address: address): vector<Coupon> {
-        let owned_coupons = vector::empty<Coupon>();
+    fun get_user_owned_vouchers(program: &LoyaltyProgram, user_address: address): vector<Voucher> {
+        let owned_vouchers = vector::empty<Voucher>();
         let i = 0;
-        let len = vector::length(&program.coupons);
+        let len = vector::length(&program.vouchers);
         
         while (i < len) {
-            let coupon = vector::borrow(&program.coupons, i);
-            if (vector::contains(&coupon.redeemed_by, &user_address)) {
-                vector::push_back(&mut owned_coupons, *coupon);
+            let voucher = vector::borrow(&program.vouchers, i);
+            if (vector::contains(&voucher.redeemed_by, &user_address)) {
+                vector::push_back(&mut owned_vouchers, *voucher);
             };
             i = i + 1;
         };
         
-        owned_coupons
+        owned_vouchers
     }
 
     struct UserProgramDetails has drop, store {
@@ -501,7 +501,7 @@ module aptrewards_addr::AptRewardsMain {
         program_name: String,
         stamps: u64,
         lifetime_stamps: u64,
-        owned_coupons: vector<Coupon>,
+        owned_vouchers: vector<Voucher>,
         current_tier: Option<Tier>,
         next_tier: Option<Tier>,
         stamps_to_next_tier: u64,
@@ -523,7 +523,7 @@ module aptrewards_addr::AptRewardsMain {
             if (simple_map::contains_key(&program.customer_stamps, &user_address)) {
                 let stamps = *simple_map::borrow(&program.customer_stamps, &user_address);
                 let lifetime_stamps = *simple_map::borrow(&program.customer_lifetime_stamps, &user_address);
-                let owned_coupons = get_user_owned_coupons(program, user_address);
+                let owned_vouchers = get_user_owned_vouchers(program, user_address);
                 let (current_tier, next_tier, stamps_to_next_tier) = get_user_tier_info(program, stamps);
 
                 let program_details = UserProgramDetails {
@@ -531,7 +531,7 @@ module aptrewards_addr::AptRewardsMain {
                     program_name: program.name,
                     stamps,
                     lifetime_stamps,
-                    owned_coupons,
+                    owned_vouchers,
                     current_tier,
                     next_tier,
                     stamps_to_next_tier,
@@ -630,16 +630,16 @@ module aptrewards_addr::AptRewardsMain {
     }
 
     #[test(fx = @aptos_framework, owner = @0x123)]
-    public fun test_create_coupon(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
+    public fun test_create_voucher(fx: &signer, owner: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
-        create_coupon(owner, 1, utf8(b"Test Coupon"), 10, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
+        create_voucher(owner, 1, utf8(b"Test Voucher"), 10, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
         
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = simple_map::borrow(&factory.programs, &1);
-        // Checks if the length of the merchant's coupons vector is equal to 1, indicating a single coupon was created successfully.
-        assert!(vector::length(&program.coupons) == 1, 0);
+        // Checks if the length of the merchant's vouchers vector is equal to 1, indicating a single voucher was created successfully.
+        assert!(vector::length(&program.vouchers) == 1, 0);
     }
 
     #[test(fx = @aptos_framework, owner = @0x123)]
@@ -724,51 +724,51 @@ module aptrewards_addr::AptRewardsMain {
     }
 
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
-    public fun test_redeem_coupon(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
+    public fun test_redeem_voucher(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
-        create_coupon(owner, 1, utf8(b"Test Coupon"), 10, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
+        create_voucher(owner, 1, utf8(b"Test Voucher"), 10, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
         
         account::create_account_for_test(address_of(customer));
         earn_stamps(owner, 1, address_of(customer), 10);
         
-        redeem_coupon(owner, 1, address_of(customer), 0);
+        redeem_voucher(owner, 1, address_of(customer), 0);
         
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = simple_map::borrow(&factory.programs, &1);
-        // Checks if the customer's stamp count is 0 after redeeming a coupon
+        // Checks if the customer's stamp count is 0 after redeeming a voucher
         assert!(*simple_map::borrow(&program.customer_stamps, &address_of(customer)) == 0, 0);
     }
 
-    // This should fail due to coupon expiration
+    // This should fail due to voucher expiration
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
     #[expected_failure(abort_code = E_COUPON_EXPIRED)]
-    public fun test_coupon_expiration(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
+    public fun test_voucher_expiration(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
         let current_time = timestamp::now_seconds();
-        create_coupon(owner, 1, utf8(b"Expired Coupon"), 10, current_time + 10, 1);
+        create_voucher(owner, 1, utf8(b"Expired Voucher"), 10, current_time + 10, 1);
         
         account::create_account_for_test(address_of(customer));
         earn_stamps(owner, 1, address_of(customer), 10);        
-        // Advance time by 11 seconds to make the coupon expire
+        // Advance time by 11 seconds to make the voucher expire
         timestamp::fast_forward_seconds(11);
         
-        // This should fail due to coupon expiration
-        redeem_coupon(owner, 1, address_of(customer), 0);
+        // This should fail due to voucher expiration
+        redeem_voucher(owner, 1, address_of(customer), 0);
     }
 
     // First redemption should succeed
     // Second redemption should fail due to reaching the redemption limit
     #[test(fx = @aptos_framework, owner = @0x123, customer1 = @0x456, customer2 = @0x789)]
     #[expected_failure(abort_code = E_COUPON_LIMIT_REACHED)]
-    public fun test_coupon_redemption_limit(fx: &signer, owner: &signer, customer1: &signer, customer2: &signer) acquires LoyaltyProgramFactory {
+    public fun test_voucher_redemption_limit(fx: &signer, owner: &signer, customer1: &signer, customer2: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
         let current_time = timestamp::now_seconds();
-        create_coupon(owner, 1, utf8(b"Limited Coupon"), 10, current_time + 3600, 1);
+        create_voucher(owner, 1, utf8(b"Limited Voucher"), 10, current_time + 3600, 1);
         
         account::create_account_for_test(address_of(customer1));
         account::create_account_for_test(address_of(customer2));
@@ -776,10 +776,10 @@ module aptrewards_addr::AptRewardsMain {
         earn_stamps(owner, 1, address_of(customer2), 10);
         
         // First redemption
-        redeem_coupon(owner, 1, address_of(customer1), 0);
+        redeem_voucher(owner, 1, address_of(customer1), 0);
         
         // Second redemption
-        redeem_coupon(owner, 1, address_of(customer2), 0);
+        redeem_voucher(owner, 1, address_of(customer2), 0);
     }
 
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]

@@ -18,9 +18,9 @@ module aptrewards_addr::AptRewardsEvents {
     }
 
     #[event]
-    struct CreateCoupon has store, drop {
+    struct CreateVoucher has store, drop {
         program_id: u64,
-        coupon_id: u64,
+        voucher_id: u64,
         stamps_required: u64,
         description: String,
         expiration_date: u64,
@@ -35,10 +35,10 @@ module aptrewards_addr::AptRewardsEvents {
     }
 
     #[event]
-    struct RedeemCoupon has store, drop {
+    struct RedeemVoucher has store, drop {
         program_id: u64,
         customer: address,
-        coupon_id: u64,
+        voucher_id: u64,
         current_redemptions: u64,
         description: String,
     }
@@ -99,17 +99,17 @@ module aptrewards_addr::AptRewardsEvents {
         });
     }
 
-    public(friend) fun emit_create_coupon(
+    public(friend) fun emit_create_voucher(
         program_id: u64, 
-        coupon_id: u64,
+        voucher_id: u64,
         stamps_required: u64,
         description: String,
         expiration_date: u64,
         max_redemptions: u64
     ) {
-        event::emit(CreateCoupon { 
+        event::emit(CreateVoucher { 
             program_id, 
-            coupon_id,
+            voucher_id,
             stamps_required,
             description,
             expiration_date,
@@ -129,17 +129,17 @@ module aptrewards_addr::AptRewardsEvents {
         });
     }
 
-    public(friend) fun emit_redeem_coupon(
+    public(friend) fun emit_redeem_voucher(
         program_id: u64, 
         customer: address, 
-        coupon_id: u64,
+        voucher_id: u64,
         current_redemptions: u64,
         description: String
     ) {
-        event::emit(RedeemCoupon { 
+        event::emit(RedeemVoucher { 
             program_id, 
             customer, 
-            coupon_id,
+            voucher_id,
             current_redemptions,
             description
         });

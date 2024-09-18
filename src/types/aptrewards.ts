@@ -1,4 +1,4 @@
-export type Coupon = {
+export type Voucher = {
     id: number;
     stampsRequired: number;
     description: string;
@@ -21,8 +21,8 @@ export interface LoyaltyProgram {
     id: string;
     name: string;
     owner: string;
-    coupons?: Coupon[];
-    couponCount?: number;
+    vouchers?: Voucher[];
+    voucherCount?: number;
     stampValidityDays?: number;
     tiers?: Tier[];
     totalStampsIssued?: number;
@@ -46,7 +46,7 @@ export interface UserProgramDetails {
     program_name: string;
     stamps: number;
     lifetime_stamps: number;
-    owned_coupons: Coupon[];
+    owned_vouchers: Voucher[];
     current_tier: {
       id: number;
       name: string;

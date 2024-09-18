@@ -9,7 +9,7 @@ import { Forward } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { formatDate } from '@/utils/dateFormatter';
 
-interface RedemptionItemProps {
+interface MyVoucherItemProps {
     name: string;
     description: string;
     expiryDate: string;
@@ -18,7 +18,7 @@ interface RedemptionItemProps {
     voucherId: string; // Add this prop for unique voucher identification
 }
 
-const RedemptionItem: React.FC<RedemptionItemProps> = ({
+const MyVoucherItem: React.FC<MyVoucherItemProps> = ({
     name,
     description,
     expiryDate,
@@ -58,7 +58,7 @@ const RedemptionItem: React.FC<RedemptionItemProps> = ({
                             {imageUrl ? (
                                 <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
                             ) : (
-                                <div className="w-full h-full bg-gray-200"></div>
+                                <div className="w-full h-full patterned-placeholder"></div>
                             )}
                         </div>
                         <div className="flex-grow flex flex-col justify-center p-4">
@@ -142,4 +142,4 @@ const RedemptionItem: React.FC<RedemptionItemProps> = ({
     );
 };
 
-export default RedemptionItem;
+export default MyVoucherItem;

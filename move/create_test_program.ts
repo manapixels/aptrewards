@@ -134,8 +134,8 @@ async function main() {
         console.log(`Created tier "${tier.name}" with ID:`, confirmedTierTxn?.events?.find(event => event.type.includes("AddTier"))?.data?.tier_id);
     }
 
-    // Create coupons
-    const coupons = [
+    // Create vouchers
+    const vouchers = [
         { stamps: 50, description: "10% off", maxRedemptions: 100 },
         { stamps: 100, description: "$5 off", maxRedemptions: 50 },
         { stamps: 200, description: "Free item", maxRedemptions: 25 },
@@ -143,30 +143,30 @@ async function main() {
         { stamps: 500, description: "VIP experience", maxRedemptions: 10 }
     ];
 
-    for (const coupon of coupons) {
-        const createCouponTxn = await aptos.transaction.build.simple({
+    for (const voucher of vouchers) {
+        const createVoucherTxn = await aptos.transaction.build.simple({
             sender: admin.accountAddress,
             data: {
-                function: `${MODULE_ADDRESS}::AptRewardsMain::create_coupon`,
+                function: `${MODULE_ADDRESS}::AptRewardsMain::create_voucher`,
                 typeArguments: [],
                 functionArguments: [
                     programId,
-                    coupon.description,
-                    coupon.stamps,
+                    voucher.description,
+                    voucher.stamps,
                     Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // Expiration date (30 days from now)
-                    coupon.maxRedemptions
+                    voucher.maxRedemptions
                 ]
             }
         });
 
-        const createCouponResult = await aptos.signAndSubmitTransaction({
+        const createVoucherResult = await aptos.signAndSubmitTransaction({
             signer: admin,
-            transaction: createCouponTxn
+            transaction: createVoucherTxn
         })
 
-        const confirmedCouponTxn = await aptos.waitForTransaction({ transactionHash: createCouponResult.hash });
+        const confirmedVoucherTxn = await aptos.waitForTransaction({ transactionHash: createVoucherResult.hash });
         // @ts-ignore
-        console.log(`Created coupon "${coupon.description}" with ID:`, confirmedCouponTxn?.events?.find(event => event.type.includes("CreateCoupon"))?.data?.coupon_id);
+        console.log(`Created voucher "${voucher.description}" with ID:`, confirmedVoucherTxn?.events?.find(event => event.type.includes("CreateVoucher"))?.data?.voucher_id);
     }
 
     // Create 5 random customer accounts and assign stamps
@@ -195,30 +195,30 @@ async function main() {
         await aptos.waitForTransaction({ transactionHash: earnStampsResult.hash });
         console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) earned ${stamps} stamps`);
 
-        // Find a coupon that the customer has enough stamps for
-        const availableCoupons = coupons.filter(coupon => coupon.stamps <= stamps);
-        if (availableCoupons.length > 0) {
-            const randomCoupon = availableCoupons[Math.floor(Math.random() * availableCoupons.length)];
-            const couponIndex = coupons.indexOf(randomCoupon);
+        // Find a voucher that the customer has enough stamps for
+        const availableVouchers = vouchers.filter(voucher => voucher.stamps <= stamps);
+        if (availableVouchers.length > 0) {
+            const randomVoucher = availableVouchers[Math.floor(Math.random() * availableVouchers.length)];
+            const voucherIndex = vouchers.indexOf(randomVoucher);
 
-            const redeemCouponTxn = await aptos.transaction.build.simple({
+            const redeemVoucherTxn = await aptos.transaction.build.simple({
                 sender: admin.accountAddress,
                 data: {
-                    function: `${MODULE_ADDRESS}::AptRewardsMain::redeem_coupon`,
+                    function: `${MODULE_ADDRESS}::AptRewardsMain::redeem_voucher`,
                     typeArguments: [],
-                    functionArguments: [programId, customer.accountAddress.toString(), couponIndex]
+                    functionArguments: [programId, customer.accountAddress.toString(), voucherIndex]
                 }
             });
 
-            const redeemCouponResult = await aptos.signAndSubmitTransaction({
+            const redeemVoucherResult = await aptos.signAndSubmitTransaction({
                 signer: admin,
-                transaction: redeemCouponTxn
+                transaction: redeemVoucherTxn
             })
 
-            await aptos.waitForTransaction({ transactionHash: redeemCouponResult.hash });
-            console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) redeemed coupon ${couponIndex} (${randomCoupon.description})`);
+            await aptos.waitForTransaction({ transactionHash: redeemVoucherResult.hash });
+            console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) redeemed voucher ${voucherIndex} (${randomVoucher.description})`);
         } else {
-            console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) doesn't have enough stamps to redeem any coupons`);
+            console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) doesn't have enough stamps to redeem any vouchers`);
         }
     }
 

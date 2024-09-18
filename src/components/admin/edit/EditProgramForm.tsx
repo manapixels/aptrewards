@@ -6,7 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useProgramStore } from '@/store/programStore';
 import ProgramDetails from './ProgramDetails';
 import Tiers from './ProgramTiers';
-import Coupons from './ProgramCoupons';
+import Vouchers from './ProgramVouchers';
 
 export default function EditProgramForm({ programId }: { programId: string }) {
     const { fetchProgramDetails, programs, isFetchingOneProgram } = useProgramStore();
@@ -38,7 +38,7 @@ export default function EditProgramForm({ programId }: { programId: string }) {
                 <>
                     <ProgramDetails program={currProgram} />
                     <Tiers program={currProgram} />
-                    <Coupons program={currProgram} />
+                    <Vouchers program={currProgram} />
                 </>
             )}
 

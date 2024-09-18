@@ -7,7 +7,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 
 import { truncateAddress } from '@/utils/address';
-import RedemptionItem from '@/components/customer/RedemptionItem';
+import RedeemableVoucherItem from '@/components/customer/RedeemableVoucherItem';
+import MyVoucherItem from '@/components/customer/MyVoucherItem';
 import { getAptosClient } from '@/utils/aptos';
 import { moduleAddress, moduleName } from "@/constants";
 import { ArrowRight, Copy } from 'lucide-react';
@@ -29,8 +30,8 @@ interface UserProgramDetails {
     userTier: string;
     nextTier: string | null;
     stampsToNextTier: number | null;
-    ownedCoupons: any[];
-    allCoupons: any[];
+    ownedVouchers: any[];
+    allVouchers: any[];
 }
 
 const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
@@ -52,7 +53,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                     }
                 });
 
-                const [programName, userStamps, stampValidity, ownedCoupons, allCoupons, tiers] = resource as [string, number, number, any[], any[], any[]];
+                const [programName, userStamps, stampValidity, ownedVouchers, allVouchers, tiers] = resource as [string, number, number, any[], any[], any[]];
 
                 const currentTier = tiers.reduce((prev, current) =>
                     userStamps >= current.stamps_required ? current : prev
@@ -67,8 +68,8 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                     userTier: currentTier?.name || 'No Tier',
                     nextTier: nextTier?.name || null,
                     stampsToNextTier: nextTier ? nextTier.stamps_required - userStamps : null,
-                    ownedCoupons,
-                    allCoupons,
+                    ownedVouchers,
+                    allVouchers,
                 };
 
                 setUserDetails(userDetails);
@@ -90,8 +91,8 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
         return <div>Loading...</div>;
     }
 
-    const redeemableCoupons = userDetails.allCoupons.filter(coupon => 
-        !userDetails.ownedCoupons.some(owned => owned.id === coupon.id)
+    const redeemableVouchers = userDetails.allVouchers.filter(voucher => 
+        !userDetails.ownedVouchers.some(owned => owned.id === voucher.id)
     );
 
     return (
@@ -130,27 +131,27 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
             </div>
             <hr className="my-8" />
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">My Coupons <span className="bg-black text-gray-200 px-2 py-1 rounded-md font-mono text-sm">{userDetails.ownedCoupons.length}</span></h2>
+                <h2 className="text-lg font-semibold">My Vouchers <span className="bg-black text-gray-200 px-2 py-1 rounded-md font-mono text-sm">{userDetails.ownedVouchers.length}</span></h2>
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="outline">View Redeemable Coupons <ArrowRight className="w-4 h-4 ml-1" /></Button>
+                        <Button variant="outline">Exchange for Vouchers <ArrowRight className="w-4 h-4 ml-1" /></Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
-                            <DialogTitle>Redeemable Coupons</DialogTitle>
+                            <DialogTitle>Redeemable Vouchers</DialogTitle>
                             <DialogDescription>
-                                Coupons you can earn in this program.
+                                Vouchers you can earn in this program.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                            {redeemableCoupons.map((coupon, index) => (
-                                <RedemptionItem
+                            {redeemableVouchers.map((voucher, index) => (
+                                <RedeemableVoucherItem
                                     key={index}
-                                    voucherId={coupon.id.toString()}
-                                    name={coupon.description}
-                                    description={`Requires ${coupon.stamps_required} stamps`}
-                                    expiryDate={new Date(Number(coupon.expiration_date) * 1000).toLocaleDateString()}
-                                    termsAndConditions={`Max redemptions: ${coupon.max_redemptions}, Current redemptions: ${coupon.redemptions}`}
+                                    voucherId={voucher.id.toString()}
+                                    name={voucher.description}
+                                    description={`Requires ${voucher.stamps_required} stamps`}
+                                    expiryDate={new Date(Number(voucher.expiration_date) * 1000).toLocaleDateString()}
+                                    termsAndConditions={`Max redemptions: ${voucher.max_redemptions}, Current redemptions: ${voucher.redemptions}`}
                                 />
                             ))}
                         </div>
@@ -158,14 +159,14 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 </Dialog>
             </div>
             <div className="space-y-4">
-                {userDetails.ownedCoupons.map((coupon, index) => (
-                    <RedemptionItem
+                {userDetails.ownedVouchers.map((voucher, index) => (
+                    <MyVoucherItem
                         key={index}
-                        voucherId={coupon.id.toString()}
-                        name={coupon.description}
+                        voucherId={voucher.id.toString()}
+                        name={voucher.description}
                         description="Ready to use"
-                        expiryDate={new Date(Number(coupon.expiration_date) * 1000).toLocaleDateString()}
-                        termsAndConditions={`Max redemptions: ${coupon.max_redemptions}, Current redemptions: ${coupon.redemptions}`}
+                        expiryDate={new Date(Number(voucher.expiration_date) * 1000).toLocaleDateString()}
+                        termsAndConditions={`Max redemptions: ${voucher.max_redemptions}, Current redemptions: ${voucher.redemptions}`}
                     />
                 ))}
             </div>

@@ -68,7 +68,7 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
           stamps_to_next_tier: rawData.stamps_to_next_tier,
           current_tier: rawData.current_tier?.vec[0],
           next_tier: rawData.next_tier?.vec[0],
-          owned_coupons: rawData.owned_coupons,
+          owned_vouchers: rawData.owned_vouchers,
         }));
 
         setUserDetails(formattedUserDetails);

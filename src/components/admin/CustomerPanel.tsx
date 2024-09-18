@@ -35,7 +35,7 @@ export default function CustomerPanel() {
                     Action:
                     <select value={action} onChange={(e) => setAction(e.target.value)}>
                         <option value="earnStamps">Earn Stamps</option>
-                        <option value="redeemCoupon">Redeem Coupon</option>
+                        <option value="redeemVoucher">Redeem Voucher</option>
                         <option value="luckySpin">Lucky Spin</option>
                         <option value="getCustomerTier">Get Customer Tier</option>
                     </select>

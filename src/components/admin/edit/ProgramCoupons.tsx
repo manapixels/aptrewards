@@ -14,63 +14,63 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/utils/aptos';
 import { useProgramStore } from '@/store/programStore';
-import { Coupon } from '@/types/aptrewards';
+import { Voucher } from '@/types/aptrewards';
 import { LoyaltyProgram } from "@/types/aptrewards";
 
 
-const CouponRedemptionsTable = ({ coupons, couponsRedeemed }: { coupons: Coupon[] | undefined, couponsRedeemed: number[] | undefined }) => (
+const VoucherRedemptionsTable = ({ vouchers, vouchersRedeemed }: { vouchers: Voucher[] | undefined, vouchersRedeemed: number[] | undefined }) => (
     <Table>
         <TableHeader>
             <TableRow>
-                <TableHead>Coupon Description</TableHead>
+                <TableHead>Voucher Description</TableHead>
                 <TableHead>Stamps Required</TableHead>
                 <TableHead>Expiration Date</TableHead>
                 <TableHead className="text-right">Redemptions</TableHead>
             </TableRow>
         </TableHeader>
         <TableBody>
-            {coupons?.map((coupon, index) => (
-                <TableRow key={coupon.id}>
-                    <TableCell className="font-medium">{coupon.description}</TableCell>
-                    <TableCell>{coupon.stampsRequired}</TableCell>
-                    <TableCell>{new Date(coupon.expirationDate * 1000).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">{couponsRedeemed?.[index] || 0}</TableCell>
+            {vouchers?.map((voucher, index) => (
+                <TableRow key={voucher.id}>
+                    <TableCell className="font-medium">{voucher.description}</TableCell>
+                    <TableCell>{voucher.stampsRequired}</TableCell>
+                    <TableCell>{new Date(voucher.expirationDate * 1000).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-right">{vouchersRedeemed?.[index] || 0}</TableCell>
                 </TableRow>
             ))}
         </TableBody>
     </Table>
 );
 
-export default function ProgramCoupons({ program }: { program: LoyaltyProgram }) {
+export default function ProgramVouchers({ program }: { program: LoyaltyProgram }) {
 
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
     const { triggerRefetch, fetchProgramDetails, programs } = useProgramStore();
-    const [isAddCouponDialogOpen, setIsAddCouponDialogOpen] = useState(false);
-    const [newCoupon, setNewCoupon] = useState({
+    const [isAddVoucherDialogOpen, setIsAddVoucherDialogOpen] = useState(false);
+    const [newVoucher, setNewVoucher] = useState({
         description: '',
         stampsRequired: 0,
         expirationDate: ''
     });
 
-    const handleAddCoupon = async (e: React.FormEvent) => {
+    const handleAddVoucher = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             setTransactionInProgress(true);
             if (!account) throw new Error("No account connected");
             if (!moduleAddress || !moduleName) throw new Error("No module address or name");
 
-            const expirationTimestamp = Math.floor(new Date(newCoupon.expirationDate).getTime() / 1000);
+            const expirationTimestamp = Math.floor(new Date(newVoucher.expirationDate).getTime() / 1000);
 
             const response = await signAndSubmitTransaction({
                 sender: account.address,
                 data: {
-                    function: `${moduleAddress}::${moduleName}::create_coupon`,
+                    function: `${moduleAddress}::${moduleName}::create_voucher`,
                     typeArguments: [],
                     functionArguments: [
                         new U64(parseInt(program.id)),
-                        new MoveString(newCoupon.description),
-                        new U64(newCoupon.stampsRequired),
+                        new MoveString(newVoucher.description),
+                        new U64(newVoucher.stampsRequired),
                         new U64(expirationTimestamp),
                     ],
                 },
@@ -81,13 +81,13 @@ export default function ProgramCoupons({ program }: { program: LoyaltyProgram })
             triggerRefetch();
             fetchProgramDetails(program.id);
 
-            toast.success('Coupon created successfully');
+            toast.success('Voucher created successfully');
         } catch (error) {
-            console.error('Error creating coupon:', error);
-            toast.error('Error creating coupon');
+            console.error('Error creating voucher:', error);
+            toast.error('Error creating voucher');
         } finally {
             setTransactionInProgress(false);
-            setIsAddCouponDialogOpen(false);
+            setIsAddVoucherDialogOpen(false);
         }
     };
 
@@ -98,8 +98,8 @@ export default function ProgramCoupons({ program }: { program: LoyaltyProgram })
     return (
         <div className="bg-white shadow-sm border rounded-lg">
             <div className="flex justify-between items-center px-6 py-4 bg-gray-100">
-                <h3 className="font-semibold">Coupons</h3>
-                <Dialog open={isAddCouponDialogOpen} onOpenChange={setIsAddCouponDialogOpen}>
+                <h3 className="font-semibold">Vouchers</h3>
+                <Dialog open={isAddVoucherDialogOpen} onOpenChange={setIsAddVoucherDialogOpen}>
                     <DialogTrigger asChild>
                         <Button size="sm" variant="outline" className="border-gray-500">
                             <PlusIcon className="w-4 h-4 stroke-gray-500" />
@@ -107,44 +107,44 @@ export default function ProgramCoupons({ program }: { program: LoyaltyProgram })
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Add New Coupon</DialogTitle>
+                            <DialogTitle>Add New Voucher</DialogTitle>
                         </DialogHeader>
-                        <form onSubmit={handleAddCoupon}>
-                            <Label htmlFor="couponDescription">Description</Label>
+                        <form onSubmit={handleAddVoucher}>
+                            <Label htmlFor="voucherDescription">Description</Label>
                             <Input
-                                id="couponDescription"
-                                value={newCoupon.description}
-                                onChange={(e) => setNewCoupon({ ...newCoupon, description: e.target.value })}
+                                id="voucherDescription"
+                                value={newVoucher.description}
+                                onChange={(e) => setNewVoucher({ ...newVoucher, description: e.target.value })}
                                 className="mb-2"
                             />
-                            <Label htmlFor="couponStampsRequired">Stamps Required</Label>
+                            <Label htmlFor="voucherStampsRequired">Stamps Required</Label>
                             <Input
-                                id="couponStampsRequired"
+                                id="voucherStampsRequired"
                                 type="number"
-                                value={newCoupon.stampsRequired}
-                                onChange={(e) => setNewCoupon({ ...newCoupon, stampsRequired: parseInt(e.target.value) })}
+                                value={newVoucher.stampsRequired}
+                                onChange={(e) => setNewVoucher({ ...newVoucher, stampsRequired: parseInt(e.target.value) })}
                                 className="mb-2"
                             />
-                            <Label htmlFor="couponExpirationDate">Expiration Date</Label>
+                            <Label htmlFor="voucherExpirationDate">Expiration Date</Label>
                             <Input
-                                id="couponExpirationDate"
+                                id="voucherExpirationDate"
                                 type="date"
-                                value={newCoupon.expirationDate}
-                                onChange={(e) => setNewCoupon({ ...newCoupon, expirationDate: e.target.value })}
+                                value={newVoucher.expirationDate}
+                                onChange={(e) => setNewVoucher({ ...newVoucher, expirationDate: e.target.value })}
                                 className="mb-2"
                             />
                             <div className="flex justify-end">
                                 <Button type="submit" disabled={transactionInProgress}>
-                                    {transactionInProgress ? 'Creating...' : 'Create Coupon'}
+                                    {transactionInProgress ? 'Creating...' : 'Create Voucher'}
                                 </Button>
                             </div>
                         </form>
                     </DialogContent>
                 </Dialog>
             </div>
-            <CouponRedemptionsTable
-                coupons={program?.coupons}
-                couponsRedeemed={program?.coupons?.map(coupon => coupon.redemptions) || []}
+            <VoucherRedemptionsTable
+                vouchers={program?.vouchers}
+                vouchersRedeemed={program?.vouchers?.map(voucher => voucher.redemptions) || []}
             />
         </div>
     )
