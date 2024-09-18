@@ -130,7 +130,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
             </div>
             <hr className="my-8" />
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Your Coupons ({userDetails.ownedCoupons.length})</h2>
+                <h2 className="text-lg font-semibold">My Coupons <span className="bg-black text-gray-200 px-2 py-1 rounded-md font-mono text-sm">{userDetails.ownedCoupons.length}</span></h2>
                 <Dialog>
                     <DialogTrigger asChild>
                         <Button variant="outline">View Redeemable Coupons <ArrowRight className="w-4 h-4 ml-1" /></Button>
@@ -142,7 +142,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                                 Coupons you can earn in this program.
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                        <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
                             {redeemableCoupons.map((coupon, index) => (
                                 <RedemptionItem
                                     key={index}

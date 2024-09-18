@@ -95,7 +95,7 @@ const RedemptionItem: React.FC<RedemptionItemProps> = ({
                                     if (!open) setShowQRCode(false);
                                 }}>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" size="sm">Redeem</Button>
+                                        <Button variant="secondary" className="border border-gray-400" size="sm">Redeem</Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-[425px]">
                                         <DialogHeader>
