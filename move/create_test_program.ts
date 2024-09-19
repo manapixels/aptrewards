@@ -201,6 +201,25 @@ async function main() {
             const randomVoucher = availableVouchers[Math.floor(Math.random() * availableVouchers.length)];
             const voucherIndex = vouchers.indexOf(randomVoucher);
 
+            // Step 1: Exchange points for voucher
+            const exchangePointsTxn = await aptos.transaction.build.simple({
+                sender: customer.accountAddress,
+                data: {
+                    function: `${MODULE_ADDRESS}::AptRewardsMain::exchange_points_for_voucher`,
+                    typeArguments: [],
+                    functionArguments: [programId, voucherIndex]
+                }
+            });
+
+            const exchangePointsResult = await aptos.signAndSubmitTransaction({
+                signer: customer,
+                transaction: exchangePointsTxn
+            })
+
+            await aptos.waitForTransaction({ transactionHash: exchangePointsResult.hash });
+            console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) exchanged points for voucher ${voucherIndex} (${randomVoucher.description})`);
+
+            // Step 2: Redeem voucher (simulating a cashier redeeming it)
             const redeemVoucherTxn = await aptos.transaction.build.simple({
                 sender: admin.accountAddress,
                 data: {

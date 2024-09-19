@@ -18,16 +18,16 @@ import { AccountAddress } from '@aptos-labs/ts-sdk';
 import { ArrowLeft, ArrowRight, ChevronDown, Copy, LogOut, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
 
-import { Button } from './ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { getAptosClient } from '@/utils/aptos';
 import { moduleAddress, moduleName } from '@/constants';
-
 import { UserProgramDetails } from '@/types/aptrewards';
-import Link from 'next/link';
+
 
 export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
   const { account, connected, disconnect, wallet, network } = useWallet();
@@ -60,16 +60,28 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
         });
 
         const rawDataArray = resource[0] as any[];
-        const formattedUserDetails: UserProgramDetails[] = rawDataArray.map(rawData => ({
-          program_id: rawData.program_id,
-          program_name: rawData.program_name,
-          points: rawData.points,
-          lifetime_points: rawData.lifetime_points,
-          points_to_next_tier: rawData.points_to_next_tier,
-          current_tier: rawData.current_tier?.vec[0],
-          next_tier: rawData.next_tier?.vec[0],
-          owned_vouchers: rawData.owned_vouchers,
-        }));
+        const formattedUserDetails: UserProgramDetails[] = rawDataArray.map((program: any) => {
+
+          const currentTier = program.tiers.reduce((prev: any, current: any) =>
+            program.points >= current.pointsRequired ? current : prev
+          );
+
+          const nextTier = program.tiers.find((tier: any) => tier.pointsRequired > program.points);
+
+          return {
+            programId: program.program_id,
+            programName: program.program_name,
+            points: program.points,
+            lifetimePoints: program.lifetime_points,
+            pointValidityDays: program.point_validity_days,
+            ownedVouchers: program.owned_vouchers,
+            allVouchers: program.all_vouchers,
+            tiers: program.tiers,
+            currentTier,
+            nextTier,
+            pointsToNextTier: nextTier ? nextTier.pointsRequired - program.points : null,
+          }
+        });
 
         setUserDetails(formattedUserDetails);
       } catch (error) {
@@ -98,33 +110,33 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
         <div className="py-2">
           <div className="text-lg font-semibold my-3 px-4">{userDisplayName}</div>
           <div className="bg-gray-100 rounded-md p-1.5 flex flex-col gap-2">
-          {userDetails.map((program) => (
-            <Button
-              variant="ghost"
-              key={program.program_id}
-              className="py-2 h-auto w-full text-left flex items-center justify-start gap-3 border border-transparent bg-white hover:bg-white hover:border-gray-900"
-              asChild
-            >
-              <Link href={`/co/${program.program_id}`}>
-                <div className="aspect-square w-10 h-10 rounded-md bg-green-600"></div>
-                <div>
-                  <h3 className="text-gray-500">{program.program_name}</h3>
-                  {program.current_tier && (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500 text-xs">Status</span>
-                        <span className="font-semibold text-sm">{program.current_tier.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500 text-xs">Points</span>
-                        <span className="font-semibold text-sm">{program.points}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </Link>
-            </Button>
-          ))}
+            {userDetails.map((program) => (
+              <Button
+                variant="ghost"
+                key={program.programId}
+                className="py-2 h-auto w-full text-left flex items-center justify-start gap-3 border border-transparent bg-white hover:bg-white hover:border-gray-900"
+                asChild
+              >
+                <Link href={`/co/${program.programId}`}>
+                  <div className="aspect-square w-10 h-10 rounded-md bg-green-600"></div>
+                  <div>
+                    <h3 className="text-gray-500">{program.programName}</h3>
+                    {program.currentTier && (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-500 text-xs">Status</span>
+                          <span className="font-semibold text-sm">{program.currentTier.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-500 text-xs">Points</span>
+                          <span className="font-semibold text-sm">{program.points}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </Link>
+              </Button>
+            ))}
           </div>
         </div>
         <DropdownMenuItem onSelect={copyAddress} className="gap-2">

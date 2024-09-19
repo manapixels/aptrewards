@@ -42,22 +42,15 @@ export interface CustomerWithPoints {
 }
 
 export interface UserProgramDetails {
-    program_id: number;
-    program_name: string;
+    programId: number;
+    programName: string;
     points: number;
-    lifetime_points: number;
-    owned_vouchers: Voucher[];
-    current_tier: {
-      id: number;
-      name: string;
-      points_required: number;
-      benefits: string[];
-    } | null;
-    next_tier: {
-      id: number;
-      name: string;
-      points_required: number;
-      benefits: string[];
-    } | null;
-    points_to_next_tier: number;
+    lifetimePoints: number;
+    pointValidityDays: number;
+    ownedVouchers: Voucher[];
+    allVouchers: Voucher[];
+    tiers: Tier[];
+    currentTier: Tier | null;
+    nextTier: Tier | null;
+    pointsToNextTier: number | null;
 }

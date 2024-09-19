@@ -39,7 +39,6 @@ module aptrewards_addr::AptRewardsEvents {
         program_id: u64,
         customer: address,
         voucher_id: u64,
-        current_redemptions: u64,
         description: String,
     }
 
@@ -73,6 +72,15 @@ module aptrewards_addr::AptRewardsEvents {
         program_id: u64,
         new_name: String,
         new_point_validity_days: u64,
+    }
+
+    #[event]
+    struct ExchangePointsForVoucher has store, drop {
+        program_id: u64,
+        customer: address,
+        voucher_id: u64,
+        points_exchanged: u64,
+        description: String,
     }
 
     public(friend) fun emit_create_loyalty_program(
@@ -129,18 +137,32 @@ module aptrewards_addr::AptRewardsEvents {
         });
     }
 
-    public(friend) fun emit_redeem_voucher(
-        program_id: u64, 
-        customer: address, 
+    public(friend) fun emit_exchange_points_for_voucher(
+        program_id: u64,
+        customer: address,
         voucher_id: u64,
-        current_redemptions: u64,
+        points_exchanged: u64,
         description: String
     ) {
-        event::emit(RedeemVoucher { 
-            program_id, 
-            customer, 
+        event::emit(ExchangePointsForVoucher {
+            program_id,
+            customer,
             voucher_id,
-            current_redemptions,
+            points_exchanged,
+            description
+        });
+    }
+
+    public(friend) fun emit_redeem_voucher(
+        program_id: u64,
+        customer: address,
+        voucher_id: u64,
+        description: String
+    ) {
+        event::emit(RedeemVoucher {
+            program_id,
+            customer,
+            voucher_id,
             description
         });
     }
