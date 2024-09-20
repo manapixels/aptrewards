@@ -261,7 +261,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                         Points Issued
                     </span>
                     <span className="text-lg font-bold leading-none sm:text-3xl">
-                        {program?.totalPointsIssued || 'N/A'}
+                        {program?.totalPointsIssued?.toLocaleString() || 'N/A'}
                     </span>
                 </div>
             </div>

@@ -32,7 +32,7 @@ const VoucherRedemptionsTable = ({ vouchers, vouchersRedeemed }: { vouchers: Red
             {vouchers?.map((voucher, index) => (
                 <TableRow key={voucher.id}>
                     <TableCell className="font-medium">{voucher.description}</TableCell>
-                    <TableCell>{voucher.pointsRequired}</TableCell>
+                    <TableCell>{voucher.pointsRequired.toLocaleString()}</TableCell>
                     <TableCell>{new Date(parseInt(voucher.expirationDate) * 1000).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">{vouchersRedeemed?.[index] || 0}</TableCell>
                 </TableRow>

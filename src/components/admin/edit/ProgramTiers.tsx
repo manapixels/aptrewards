@@ -167,7 +167,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                                 <div className="w-1 h-1 bg-white rounded-full mx-auto z-10" />
                             </div>
                             <span className="text-xs text-gray-500 block text-center">
-                                {tier.pointsRequired}
+                                {tier.pointsRequired.toLocaleString()}
                             </span>
                         </div>
                     ))}
@@ -311,7 +311,7 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
                         <div key={tier.id} className="px-6 py-4">
                             <div className="flex justify-between">
                                 <h4 className="font-medium">{tier.name}</h4>
-                                <div className="text-sm">From {tier.pointsRequired} points</div>
+                                <div className="text-sm">From {tier.pointsRequired.toLocaleString()} points</div>
                             </div>
                             <div className="flex justify-between gap-4">
                                 <div className="text-gray-600 text-sm">

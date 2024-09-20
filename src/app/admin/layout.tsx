@@ -1,5 +1,4 @@
 import ProgramListSidebar from '@/components/admin/ProgramListSidebar';
-import { isMobile } from 'react-device-detect';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
 

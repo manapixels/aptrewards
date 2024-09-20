@@ -82,7 +82,7 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
                         <div className="flex-grow flex flex-col justify-center p-4">
                             <h3 className="font-bold text-lg">{name}</h3>
                             <p className="text-sm text-gray-500">Valid until {formatDate(expirationDate)}</p>
-                            <p className="text-sm text-gray-500">{pointsRequired} points required</p>
+                            <p className="text-sm text-gray-500">{pointsRequired.toLocaleString()} points required</p>
                             <div className="mt-3 flex items-center">
                                 <Dialog open={isExchangeOpen} onOpenChange={setIsExchangeOpen}>
                                     <DialogTrigger asChild>
