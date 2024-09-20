@@ -31,8 +31,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="flex flex-row justify-between items-center my-2 mx-4">
                 <Link href="/">
                   <div className="text-xl font-bold flex flex-row gap-2">
-                    <Image src="/logo.svg" alt="AptRewards" width={28} height={28} />
-                    <div>AptRewards</div>
+                    <Image src="/logo.svg" alt="AptRewards" width={160} height={26} />
+                    {/* <div>AptRewards</div> */}
                   </div>
                 </Link>
                 <div className="flex flex-row gap-2">

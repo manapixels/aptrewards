@@ -19,7 +19,6 @@ import { ArrowLeft, ArrowRight, ChevronDown, Copy, LogOut, User } from 'lucide-r
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -27,7 +26,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { getAptosClient } from '@/utils/aptos';
 import { moduleAddress, moduleName } from '@/constants';
 import { UserProgramDetails } from '@/types/aptrewards';
-
 
 export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
   const { account, connected, disconnect, wallet, network } = useWallet();
@@ -94,7 +92,7 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
 
   const networkSupported = network?.name.toLowerCase() === process.env.NEXT_PUBLIC_NETWORK
   const userDisplayName = account?.ansName || truncateAddress(account?.address) || ''
-  let displayText = 'Welcome, ' + userDisplayName || 'Unknown' + '!';
+  let displayText = userDisplayName || 'Unknown';
   if (!networkSupported) {
     displayText = 'Network not supported. Change to ' + process.env.NEXT_PUBLIC_NETWORK
   }
@@ -102,7 +100,7 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
   return connected ? (
     <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
       <DropdownMenuTrigger asChild>
-        <Button>{displayText}</Button>
+        <Button className="welcome-text">{displayText}</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <div className="py-2">
