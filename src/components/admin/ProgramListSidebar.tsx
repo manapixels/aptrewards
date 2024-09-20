@@ -1,12 +1,12 @@
 'use client'
 
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useProgramStore } from '@/store/programStore';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,14 +18,30 @@ import { isMobile } from 'react-device-detect';
 
 const ProgramListSidebar = () => {
     const { account } = useWallet();
-    const { programs, fetchPrograms, shouldRefetch, isFetchingAllPrograms } = useProgramStore();
+    const { programs, fetchPrograms, shouldRefetch } = useProgramStore();
     const pathname = usePathname();
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (account?.address) {
-            fetchPrograms(account.address);
+            setIsLoading(true);
+            fetchPrograms(account.address).then(() => setIsLoading(false));
         }
     }, [account?.address, shouldRefetch, fetchPrograms]);
+
+    const renderSkeletons = () => (
+        <>
+            <div className="flex justify-between items-center mb-4">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-7 w-7" />
+            </div>
+            <div className="flex flex-col gap-2">
+                {[...Array(3)].map((_, index) => (
+                    <Skeleton key={index} className="h-9 w-full" />
+                ))}
+            </div>
+        </>
+    );
 
     const renderProgramList = () => (
         <>
@@ -38,8 +54,8 @@ const ProgramListSidebar = () => {
                 )}
             </div>
             <div className="flex flex-col gap-2 text-sm">
-                {isFetchingAllPrograms && programs.length === 0 ? (
-                    <div><LoadingSpinner /></div>
+                {isLoading && programs.length === 0 ? (
+                    renderSkeletons()
                 ) : (
                     programs.map((program) => (
                         <Link
@@ -63,9 +79,13 @@ const ProgramListSidebar = () => {
     const renderMobileDropdown = () => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between sticky top-0 border-gray-500">
-                    <Menu className="h-4 w-4 opacity-50" /> Your Programs <ChevronDown className="h-4 w-4 opacity-50" />
-                </Button>
+                {isLoading && programs.length === 0 ? (
+                    <Skeleton className="h-10 w-full" />
+                ) : (
+                    <Button variant="outline" className="w-full justify-between sticky top-0 border-gray-500">
+                        <Menu className="h-4 w-4 opacity-50" /> Your Programs <ChevronDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                )}
             </DropdownMenuTrigger>
             <DropdownMenuContent>
                 {programs.map((program) => (

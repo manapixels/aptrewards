@@ -20,8 +20,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { truncateAddress } from '@/utils/address';
 import { ColumnDef } from '@tanstack/react-table';
 import toast from 'react-hot-toast';
+import { Skeleton } from "@/components/ui/skeleton";
 
-const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
+const ProgramTiers = ({ program, isLoading }: { program: LoyaltyProgram, isLoading: boolean }) => {
 
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
@@ -228,6 +229,31 @@ const ProgramTiers = ({ program }: { program: LoyaltyProgram }) => {
             </ScrollArea>
         );
     };
+
+    const renderSkeletons = () => (
+        <div className="bg-white shadow-sm border rounded-lg">
+            <div className="flex justify-between items-center px-6 py-4 bg-gray-100">
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-8 w-8" />
+            </div>
+            <div className="px-6 py-4">
+                <Skeleton className="h-4 w-32 mb-2" />
+                <Skeleton className="h-8 w-full mb-4" />
+            </div>
+            {[...Array(3)].map((_, index) => (
+                <div key={index} className="px-6 py-4 border-t">
+                    <Skeleton className="h-6 w-32 mb-2" />
+                    <Skeleton className="h-4 w-full mb-1" />
+                    <Skeleton className="h-4 w-3/4 mb-1" />
+                    <Skeleton className="h-4 w-1/2" />
+                </div>
+            ))}
+        </div>
+    );
+
+    if (isLoading) {
+        return renderSkeletons();
+    }
 
     return (
         <div>

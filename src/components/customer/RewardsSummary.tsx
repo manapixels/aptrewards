@@ -23,6 +23,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { UserProgramDetails } from '@/types/aptrewards';
+import { Skeleton } from "@/components/ui/skeleton";
 
 const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
     const { account } = useWallet();
@@ -42,14 +43,14 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 }
             });
 
-            const { 
-                program_id, 
-                program_name, 
-                points, 
-                lifetime_points, 
-                point_validity_days, 
-                owned_vouchers, 
-                all_vouchers, 
+            const {
+                program_id,
+                program_name,
+                points,
+                lifetime_points,
+                point_validity_days,
+                owned_vouchers,
+                all_vouchers,
                 tiers
             } = resource[0] as any;
 
@@ -129,7 +130,34 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
     };
 
     if (!userDetails) {
-        return <div>Loading...</div>;
+        return (
+            <div className="space-y-4 md:-mt-4">
+                <div className="relative flex justify-center">
+                    <Skeleton className="h-8 w-48" />
+                </div>
+                <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 justify-center md:justify-between">
+                    <div className="flex flex-col md:block items-center">
+                        <Skeleton className="h-8 w-48 mb-2" />
+                        <Skeleton className="h-6 w-36 mb-2" />
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-4 w-48 mt-1" />
+                    </div>
+                    <div className="flex flex-col w-full md:w-auto items-center gap-2 pt-4 md:pt-0 md:pl-8 border-t md:border-t-0 md:border-l border-gray-200">
+                        <Skeleton className="h-6 w-40 mb-2" />
+                        <Skeleton className="h-[150px] w-[150px]" />
+                    </div>
+                </div>
+                <Skeleton className="h-[1px] w-full my-8" />
+                <div className="flex justify-between items-center mb-4">
+                    <Skeleton className="h-8 w-40" />
+                </div>
+                <div className="space-y-4">
+                    {[1, 2, 3].map((_, index) => (
+                        <Skeleton key={index} className="h-24 w-full" />
+                    ))}
+                </div>
+            </div>
+        );
     }
 
     const redeemableVouchers = userDetails.allVouchers.filter(voucher =>

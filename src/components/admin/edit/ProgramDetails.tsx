@@ -19,16 +19,10 @@ import { LoyaltyProgram } from '@/types/aptrewards';
 import { truncateAddress } from '@/utils/address';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 
-
-const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
+const ProgramDetails = ({ program, isLoading }: { program: LoyaltyProgram, isLoading: boolean }) => {
     const { fetchProgramDetails, getTierForCustomer } = useProgramStore();
-
-    useEffect(() => {
-        if (program.id) {
-            fetchProgramDetails(program.id);
-        }
-    }, [program.id]);
 
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
@@ -183,10 +177,29 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
         },
     ];
 
+    const SkeletonCustomerTable = () => (
+        <div className="space-y-2">
+            <div className="flex justify-between">
+                {[1, 2, 3, 4].map((_, index) => (
+                    <Skeleton key={index} className="h-8 w-24" />
+                ))}
+            </div>
+            {[1, 2, 3, 4, 5].map((_, index) => (
+                <div key={index} className="flex justify-between">
+                    {[1, 2, 3, 4].map((_, colIndex) => (
+                        <Skeleton key={colIndex} className="h-6 w-24" />
+                    ))}
+                </div>
+            ))}
+        </div>
+    );
+
     const renderCustomersTable = () => {
         const customers = filteredAndSortedCustomers();
 
-        if (!customers || !customers.length) return null;
+        if (!customers) return <SkeletonCustomerTable />;
+
+        if (!customers.length) return null;
 
         return (
             <ScrollArea className="h-[400px]">
@@ -197,6 +210,31 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
             </ScrollArea>
         );
     };
+
+    if (isLoading) {
+        return (
+            <div className="bg-white shadow-sm border rounded-lg">
+                <div className="flex justify-between items-center px-6 py-4 bg-gray-100">
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-8 w-8" />
+                </div>
+                <div className="grid grid-cols-2 border">
+                    <div className="flex flex-col justify-center gap-1 border-t px-6 py-4 sm:border-t-0 sm:px-8 sm:py-6">
+                        <Skeleton className="h-4 w-20 mb-2" />
+                        <Skeleton className="h-8 w-16" />
+                    </div>
+                    <div className="flex flex-col justify-center gap-1 border-t px-6 py-4 sm:border-t-0 sm:px-8 sm:py-6">
+                        <Skeleton className="h-4 w-24 mb-2" />
+                        <Skeleton className="h-8 w-20" />
+                    </div>
+                </div>
+                <div className="px-6 py-4">
+                    <Skeleton className="h-5 w-16 mb-2" />
+                    <Skeleton className="h-4 w-48" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white shadow-sm border rounded-lg">
@@ -271,7 +309,7 @@ const ProgramDetails = ({ program }: { program: LoyaltyProgram }) => {
                     <DialogHeader>
                         <DialogTitle>Customers</DialogTitle>
                     </DialogHeader>
-                    {renderCustomersTable()}
+                    {program ? renderCustomersTable() : <SkeletonCustomerTable />}
                 </DialogContent>
             </Dialog>
 

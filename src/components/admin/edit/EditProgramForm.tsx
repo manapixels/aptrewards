@@ -1,22 +1,39 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useProgramStore } from '@/store/programStore';
 import ProgramDetails from './ProgramDetails';
 import ProgramTiers from './ProgramTiers';
 import ProgramVouchers from './ProgramVouchers';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EditProgramForm({ programId }: { programId: string }) {
-    const { fetchProgramDetails, programs, isFetchingOneProgram } = useProgramStore();
+    const { fetchProgramDetails, programs } = useProgramStore();
     const currProgram = programs.find(program => program.id === programId.toString());
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        fetchProgramDetails(programId);
+        setIsLoading(true);
+        fetchProgramDetails(programId).then(() => setIsLoading(false));
     }, [programId, fetchProgramDetails]);
 
-    if (!currProgram && !isFetchingOneProgram) {
+    const renderSkeletons = () => (
+        <>
+            <Skeleton className="h-6 w-48 mb-2" />
+            <Skeleton className="h-8 w-64 mb-4" />
+            <Skeleton className="h-[200px] w-full mb-4" />
+            <Skeleton className="h-[300px] w-full mb-4" />
+            <Skeleton className="h-[200px] w-full" />
+        </>
+    );
+
+    if (isLoading) {
+        return renderSkeletons();
+    }
+
+    if (!currProgram && !isLoading) {
         return (
             <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -36,9 +53,9 @@ export default function EditProgramForm({ programId }: { programId: string }) {
             </div>
             {currProgram && (
                 <>
-                    <ProgramDetails program={currProgram} />
-                    <ProgramTiers program={currProgram} />
-                    <ProgramVouchers program={currProgram} />
+                    <ProgramDetails program={currProgram} isLoading={isLoading} />
+                    <ProgramTiers program={currProgram} isLoading={isLoading} />
+                    <ProgramVouchers program={currProgram} isLoading={isLoading} />
                 </>
             )}
 

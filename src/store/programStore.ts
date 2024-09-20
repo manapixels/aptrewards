@@ -6,8 +6,6 @@ import { moduleAddress, moduleName } from "@/constants";
 type ProgramStore = {
     programs: LoyaltyProgram[];
     shouldRefetch: boolean;
-    isFetchingAllPrograms: boolean;
-    isFetchingOneProgram: boolean;
     fetchPrograms: (address: string) => Promise<void>;
     fetchProgramDetails: (programId: string) => Promise<void>;
     triggerRefetch: () => void;
@@ -52,12 +50,12 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
         owner: response[2]?.toString() || '',
         pointValidityDays: Number(response[3]),
         vouchers: (response[4] as any[])?.map((voucher: any) => ({
-            id: Number(voucher.id),
+            id: voucher.id,
+            name: voucher.name,
             pointsRequired: Number(voucher.points_required),
             description: voucher.description,
-            isMonetary: voucher.is_monetary,
-            value: Number(voucher.value),
-            expirationDate: Number(voucher.expiration_date),
+            termsAndConditions: voucher.terms_and_conditions,
+            expirationDate: voucher.expiration_date,
             maxRedemptions: Number(voucher.max_redemptions),
             redemptions: Number(voucher.redemptions),
         })) || [],
@@ -91,10 +89,7 @@ const getTierForCustomer = (program: LoyaltyProgram, points: number): string => 
 export const useProgramStore = create<ProgramStore>((set, get) => ({
     programs: [],
     shouldRefetch: false,
-    isFetchingAllPrograms: false,
-    isFetchingOneProgram: false,
     fetchPrograms: async (address: string) => {
-        set({ isFetchingAllPrograms: true });
         try {
             const fetchedPrograms = await getProgramsByAddress(address);
             
@@ -104,30 +99,27 @@ export const useProgramStore = create<ProgramStore>((set, get) => ({
                     return existingProgram ? { ...existingProgram, ...fetchedProgram, id: fetchedProgram.id.toString() } : { ...fetchedProgram, id: fetchedProgram.id.toString() };
                 });
 
-                return { programs: mergedPrograms, shouldRefetch: false, isFetchingAllPrograms: false };
+                return { programs: mergedPrograms, shouldRefetch: false };
             });
         } catch (error) {
             console.error("Error fetching programs:", error);
-            set({ isFetchingAllPrograms: false });
         }
     },
     fetchProgramDetails: async (programId: string) => {
-        set({ isFetchingOneProgram: true });
         try {
             const programDetails = await getProgramDetails(programId);
             set((state) => {
                 const index = state.programs.findIndex((program) => program.id === programId);
                 if (index === -1) {
-                    return { programs: [...state.programs, programDetails], isFetchingOneProgram: false };
+                    return { programs: [...state.programs, programDetails] };
                 } else {
                     const updatedPrograms = [...state.programs];
                     updatedPrograms[index] = programDetails;
-                    return { programs: updatedPrograms, isFetchingOneProgram: false };
+                    return { programs: updatedPrograms };
                 }
             });
         } catch (error) {
             console.error("Error fetching program details:", error);
-            set({ isFetchingOneProgram: false });
         }
     },
     triggerRefetch: () => set({ shouldRefetch: true }),

@@ -5,6 +5,7 @@ import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { MoveString, U64 } from '@aptos-labs/ts-sdk';
 import { PlusIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -41,7 +42,7 @@ const VoucherRedemptionsTable = ({ vouchers, vouchersRedeemed }: { vouchers: Red
     </Table>
 );
 
-export default function ProgramVouchers({ program }: { program: LoyaltyProgram }) {
+export default function ProgramVouchers({ program, isLoading }: { program: LoyaltyProgram, isLoading: boolean }) {
 
     const { account, signAndSubmitTransaction } = useWallet();
     const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
@@ -94,6 +95,35 @@ export default function ProgramVouchers({ program }: { program: LoyaltyProgram }
     useEffect(() => {
         fetchProgramDetails(program.id);
     }, [program.id]);
+
+    const renderSkeletons = () => (
+        <div className="bg-white shadow-sm border rounded-lg">
+            <div className="flex justify-between items-center px-6 py-4 bg-gray-100">
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-8 w-8" />
+            </div>
+            <div className="p-4">
+                <div className="flex items-center space-x-4 py-2">
+                    <Skeleton className="h-4 w-1/4" />
+                    <Skeleton className="h-4 w-1/4" />
+                    <Skeleton className="h-4 w-1/4" />
+                    <Skeleton className="h-4 w-1/4" />
+                </div>
+                {[...Array(3)].map((_, index) => (
+                    <div key={index} className="flex items-center space-x-4 py-2">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-4 w-1/4" />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+
+    if (isLoading) {
+        return renderSkeletons();
+    }
 
     return (
         <div className="bg-white shadow-sm border rounded-lg">
