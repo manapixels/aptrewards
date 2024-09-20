@@ -120,8 +120,12 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
     }, [loyaltyProgramId, account]);
 
     const handleCopyAddress = (address: string) => {
-        navigator.clipboard.writeText(address);
-        toast.success('Address copied to clipboard');
+        navigator.clipboard.writeText(address).then(() => {
+            toast.success('Address copied to clipboard');
+        }).catch((error) => {
+            console.error('Failed to copy address to clipboard:', error);
+            toast.error('Failed to copy address to clipboard');
+        });
     };
 
     if (!userDetails) {
@@ -133,15 +137,15 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
     );
 
     return (
-        <div className="space-y-4 -mt-4">
+        <div className="space-y-4 md:-mt-4">
             <div className="relative flex justify-center ">
                 <div className="absolute top-[50%] translate-y-[-50%] left-0 border-t border-gray-200 w-full"></div>
                 <div className="text-sm font-semibold text-gray-400 px-8 py-2 rounded-md tracking-widest bg-white relative z-10 font-mono uppercase">
                     {userDetails.programName}
                 </div>
             </div>
-            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 justify-between">
-                <div>
+            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 justify-center md:justify-between">
+                <div className="flex flex-col md:block items-center">
                     <div className="text-2xl text-gray-700 font-bold tracking-wider flex items-center gap-1">
                         {truncateAddress(account?.address)}
                         <Copy
@@ -150,14 +154,14 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                         />
                     </div>
                     <div className="flex flex-row items-center gap-2 text-[#ae7427] mt-1 mb-2">
-                        <span className="text-lg font-semibold">{userDetails.points} points</span>
+                        <span className="text-lg font-semibold">{userDetails.points?.toLocaleString()} points</span>
                         <div className="w-[1px] h-4 bg-[#ae7427]"></div>
                         <span className="text-lg font-semibold ">{userDetails.currentTier?.name}</span>
                     </div>
                     {userDetails.nextTier && (
                         <>
                             <div className="text-sm text-gray-600">Expiring {formatDate(new Date(Date.now() + Number(userDetails.pointValidityDays) * 24 * 60 * 60 * 1000).toLocaleDateString())}</div>
-                            <div className="text-sm text-gray-600">{userDetails.pointsToNextTier} more points to unlock {userDetails.nextTier?.name}</div>
+                            <div className="text-sm text-gray-600">{userDetails.pointsToNextTier?.toLocaleString()} more points to unlock {userDetails.nextTier?.name}</div>
                         </>
                     )}
                 </div>
