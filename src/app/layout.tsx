@@ -41,8 +41,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
               </div>
               <div>
-                <Card className="m-4">
-                  <CardContent className="p-6">{children}</CardContent>
+                <Card className="m-4 border-none md:border shadow-none md:shadow-sm">
+                  <CardContent className="p-0 md:p-6">{children}</CardContent>
                 </Card>
               </div>
               <Toaster position="bottom-right" />
