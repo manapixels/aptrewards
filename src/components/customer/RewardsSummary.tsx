@@ -28,59 +28,59 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
     const { account } = useWallet();
     const [userDetails, setUserDetails] = useState<UserProgramDetails | null>(null);
 
+    const fetchUserProgramDetails = async () => {
+        if (!account?.address) return;
+
+        try {
+            const resource = await getAptosClient().view({
+                payload: {
+                    function: `${moduleAddress}::${moduleName}::get_user_program_details`,
+                    functionArguments: [
+                        new U64(parseInt(loyaltyProgramId)),
+                        AccountAddress.fromString('0x991d4766be3306bc138fcda1d3e4e1ebb2dd0858fc7932c1a273964a2e0e5718')
+                    ],
+                }
+            });
+
+            const { 
+                program_id, 
+                program_name, 
+                points, 
+                lifetime_points, 
+                point_validity_days, 
+                owned_vouchers, 
+                all_vouchers, 
+                tiers
+            } = resource[0] as any;
+
+            const currentTier = tiers.reduce((prev: any, current: any) =>
+                points >= current.points_required ? current : prev
+            );
+
+            const nextTier = tiers.find((tier: any) => tier.points_required > points);
+
+            const userDetails: UserProgramDetails = {
+                programId: program_id,
+                programName: program_name,
+                points,
+                pointValidityDays: point_validity_days,
+                lifetimePoints: lifetime_points,
+                ownedVouchers: owned_vouchers,
+                allVouchers: all_vouchers,
+                tiers,
+                currentTier,
+                nextTier,
+                pointsToNextTier: nextTier ? nextTier.points_required - points : null,
+            };
+
+            setUserDetails(userDetails);
+        } catch (error) {
+            console.error("Error fetching user program details:", error);
+            toast.error("Failed to fetch user program details");
+        }
+    };
+
     useEffect(() => {
-        const fetchUserProgramDetails = async () => {
-            if (!account?.address) return;
-
-            try {
-                const resource = await getAptosClient().view({
-                    payload: {
-                        function: `${moduleAddress}::${moduleName}::get_user_program_details`,
-                        functionArguments: [
-                            new U64(parseInt(loyaltyProgramId)),
-                            AccountAddress.fromString('0x991d4766be3306bc138fcda1d3e4e1ebb2dd0858fc7932c1a273964a2e0e5718')
-                        ],
-                    }
-                });
-
-                const { 
-                    program_id, 
-                    program_name, 
-                    points, 
-                    lifetime_points, 
-                    point_validity_days, 
-                    owned_vouchers, 
-                    all_vouchers, 
-                    tiers
-                } = resource[0] as any;
-
-                const currentTier = tiers.reduce((prev: any, current: any) =>
-                    points >= current.points_required ? current : prev
-                );
-
-                const nextTier = tiers.find((tier: any) => tier.points_required > points);
-
-                const userDetails: UserProgramDetails = {
-                    programId: program_id,
-                    programName: program_name,
-                    points,
-                    pointValidityDays: point_validity_days,
-                    lifetimePoints: lifetime_points,
-                    ownedVouchers: owned_vouchers,
-                    allVouchers: all_vouchers,
-                    tiers,
-                    currentTier,
-                    nextTier: nextTier?.name || null,
-                    pointsToNextTier: nextTier ? nextTier.points_required - points : null,
-                };
-
-                setUserDetails(userDetails);
-            } catch (error) {
-                console.error("Error fetching user program details:", error);
-                toast.error("Failed to fetch user program details");
-            }
-        };
-
         fetchUserProgramDetails();
     }, [loyaltyProgramId, account]);
 
@@ -157,6 +157,11 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                                     pointsRequired={voucher.pointsRequired}
                                     maxRedemptions={voucher.maxRedemptions}
                                     redemptions={voucher.redemptions}
+                                    onExchangeSuccess={() => {
+                                        // Refresh the user details
+                                        fetchUserProgramDetails();
+                                    }}
+                                    programId={loyaltyProgramId}
                                 />
                             ))}
                         </div>

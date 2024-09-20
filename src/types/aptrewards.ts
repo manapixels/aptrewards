@@ -1,5 +1,5 @@
 export type MyVoucher = {
-    id: number;
+    id: string;
     name: string;
     description: string;
     expirationDate: string;

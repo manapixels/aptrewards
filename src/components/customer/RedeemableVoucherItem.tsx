@@ -12,8 +12,8 @@ import { U64 } from '@aptos-labs/ts-sdk';
 import toast from 'react-hot-toast';
 
 interface RedeemableVoucherItemProps extends RedeemableVoucher {
+    onExchangeSuccess: () => void;
     programId: string;
-    onExchange: () => void;
 }
 
 const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
@@ -26,8 +26,8 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
     pointsRequired,
     maxRedemptions,
     redemptions,
-    programId,
-    onExchange
+    onExchangeSuccess,
+    programId
 }) => {
     const [isExchangeOpen, setIsExchangeOpen] = useState(false);
     const [transactionInProgress, setTransactionInProgress] = useState(false);
@@ -49,7 +49,7 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
                     typeArguments: [],
                     functionArguments: [
                         new U64(parseInt(programId)),
-                        new U64(id)
+                        new U64(parseInt(id))
                     ],
                 },
             });
@@ -57,7 +57,7 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
             await getAptosClient().waitForTransaction({ transactionHash: response.hash });
 
             toast.success("Voucher exchanged successfully");
-            onExchange(); // Callback to refresh the voucher list or update the UI
+            onExchangeSuccess(); // Callback to refresh the voucher list or update the UI
             setIsExchangeOpen(false);
         } catch (error) {
             console.error("Error exchanging voucher:", error);
