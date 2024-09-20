@@ -14,11 +14,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/utils/aptos';
 import { useProgramStore } from '@/store/programStore';
-import { Voucher } from '@/types/aptrewards';
+import { RedeemableVoucher } from '@/types/aptrewards';
 import { LoyaltyProgram } from "@/types/aptrewards";
 
 
-const VoucherRedemptionsTable = ({ vouchers, vouchersRedeemed }: { vouchers: Voucher[] | undefined, vouchersRedeemed: number[] | undefined }) => (
+const VoucherRedemptionsTable = ({ vouchers, vouchersRedeemed }: { vouchers: RedeemableVoucher[] | undefined, vouchersRedeemed: number[] | undefined }) => (
     <Table>
         <TableHeader>
             <TableRow>
@@ -33,7 +33,7 @@ const VoucherRedemptionsTable = ({ vouchers, vouchersRedeemed }: { vouchers: Vou
                 <TableRow key={voucher.id}>
                     <TableCell className="font-medium">{voucher.description}</TableCell>
                     <TableCell>{voucher.pointsRequired}</TableCell>
-                    <TableCell>{new Date(voucher.expirationDate * 1000).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(parseInt(voucher.expirationDate) * 1000).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">{vouchersRedeemed?.[index] || 0}</TableCell>
                 </TableRow>
             ))}
