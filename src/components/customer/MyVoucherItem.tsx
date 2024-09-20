@@ -46,7 +46,7 @@ const MyVoucherItem: React.FC<MyVoucher> = ({
             <CardContent className="p-0">
                 <div className="flex flex-col h-full">
                     <div className="flex flex-grow">
-                        <div className="w-1/3 bg-gray-200 flex-shrink-0">
+                        <div className="w-1/4 md:w-1/3 bg-gray-200 flex-shrink-0">
                             {imageUrl ? (
                                 <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
                             ) : (
@@ -55,7 +55,7 @@ const MyVoucherItem: React.FC<MyVoucher> = ({
                         </div>
                         <div className="flex-grow flex flex-col justify-center p-4">
                             <h3 className="font-bold text-lg">{name}</h3>
-                            <p className="text-sm text-gray-500">Valid until {formatDate(expirationDate)}</p>
+                            <p className="text-sm text-gray-500">Valid until {formatDate(Number(expirationDate))}</p>
                             <div className="mt-3 flex items-center">
                                 <Dialog open={isTransferOpen} onOpenChange={setIsTransferOpen}>
                                     <DialogTrigger asChild>

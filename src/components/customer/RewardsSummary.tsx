@@ -5,7 +5,7 @@ import { U64, AccountAddress } from '@aptos-labs/ts-sdk';
 import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
-import { ArrowRight, Copy } from 'lucide-react';
+import { ArrowRight, ArrowRightLeft, Copy } from 'lucide-react';
 
 import RedeemableVoucherItem from '@/components/customer/RedeemableVoucherItem';
 import MyVoucherItem from '@/components/customer/MyVoucherItem';
@@ -60,17 +60,52 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
             const nextTier = tiers.find((tier: any) => tier.points_required > points);
 
             const userDetails: UserProgramDetails = {
-                programId: program_id,
+                programId: parseInt(program_id),
                 programName: program_name,
-                points,
-                pointValidityDays: point_validity_days,
-                lifetimePoints: lifetime_points,
-                ownedVouchers: owned_vouchers,
-                allVouchers: all_vouchers,
-                tiers,
-                currentTier,
-                nextTier,
-                pointsToNextTier: nextTier ? nextTier.points_required - points : null,
+                points: parseInt(points),
+                lifetimePoints: parseInt(lifetime_points),
+                pointValidityDays: parseInt(point_validity_days),
+                ownedVouchers: owned_vouchers.map((voucher: any) => ({
+                    id: voucher.id,
+                    name: voucher.name,
+                    description: voucher.description,
+                    expirationDate: voucher.expiration_date,
+                    termsAndConditions: voucher.terms_and_conditions,
+                    imageUrl: voucher.image_url,
+                })),
+                allVouchers: all_vouchers.map((voucher: any) => ({
+                    id: voucher.id,
+                    name: voucher.name,
+                    description: voucher.description,
+                    expirationDate: voucher.expiration_date,
+                    termsAndConditions: voucher.terms_and_conditions,
+                    imageUrl: voucher.image_url,
+                    pointsRequired: parseInt(voucher.points_required),
+                    maxRedemptions: parseInt(voucher.max_redemptions),
+                    redemptions: parseInt(voucher.redemptions),
+                })),
+                tiers: tiers.map((tier: any) => ({
+                    id: parseInt(tier.id),
+                    name: tier.name,
+                    pointsRequired: parseInt(tier.points_required),
+                    benefits: tier.benefits,
+                    customerCount: tier.customer_count,
+                })),
+                currentTier: currentTier ? {
+                    id: parseInt(currentTier.id),
+                    name: currentTier.name,
+                    pointsRequired: parseInt(currentTier.points_required),
+                    benefits: currentTier.benefits,
+                    customerCount: currentTier.customer_count,
+                } : null,
+                nextTier: nextTier ? {
+                    id: parseInt(nextTier.id),
+                    name: nextTier.name,
+                    pointsRequired: parseInt(nextTier.points_required),
+                    benefits: nextTier.benefits,
+                    customerCount: nextTier.customer_count,
+                } : null,
+                pointsToNextTier: nextTier ? parseInt(nextTier.points_required) - parseInt(points) : null,
             };
 
             setUserDetails(userDetails);
@@ -105,7 +140,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                     {userDetails.programName}
                 </div>
             </div>
-            <div className="flex items-center space-x-4 justify-between">
+            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 justify-between">
                 <div>
                     <div className="text-2xl text-gray-700 font-bold tracking-wider flex items-center gap-1">
                         {truncateAddress(account?.address)}
@@ -126,7 +161,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                         </>
                     )}
                 </div>
-                <div className="flex flex-col items-center gap-2 pl-8 border-l border-gray-200">
+                <div className="flex flex-col w-full md:w-auto items-center gap-2 pt-4 md:pt-0 md:pl-8 border-t md:border-t-0 md:border-l border-gray-200">
                     <span className="text-lg font-semibold">Scan to earn points</span>
                     <QRCodeSVG value={account?.address || ''} size={150} />
                 </div>
@@ -136,7 +171,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 <h2 className="text-lg font-semibold">My Vouchers <span className="bg-black text-gray-200 px-2 py-1 rounded-md font-mono text-sm">{userDetails.ownedVouchers.length}</span></h2>
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="outline">Exchange for Vouchers <ArrowRight className="w-4 h-4 ml-1" /></Button>
+                        <Button variant="outline"><span className="hidden md:block">Exchange for Vouchers</span> <ArrowRight className="w-4 h-4 ml-1 hidden md:block" /> <ArrowRightLeft className="w-4 h-4 ml-1 block md:hidden" /></Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
@@ -152,7 +187,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                                     id={voucher.id}
                                     name={voucher.description}
                                     description={`Requires ${voucher.pointsRequired} points`}
-                                    expirationDate={new Date(Number(voucher.expirationDate) * 1000).toLocaleDateString()}
+                                    expirationDate={voucher.expirationDate}
                                     termsAndConditions={voucher.termsAndConditions}
                                     pointsRequired={voucher.pointsRequired}
                                     maxRedemptions={voucher.maxRedemptions}
@@ -175,7 +210,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                         id={voucher.id}
                         name={voucher.description}
                         description="Ready to use"
-                        expirationDate={new Date(Number(voucher.expirationDate) * 1000).toLocaleDateString()}
+                        expirationDate={voucher.expirationDate}
                         termsAndConditions={voucher.termsAndConditions}
                     />
                 ))}
