@@ -38,27 +38,36 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                         function: `${moduleAddress}::${moduleName}::get_user_program_details`,
                         functionArguments: [
                             new U64(parseInt(loyaltyProgramId)),
-                            AccountAddress.fromString('0x3eff8f929e7f170661d0cf17fb51a7a8726b91361d96b68be095639d5eff8db6')
+                            AccountAddress.fromString('0x991d4766be3306bc138fcda1d3e4e1ebb2dd0858fc7932c1a273964a2e0e5718')
                         ],
                     }
                 });
 
-                const [programId, programName, points, lifetime_points, pointValidityDays, ownedVouchers, allVouchers, tiers] = resource as [number, string, number, number, number, any[], any[], any[]];
+                const { 
+                    program_id, 
+                    program_name, 
+                    points, 
+                    lifetime_points, 
+                    point_validity_days, 
+                    owned_vouchers, 
+                    all_vouchers, 
+                    tiers
+                } = resource[0] as any;
 
-                const currentTier = tiers.reduce((prev, current) =>
+                const currentTier = tiers.reduce((prev: any, current: any) =>
                     points >= current.points_required ? current : prev
                 );
 
-                const nextTier = tiers.find(tier => tier.points_required > points);
+                const nextTier = tiers.find((tier: any) => tier.points_required > points);
 
                 const userDetails: UserProgramDetails = {
-                    programId,
-                    programName,
+                    programId: program_id,
+                    programName: program_name,
                     points,
-                    pointValidityDays,
+                    pointValidityDays: point_validity_days,
                     lifetimePoints: lifetime_points,
-                    ownedVouchers,
-                    allVouchers,
+                    ownedVouchers: owned_vouchers,
+                    allVouchers: all_vouchers,
                     tiers,
                     currentTier,
                     nextTier: nextTier?.name || null,

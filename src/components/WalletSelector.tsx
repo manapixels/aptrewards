@@ -54,14 +54,14 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
       try {
         const resource = await getAptosClient().view({
           payload: {
-            function: `${moduleAddress}::${moduleName}::get_user_details`,
-            functionArguments: [AccountAddress.fromString('0x3eff8f929e7f170661d0cf17fb51a7a8726b91361d96b68be095639d5eff8db6')],
+            function: `${moduleAddress}::${moduleName}::get_all_user_program_details`,
+            functionArguments: [AccountAddress.fromString('0x991d4766be3306bc138fcda1d3e4e1ebb2dd0858fc7932c1a273964a2e0e5718')],
           }
         });
 
         const rawDataArray = resource[0] as any[];
-        const formattedUserDetails: UserProgramDetails[] = rawDataArray.map((program: any) => {
 
+        const formattedUserDetails: UserProgramDetails[] = rawDataArray.map((program: any) => {
           const currentTier = program.tiers.reduce((prev: any, current: any) =>
             program.points >= current.pointsRequired ? current : prev
           );
@@ -99,8 +99,6 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
     displayText = 'Network not supported. Change to ' + process.env.NEXT_PUBLIC_NETWORK
   }
 
-  console.log(userDetails);
-
   return connected ? (
     <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
       <DropdownMenuTrigger asChild>
@@ -117,9 +115,9 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
                 className="py-2 h-auto w-full text-left flex items-center justify-start gap-3 border border-transparent bg-white hover:bg-white hover:border-gray-900"
                 asChild
               >
-                <Link href={`/co/${program.programId}`}>
-                  <div className="aspect-square w-10 h-10 rounded-md bg-green-600"></div>
-                  <div>
+                <Link href={`/co/${program.programId}`} className="pt-0 pb-0 pl-0">
+                  <div className="w-2 self-stretch rounded-md patterned-placeholder-green"></div>
+                  <div className="pl-1 py-2">
                     <h3 className="text-gray-500">{program.programName}</h3>
                     {program.currentTier && (
                       <>

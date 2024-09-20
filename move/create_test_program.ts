@@ -45,7 +45,7 @@ async function main() {
     }
 
     // Fund the admin account
-    // await aptos.fundAccount({ accountAddress: admin.accountAddress, amount: 100_000_000 });
+    await aptos.fundAccount({ accountAddress: admin.accountAddress, amount: 100_000_000 });
 
     // Function to generate a random program name
     function generateRandomProgramName(): string {
@@ -174,7 +174,7 @@ async function main() {
     for (let i = 0; i < 5; i++) {
         const customer = Account.generate();
         customers.push(customer);
-        await aptos.fundAccount({ accountAddress: customer.accountAddress, amount: 10_000_000 });
+        await aptos.fundAccount({ accountAddress: customer.accountAddress, amount: 100_000_000 });
 
         const points = Math.floor(Math.random() * 50000) + 1000; // Random points between 1000 and 50000
 
@@ -201,41 +201,49 @@ async function main() {
             const randomVoucher = availableVouchers[Math.floor(Math.random() * availableVouchers.length)];
             const voucherIndex = vouchers.indexOf(randomVoucher);
 
-            // Step 1: Exchange points for voucher
-            const exchangePointsTxn = await aptos.transaction.build.simple({
-                sender: customer.accountAddress,
-                data: {
-                    function: `${MODULE_ADDRESS}::AptRewardsMain::exchange_points_for_voucher`,
-                    typeArguments: [],
-                    functionArguments: [programId, voucherIndex]
+            try {
+                // Step 1: Exchange points for voucher
+                const exchangePointsTxn = await aptos.transaction.build.simple({
+                    sender: customer.accountAddress,
+                    data: {
+                        function: `${MODULE_ADDRESS}::AptRewardsMain::exchange_points_for_voucher`,
+                        typeArguments: [],
+                        functionArguments: [programId, voucherIndex]
+                    }
+                });
+
+                const exchangePointsResult = await aptos.signAndSubmitTransaction({
+                    signer: customer,
+                    transaction: exchangePointsTxn
+                })
+
+                await aptos.waitForTransaction({ transactionHash: exchangePointsResult.hash });
+                console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) exchanged points for voucher ${voucherIndex} (${randomVoucher.description})`);
+
+                // Step 2: Redeem voucher (simulating a cashier redeeming it)
+                const redeemVoucherTxn = await aptos.transaction.build.simple({
+                    sender: admin.accountAddress,
+                    data: {
+                        function: `${MODULE_ADDRESS}::AptRewardsMain::redeem_voucher`,
+                        typeArguments: [],
+                        functionArguments: [programId, customer.accountAddress.toString(), voucherIndex]
+                    }
+                });
+
+                const redeemVoucherResult = await aptos.signAndSubmitTransaction({
+                    signer: admin,
+                    transaction: redeemVoucherTxn
+                })
+
+                await aptos.waitForTransaction({ transactionHash: redeemVoucherResult.hash });
+                console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) redeemed voucher ${voucherIndex} (${randomVoucher.description})`);
+            } catch (error) {
+                if (error instanceof Error) {
+                    console.error(`Error processing voucher for Customer ${i + 1} (${customer.accountAddress.toString()}):`, error.message);
+                } else {
+                    console.error(`Error processing voucher for Customer ${i + 1} (${customer.accountAddress.toString()}):`, error);
                 }
-            });
-
-            const exchangePointsResult = await aptos.signAndSubmitTransaction({
-                signer: customer,
-                transaction: exchangePointsTxn
-            })
-
-            await aptos.waitForTransaction({ transactionHash: exchangePointsResult.hash });
-            console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) exchanged points for voucher ${voucherIndex} (${randomVoucher.description})`);
-
-            // Step 2: Redeem voucher (simulating a cashier redeeming it)
-            const redeemVoucherTxn = await aptos.transaction.build.simple({
-                sender: admin.accountAddress,
-                data: {
-                    function: `${MODULE_ADDRESS}::AptRewardsMain::redeem_voucher`,
-                    typeArguments: [],
-                    functionArguments: [programId, customer.accountAddress.toString(), voucherIndex]
-                }
-            });
-
-            const redeemVoucherResult = await aptos.signAndSubmitTransaction({
-                signer: admin,
-                transaction: redeemVoucherTxn
-            })
-
-            await aptos.waitForTransaction({ transactionHash: redeemVoucherResult.hash });
-            console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) redeemed voucher ${voucherIndex} (${randomVoucher.description})`);
+            }
         } else {
             console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) doesn't have enough points to redeem any vouchers`);
         }
