@@ -136,11 +136,11 @@ async function main() {
 
     // Create vouchers
     const vouchers = [
-        { points: 5000, description: "10% off", maxRedemptions: 100 },
-        { points: 10000, description: "$5 off", maxRedemptions: 50 },
-        { points: 20000, description: "Free item", maxRedemptions: 25 },
-        { points: 30000, description: "$10 off", maxRedemptions: 20 },
-        { points: 50000, description: "VIP experience", maxRedemptions: 10 }
+        { name: "10% off", points: 5000, description: "", maxRedemptions: 100, termsAndConditions: "Valid for 30 days from issuance." },
+        { name: "$5 off", points: 10000, description: "", maxRedemptions: 50, termsAndConditions: "Minimum purchase of $20 required." },
+        { name: "Free item", points: 20000, description: "Choose any item up to $10 value", maxRedemptions: 25, termsAndConditions: "One free item per transaction." },
+        { name: "$10 off", points: 30000, description: "", maxRedemptions: 20, termsAndConditions: "Cannot be combined with other offers." },
+        { name: "VIP experience", points: 50000, description: "Exclusive in-store personal shopping session", maxRedemptions: 10, termsAndConditions: "Reservation required. Subject to availability." }
     ];
 
     for (const voucher of vouchers) {
@@ -151,10 +151,12 @@ async function main() {
                 typeArguments: [],
                 functionArguments: [
                     programId,
+                    voucher.name,
                     voucher.description,
                     voucher.points,
                     Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // Expiration date (30 days from now)
-                    voucher.maxRedemptions
+                    voucher.maxRedemptions,
+                    voucher.termsAndConditions
                 ]
             }
         });
@@ -166,7 +168,7 @@ async function main() {
 
         const confirmedVoucherTxn = await aptos.waitForTransaction({ transactionHash: createVoucherResult.hash });
         // @ts-ignore
-        console.log(`Created voucher "${voucher.description}" with ID:`, confirmedVoucherTxn?.events?.find(event => event.type.includes("CreateVoucher"))?.data?.voucher_id);
+        console.log(`Created voucher "${voucher.name}" with ID:`, confirmedVoucherTxn?.events?.find(event => event.type.includes("CreateVoucher"))?.data?.voucher_id);
     }
 
     // Create 5 random customer accounts and assign points
@@ -218,7 +220,7 @@ async function main() {
                 })
 
                 await aptos.waitForTransaction({ transactionHash: exchangePointsResult.hash });
-                console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) exchanged points for voucher ${voucherIndex} (${randomVoucher.description})`);
+                console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) exchanged points for voucher ${voucherIndex} (${randomVoucher.name})`);
 
                 // Step 2: Redeem voucher (simulating a cashier redeeming it)
                 const redeemVoucherTxn = await aptos.transaction.build.simple({
@@ -236,7 +238,7 @@ async function main() {
                 })
 
                 await aptos.waitForTransaction({ transactionHash: redeemVoucherResult.hash });
-                console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) redeemed voucher ${voucherIndex} (${randomVoucher.description})`);
+                console.log(`Customer ${i + 1} (${customer.accountAddress.toString()}) redeemed voucher ${voucherIndex} (${randomVoucher.name})`);
             } catch (error) {
                 if (error instanceof Error) {
                     console.error(`Error processing voucher for Customer ${i + 1} (${customer.accountAddress.toString()}):`, error.message);

@@ -1,35 +1,70 @@
 import { useState } from 'react';
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Forward } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
 import { formatDate } from '@/utils/dateFormatter';
+import { RedeemableVoucher } from '@/types/aptrewards';
+import { moduleAddress, moduleName } from '@/constants';
+import { getAptosClient } from '@/utils/aptos';
+import { U64 } from '@aptos-labs/ts-sdk';
+import toast from 'react-hot-toast';
 
-interface RedeemableVoucherItemProps {
-    name: string;
-    description: string;
-    expiryDate: string;
-    termsAndConditions: string;
-    imageUrl?: string;
-    voucherId: string; // Add this prop for unique voucher identification
+interface RedeemableVoucherItemProps extends RedeemableVoucher {
+    programId: string;
+    onExchange: () => void;
 }
 
 const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
+    id,
     name,
     description,
-    expiryDate,
+    expirationDate,
     termsAndConditions,
     imageUrl,
-    voucherId
+    pointsRequired,
+    maxRedemptions,
+    redemptions,
+    programId,
+    onExchange
 }) => {
     const [isExchangeOpen, setIsExchangeOpen] = useState(false);
+    const [transactionInProgress, setTransactionInProgress] = useState(false);
+    const { account, signAndSubmitTransaction } = useWallet();
 
-    const handleExchange = () => {
+    const handleExchange = async () => {
+        if (!account) {
+            toast.error("No account connected");
+            return;
+        }
 
+        try {
+            setTransactionInProgress(true);
+
+            const response = await signAndSubmitTransaction({
+                sender: account.address,
+                data: {
+                    function: `${moduleAddress}::${moduleName}::exchange_points_for_voucher`,
+                    typeArguments: [],
+                    functionArguments: [
+                        new U64(parseInt(programId)),
+                        new U64(id)
+                    ],
+                },
+            });
+
+            await getAptosClient().waitForTransaction({ transactionHash: response.hash });
+
+            toast.success("Voucher exchanged successfully");
+            onExchange(); // Callback to refresh the voucher list or update the UI
+            setIsExchangeOpen(false);
+        } catch (error) {
+            console.error("Error exchanging voucher:", error);
+            toast.error("Failed to exchange voucher");
+        } finally {
+            setTransactionInProgress(false);
+        }
     };
 
     return (
@@ -46,11 +81,10 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
                         </div>
                         <div className="flex-grow flex flex-col justify-center p-4">
                             <h3 className="font-bold text-lg">{name}</h3>
-                            <p className="text-sm text-gray-500">Valid until {formatDate(expiryDate)}</p>
+                            <p className="text-sm text-gray-500">Valid until {formatDate(expirationDate)}</p>
+                            <p className="text-sm text-gray-500">{pointsRequired} points required</p>
                             <div className="mt-3 flex items-center">
-                                <Dialog open={isExchangeOpen} onOpenChange={(open) => {
-                                    setIsExchangeOpen(open);
-                                }}>
+                                <Dialog open={isExchangeOpen} onOpenChange={setIsExchangeOpen}>
                                     <DialogTrigger asChild>
                                         <Button variant="secondary" className="border border-gray-400" size="sm">Redeem</Button>
                                     </DialogTrigger>
@@ -66,7 +100,7 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
                                             )}
                                             {!imageUrl && <div className="w-full h-48 bg-gray-200"></div>}
                                             <p>{description}</p>
-                                            <p className="text-sm text-gray-500">Valid until {formatDate(expiryDate)}</p>
+                                            <p className="text-sm text-gray-500">Valid until {formatDate(expirationDate)}</p>
                                             <Accordion type="single" collapsible>
                                                 <AccordionItem value="terms">
                                                     <AccordionTrigger>Terms and Conditions</AccordionTrigger>
@@ -75,7 +109,13 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
                                                     </AccordionContent>
                                                 </AccordionItem>
                                             </Accordion>
-                                            <Button onClick={handleExchange} className="w-full py-6">Exchange</Button>
+                                            <Button 
+                                                onClick={handleExchange} 
+                                                className="w-full py-6"
+                                                disabled={transactionInProgress}
+                                            >
+                                                {transactionInProgress ? 'Exchanging...' : 'Exchange'}
+                                            </Button>
                                         </div>
                                     </DialogContent>
                                 </Dialog>

@@ -21,10 +21,12 @@ module aptrewards_addr::AptRewardsEvents {
     struct CreateVoucher has store, drop {
         program_id: u64,
         voucher_id: u64,
+        name: String,
         points_required: u64,
         description: String,
         expiration_date: u64,
         max_redemptions: u64,
+        terms_and_conditions: String,
     }
 
     #[event]
@@ -110,18 +112,22 @@ module aptrewards_addr::AptRewardsEvents {
     public(friend) fun emit_create_voucher(
         program_id: u64, 
         voucher_id: u64,
+        name: String,
         points_required: u64,
         description: String,
         expiration_date: u64,
-        max_redemptions: u64
+        max_redemptions: u64,
+        terms_and_conditions: String
     ) {
         event::emit(CreateVoucher { 
             program_id, 
             voucher_id,
+            name,
             points_required,
             description,
             expiration_date,
-            max_redemptions
+            max_redemptions,
+            terms_and_conditions
         });
     }
 

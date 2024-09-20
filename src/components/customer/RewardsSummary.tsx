@@ -149,11 +149,14 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                             {redeemableVouchers.map((voucher, index) => (
                                 <RedeemableVoucherItem
                                     key={index}
-                                    voucherId={voucher.id.toString()}
+                                    id={voucher.id}
                                     name={voucher.description}
                                     description={`Requires ${voucher.pointsRequired} points`}
-                                    expiryDate={new Date(Number(voucher.expirationDate) * 1000).toLocaleDateString()}
-                                    termsAndConditions={`Max redemptions: ${voucher.maxRedemptions}, Current redemptions: ${voucher.redemptions}`}
+                                    expirationDate={new Date(Number(voucher.expirationDate) * 1000).toLocaleDateString()}
+                                    termsAndConditions={voucher.termsAndConditions}
+                                    pointsRequired={voucher.pointsRequired}
+                                    maxRedemptions={voucher.maxRedemptions}
+                                    redemptions={voucher.redemptions}
                                 />
                             ))}
                         </div>
@@ -164,11 +167,11 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 {userDetails.ownedVouchers.map((voucher, index) => (
                     <MyVoucherItem
                         key={index}
-                        voucherId={voucher.id.toString()}
+                        id={voucher.id}
                         name={voucher.description}
                         description="Ready to use"
-                        expiryDate={new Date(Number(voucher.expirationDate) * 1000).toLocaleDateString()}
-                        termsAndConditions={`Max redemptions: ${voucher.maxRedemptions}, Current redemptions: ${voucher.redemptions}`}
+                        expirationDate={new Date(Number(voucher.expirationDate) * 1000).toLocaleDateString()}
+                        termsAndConditions={voucher.termsAndConditions}
                     />
                 ))}
             </div>

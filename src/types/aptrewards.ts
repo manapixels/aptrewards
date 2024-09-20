@@ -1,10 +1,14 @@
-export type Voucher = {
+export type MyVoucher = {
     id: number;
-    pointsRequired: number;
+    name: string;
     description: string;
-    isMonetary: boolean;
-    value: number;
-    expirationDate: number;
+    expirationDate: string;
+    termsAndConditions: string;
+    imageUrl?: string;
+};
+
+export type RedeemableVoucher = MyVoucher & {
+    pointsRequired: number;
     maxRedemptions: number;
     redemptions: number;
 };
@@ -21,7 +25,7 @@ export interface LoyaltyProgram {
     id: string;
     name: string;
     owner: string;
-    vouchers?: Voucher[];
+    vouchers?: RedeemableVoucher[];
     voucherCount?: number;
     pointValidityDays?: number;
     tiers?: Tier[];
@@ -47,8 +51,8 @@ export interface UserProgramDetails {
     points: number;
     lifetimePoints: number;
     pointValidityDays: number;
-    ownedVouchers: Voucher[];
-    allVouchers: Voucher[];
+    ownedVouchers: MyVoucher[];
+    allVouchers: RedeemableVoucher[];
     tiers: Tier[];
     currentTier: Tier | null;
     nextTier: Tier | null;

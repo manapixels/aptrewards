@@ -9,12 +9,14 @@ module aptrewards_addr::AptRewardsMain {
 
     struct Voucher has store, drop, copy {
         id: u64,
+        name: String,
         points_required: u64,
         description: String,
         expiration_date: u64,
         max_redemptions: u64,
         redeemed_by: vector<address>,
         is_used: bool,
+        terms_and_conditions: String,
     }
 
     struct Tier has store, drop, copy {
@@ -160,10 +162,12 @@ module aptrewards_addr::AptRewardsMain {
     public entry fun create_voucher(
         account: &signer,
         program_id: u64,
+        name: String,
         description: String,
         points_required: u64,
         expiration_date: u64,
-        max_redemptions: u64
+        max_redemptions: u64,
+        terms_and_conditions: String
     ) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
         assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
@@ -173,18 +177,20 @@ module aptrewards_addr::AptRewardsMain {
 
         let voucher = Voucher {
             id: program.voucher_count,
+            name,
             description,
             points_required,
             expiration_date,
             max_redemptions,
             redeemed_by: vector::empty<address>(),
             is_used: false,
+            terms_and_conditions,
         };
 
         vector::push_back(&mut program.vouchers, voucher);
         program.voucher_count = program.voucher_count + 1;
 
-        AptRewardsEvents::emit_create_voucher(program_id, voucher.id, points_required, description, expiration_date, max_redemptions);
+        AptRewardsEvents::emit_create_voucher(program_id, voucher.id, name, points_required, description, expiration_date, max_redemptions, terms_and_conditions);
     }
 
     public entry fun add_tier(
@@ -656,7 +662,7 @@ module aptrewards_addr::AptRewardsMain {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
-        create_voucher(owner, 1, utf8(b"Test Voucher"), 10, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
+        create_voucher(owner, 1, utf8(b"Test Voucher"), utf8(b"Test Description"), 10, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1, utf8(b"Test Terms and Conditions"));
         
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = simple_map::borrow(&factory.programs, &1);
@@ -749,7 +755,7 @@ module aptrewards_addr::AptRewardsMain {
     public fun test_exchange_points_for_voucher(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
-        create_voucher(owner, 1, utf8(b"Test Voucher"), 10, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
+        create_voucher(owner, 1, utf8(b"Test Voucher"), utf8(b"Test Description"), 10, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1, utf8(b"Test Terms and Conditions"));
         
         account::create_account_for_test(address_of(customer));
         earn_points(owner, 1, address_of(customer), 10);
@@ -766,7 +772,7 @@ module aptrewards_addr::AptRewardsMain {
     public fun test_redeem_voucher(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
-        create_voucher(owner, 1, utf8(b"Test Voucher"), 10, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1);
+        create_voucher(owner, 1, utf8(b"Test Voucher"), utf8(b"Test Description"), 10, timestamp::now_seconds() + 60 * 60 * 24 * 7, 1, utf8(b"Test Terms and Conditions"));
         
         account::create_account_for_test(address_of(customer));
         earn_points(owner, 1, address_of(customer), 10);
@@ -790,7 +796,7 @@ module aptrewards_addr::AptRewardsMain {
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
         let current_time = timestamp::now_seconds();
-        create_voucher(owner, 1, utf8(b"Limited Voucher"), 10, current_time + 3600, 1);
+        create_voucher(owner, 1, utf8(b"Limited Voucher"), 10, current_time + 3600, 1, utf8(b"Test Terms and Conditions"));
         
         account::create_account_for_test(address_of(customer1));
         account::create_account_for_test(address_of(customer2));
@@ -862,7 +868,7 @@ module aptrewards_addr::AptRewardsMain {
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
         let current_time = timestamp::now_seconds();
-        create_voucher(owner, 1, utf8(b"Expired Voucher"), 10, current_time + 10, 1);
+        create_voucher(owner, 1, utf8(b"Expired Voucher"), 10, current_time + 10, 1, utf8(b"Test Terms and Conditions"));
         
         account::create_account_for_test(address_of(customer));
         earn_points(owner, 1, address_of(customer), 10);        
