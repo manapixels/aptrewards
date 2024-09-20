@@ -149,9 +149,9 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                             onClick={() => handleCopyAddress(account?.address || '')}
                         />
                     </div>
-                    <div className="flex flex-row items-center gap-2 text-green-600 mt-1 mb-2">
+                    <div className="flex flex-row items-center gap-2 text-[#ae7427] mt-1 mb-2">
                         <span className="text-lg font-semibold">{userDetails.points} points</span>
-                        <div className="w-[1px] h-4 bg-green-600"></div>
+                        <div className="w-[1px] h-4 bg-[#ae7427]"></div>
                         <span className="text-lg font-semibold ">{userDetails.currentTier?.name}</span>
                     </div>
                     {userDetails.nextTier && (

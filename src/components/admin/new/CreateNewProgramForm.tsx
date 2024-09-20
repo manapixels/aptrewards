@@ -122,7 +122,7 @@ export default function CreateNewProgramForm() {
                         )}
                     /> */}
                     <div className="mt-4 flex justify-end">
-                        <Button type="submit" disabled={transactionInProgress || success} className={`${success ? "bg-green-500" : ""}`}>
+                        <Button type="submit" disabled={transactionInProgress || success} className={`${success ? "bg-[#ae7427]" : ""}`}>
                             {transactionInProgress ? 'Creating...' : success ? `${<Check />}${" "}Created` : 'Create'}
                         </Button>
                     </div>

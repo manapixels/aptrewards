@@ -114,7 +114,7 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
                 asChild
               >
                 <Link href={`/co/${program.programId}`} className="pt-0 pb-0 pl-0">
-                  <div className="w-2 self-stretch rounded-md patterned-placeholder-green"></div>
+                  <div className="w-2 self-stretch rounded-md patterned-placeholder-gold"></div>
                   <div className="pl-1 py-2">
                     <h3 className="text-gray-500">{program.programName}</h3>
                     {program.currentTier && (
