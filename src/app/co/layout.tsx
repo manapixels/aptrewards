@@ -4,10 +4,9 @@ import Image from 'next/image';
 import { WalletSelector } from '@/components/WalletSelector';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Card, CardContent } from '@/components/ui/card';
-import ProgramListSidebar from '@/components/admin/ProgramListSidebar';
-import AdminMenuPanel from '@/components/admin/AdminMenuPanel';
+import CustomerMenuPanel from '@/components/customer/CustomerMenuPanel';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function CustomerLayout({ children }: { children: React.ReactNode }) {
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -16,7 +15,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link href="/">
                         <div className="text-xl font-bold flex flex-row gap-2">
                             <Image src="/logo.svg" alt="AptRewards" width={160} height={26} />
-                            {/* <div>AptRewards</div> */}
                         </div>
                     </Link>
                     <div className="flex flex-row gap-2">
@@ -27,17 +25,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div>
                     <Card className="m-4 border-none md:border shadow-none md:shadow-sm">
                         <CardContent className="p-0 md:p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="col-span-1 relative">
-                                    <ProgramListSidebar />
-                                </div>
-                                <div className="col-span-1 md:col-span-2">{children}</div>
-                            </div>
+                            {children}
                         </CardContent>
                     </Card>
                 </div>
             </main>
-            <AdminMenuPanel />
+            <CustomerMenuPanel />
         </div>
 
     )
