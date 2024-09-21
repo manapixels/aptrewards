@@ -4,9 +4,9 @@ import { useState, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'react-hot-toast';
 
-const RedeemPage = () => {
+const IssuePage = () => {
     const [data, setData] = useState<string | null>(null);
     const [scanning, setScanning] = useState(false);
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
@@ -35,11 +35,7 @@ const RedeemPage = () => {
 
     const handleError = (err: any) => {
         console.error(err);
-        toast({
-            title: "Error",
-            description: "Failed to scan QR code. Please try again.",
-            variant: "destructive",
-        });
+        toast.error("Failed to scan QR code. Please try again.");
     };
 
     const handleRedeem = async () => {
@@ -50,19 +46,12 @@ const RedeemPage = () => {
             // TODO: Implement the actual redemption logic here
             console.log('Redeeming voucher:', voucherData);
 
-            toast({
-                title: "Success",
-                description: `Voucher "${voucherData.name}" has been redeemed.`,
-            });
+            toast.success(`Voucher "${voucherData.name}" has been redeemed.`);
 
             setData(null);
         } catch (error) {
             console.error('Failed to redeem voucher:', error);
-            toast({
-                title: "Error",
-                description: "Failed to redeem voucher. Please try again.",
-                variant: "destructive",
-            });
+            toast.error("Failed to redeem voucher. Please try again.");
         }
     };
 
@@ -95,4 +84,4 @@ const RedeemPage = () => {
     );
 };
 
-export default RedeemPage;
+export default IssuePage;
