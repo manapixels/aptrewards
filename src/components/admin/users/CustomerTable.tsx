@@ -19,7 +19,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 
-import { DataTablePagination } from "@/components/admin/DataTablePagination"
+import { DataTablePagination } from "@/components/ui/DataTablePagination"
 import React from "react"
 
 interface CustomerTableProps<TData, TValue> {

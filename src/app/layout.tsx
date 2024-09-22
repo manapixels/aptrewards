@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { AutoConnectProvider } from '@/components/AutoConnectProvider';
-import { ThemeProvider } from '@/components/ThemeProvider';
-import { WalletProvider } from '@/components/WalletProvider';
+import { AutoConnectProvider } from '@/components/onchain/AutoConnectProvider';
+import { ThemeProvider } from '@/components/ui/ThemeProvider';
+import { WalletProvider } from '@/components/onchain/WalletProvider';
 import './globals.css';
 import dotenv from 'dotenv';
 import { Toaster } from 'react-hot-toast';

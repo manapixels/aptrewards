@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { CustomerTable } from '@/components/admin/CustomerTable';
+import { CustomerTable } from '@/components/admin/users/CustomerTable';
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/utils/aptos';
 import { useProgramStore } from '@/store/programStore';

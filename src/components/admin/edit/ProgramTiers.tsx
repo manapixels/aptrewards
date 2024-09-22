@@ -15,7 +15,7 @@ import { getAptosClient } from '@/utils/aptos';
 import { useProgramStore } from '@/store/programStore';
 import { CustomerWithPoints, LoyaltyProgram, Tier } from '@/types/aptrewards';
 import { MoveString, MoveVector, U64 } from '@aptos-labs/ts-sdk';
-import { CustomerTable } from '@/components/admin/CustomerTable';
+import { CustomerTable } from '@/components/admin/users/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { truncateAddress } from '@/utils/address';
 import { ColumnDef } from '@tanstack/react-table';

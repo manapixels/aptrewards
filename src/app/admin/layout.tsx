@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-import { WalletSelector } from '@/components/WalletSelector';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { WalletSelector } from '@/components/onchain/WalletSelector';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Card, CardContent } from '@/components/ui/card';
 import ProgramListSidebar from '@/components/admin/ProgramListSidebar';
 import AdminMenuPanel from '@/components/admin/AdminMenuPanel';
