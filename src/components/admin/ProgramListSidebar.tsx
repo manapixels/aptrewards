@@ -32,8 +32,8 @@ const ProgramListSidebar = () => {
     );
 
     const renderProgramList = () => (
-        <>
-            <div className="flex justify-between items-center mb-4">
+        <div className="hidden md:block">
+            <div className="flex justify-between items-center md:mb-4">
                 <div className="text-sm font-semibold">Your Programs</div>
                 {programs.length > 0 && (
                     <Link href="/admin/new">
@@ -61,7 +61,7 @@ const ProgramListSidebar = () => {
                     <Button variant="outline" className="w-full" size="sm">+ New</Button>
                 </Link>
             )}
-        </>
+        </div>
     );
 
     return (
