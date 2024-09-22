@@ -1,30 +1,81 @@
 'use client'
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Layers, Ticket, Users } from 'lucide-react';
+import { Barcode, DiscAlbum, Users } from 'lucide-react';
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { useProgramStore } from '@/store/programStore';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const AdminMenuPanel: React.FC = () => {
     const pathname = usePathname();
+    const { account } = useWallet();
+    const { programs, fetchPrograms, shouldRefetch } = useProgramStore();
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (account?.address) {
+            setIsLoading(true);
+            fetchPrograms(account.address).then(() => setIsLoading(false));
+        }
+    }, [account?.address, shouldRefetch, fetchPrograms]);
+
+    const renderProgramsDropdown = () => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className={`flex flex-col items-center py-2 px-4 h-auto ${pathname === '/admin/issue' ? 'text-[#a7783a]' : 'text-gray-600'
+                    }`}>
+                    <DiscAlbum className={`h-6 w-6 ${pathname === '/admin/issue' ? 'outline-[#a7783a]' : 'outline-gray-600'
+                    }`} />
+                    <span className="text-xs mt-1">Programs</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+                {isLoading ? (
+                    <Skeleton className="h-10 w-full" />
+                ) : (
+                    <>
+                        {programs.map((program) => (
+                            <DropdownMenuItem key={`program-${program.id}`}>
+                                <Link href={`/admin/edit/${program.id}`} className="w-full">
+                                    {program.name}
+                                </Link>
+                            </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuItem className="bg-gray-100">
+                            <Link href="/admin/new" className="w-full">
+                                + New Program
+                            </Link>
+                        </DropdownMenuItem>
+                    </>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
 
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-gray-100 shadow-lg md:hidden z-50 border-t border-gray-400">
             <nav className="flex justify-around items-center">
-                <Link href="/admin/programs" className={`flex flex-col items-center py-2 px-4 ${pathname === '/admin/programs' ? 'text-blue-600' : 'text-gray-600'
+                {renderProgramsDropdown()}
+                <Link href="/admin/issue" className={`flex flex-col items-center py-2 px-4 ${pathname === '/admin/issue' ? 'text-[#a7783a]' : 'text-white'
                     }`}>
-                    <Layers className="h-6 w-6" />
-                    <span className="text-xs mt-1">Programs</span>
-                </Link>
-                <Link href="/admin/issue" className={`flex flex-col items-center py-2 px-4 ${pathname === '/admin/issue' ? 'text-blue-600' : 'text-white'
-                    }`}>
-                    <Ticket className="h-6 w-6 outline-white" />
+                    <Barcode className={`h-6 w-6 ${pathname === '/admin/issue' ? 'outline-white' : 'outline-white'
+                    }`} />
                     <span className="text-md mt-1">Issue</span>
                     <div className="bg-gray-900 rounded-full w-24 h-24 absolute z-[-1] top-[50%] translate-y-[-50%] border border-gray-400"></div>
                 </Link>
-                <Link href="/admin/users" className={`flex flex-col items-center py-2 px-4 ${pathname === '/admin/users' ? 'text-blue-600' : 'text-gray-600'
+                <Link href="/admin/users" className={`flex flex-col items-center py-2 px-4 ${pathname === '/admin/users' ? 'text-[#a7783a]' : 'text-gray-600'
                     }`}>
-                    <Users className="h-6 w-6" />
+                    <Users className={`h-6 w-6 ${pathname === '/admin/users' ? 'outline-[#a7783a]' : 'outline-gray-600'
+                    }`} />
                     <span className="text-xs mt-1">Users</span>
                 </Link>
             </nav>

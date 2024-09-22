@@ -7,14 +7,6 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown, Menu } from "lucide-react";
-import { isMobile } from 'react-device-detect';
 
 const ProgramListSidebar = () => {
     const { account } = useWallet();
@@ -31,10 +23,6 @@ const ProgramListSidebar = () => {
 
     const renderSkeletons = () => (
         <>
-            <div className="flex justify-between items-center mb-4">
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-7 w-7" />
-            </div>
             <div className="flex flex-col gap-2">
                 {[...Array(3)].map((_, index) => (
                     <Skeleton key={index} className="h-9 w-full" />
@@ -49,7 +37,7 @@ const ProgramListSidebar = () => {
                 <div className="text-sm font-semibold">Your Programs</div>
                 {programs.length > 0 && (
                     <Link href="/admin/new">
-                        <button className="w-full border border-gray-500 text-sm font-semibold px-2 py-1 rounded-md hover:bg-gray-100">+</button>
+                        <button className="w-full border border-gray-500 text-sm font-semibold px-2 py-1 rounded-md hover:bg-gray-100">+ New</button>
                     </Link>
                 )}
             </div>
@@ -76,38 +64,10 @@ const ProgramListSidebar = () => {
         </>
     );
 
-    const renderMobileDropdown = () => (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                {isLoading && programs.length === 0 ? (
-                    <Skeleton className="h-10 w-full" />
-                ) : (
-                    <Button variant="outline" className="w-full justify-between sticky top-0 border-gray-500">
-                        <Menu className="h-4 w-4 opacity-50" /> Your Programs <ChevronDown className="h-4 w-4 opacity-50" />
-                    </Button>
-                )}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-                {programs.map((program) => (
-                    <DropdownMenuItem key={`program-${program.id}`}>
-                        <Link href={`/admin/edit/${program.id}`} className="w-full">
-                            {program.name}
-                        </Link>
-                    </DropdownMenuItem>
-                ))}
-                <DropdownMenuItem className="bg-gray-100">
-                    <Link href="/admin/new" className="w-full">
-                        + New Program
-                    </Link>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-    );
-
     return (
         <>
             {account ? (
-                isMobile ? renderMobileDropdown() : renderProgramList()
+                renderProgramList()
             ) : (
                 <div>Connect your wallet to view your programs</div>
             )}
