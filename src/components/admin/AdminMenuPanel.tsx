@@ -37,7 +37,7 @@ const AdminMenuPanel: React.FC = () => {
     const renderProgramsDropdown = () => (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className={`flex flex-col items-center py-2 px-4 h-auto ${pathname === '/admin/issue' ? 'text-[#a7783a]' : 'text-gray-600'
+                <Button variant="ghost" className={`col-span-1 flex flex-col items-center py-2 px-4 h-auto ${pathname === '/admin/issue' ? 'text-[#a7783a]' : 'text-gray-600'
                     }`}>
                     <DiscAlbum className={`h-6 w-6 ${pathname === '/admin/issue' ? 'outline-[#a7783a]' : 'outline-gray-600'
                     }`} />
@@ -69,16 +69,16 @@ const AdminMenuPanel: React.FC = () => {
 
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-gray-100 shadow-lg md:hidden z-50 border-t border-gray-400">
-            <nav className="flex justify-around items-center">
+            <nav className="grid grid-cols-3 justify-around items-center">
                 {renderProgramsDropdown()}
-                <Link href="/admin/issue" className={`flex flex-col items-center py-2 px-4 ${pathname === '/admin/issue' ? 'text-[#a7783a]' : 'text-white'
+                <Link href="/admin/issue" className={`col-span-1 flex flex-col items-center py-2 px-4 ${pathname === '/admin/issue' ? 'text-[#a7783a]' : 'text-white'
                     }`}>
                     <Barcode className={`h-6 w-6 ${pathname === '/admin/issue' ? 'outline-white' : 'outline-white'
                     }`} />
                     <span className="text-md mt-1">Issue</span>
                     <div className="bg-gray-900 rounded-full w-24 h-24 absolute z-[-1] top-[50%] translate-y-[-50%] border border-gray-400"></div>
                 </Link>
-                <Link href="/admin/users" className={`flex flex-col items-center py-2 px-4 ${pathname === '/admin/users' ? 'text-[#a7783a]' : 'text-gray-600'
+                <Link href="/admin/users" className={`col-span-1 flex flex-col items-center py-2 px-4 ${pathname === '/admin/users' ? 'text-[#a7783a]' : 'text-gray-600'
                     }`}>
                     <Users className={`h-6 w-6 ${pathname === '/admin/users' ? 'outline-[#a7783a]' : 'outline-gray-600'
                     }`} />
