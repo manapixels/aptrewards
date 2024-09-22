@@ -14,6 +14,9 @@ dotenv.config();
 export const metadata: Metadata = {
   title: `AptRewards`,
   description: `A loyalty program on Aptos.`,
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

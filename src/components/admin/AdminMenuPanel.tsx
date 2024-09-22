@@ -33,7 +33,7 @@ const AdminMenuPanel: React.FC = () => {
     const ProgramsDropdown = () => (
         <DropdownMenu open={isProgramsOpen} onOpenChange={setIsProgramsOpen}>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className={`col-span-1 flex flex-col items-center py-2 px-4 h-auto ${pathname.startsWith('/admin/edit') ? 'text-[#a7783a] font-semibold' : 'text-gray-600'}`}>
+                <Button variant="ghost" className={`col-span-1 flex flex-col items-center py-2 px-4 h-auto ${pathname.startsWith('/admin/edit') ? 'text-[#a7783a] font-bold' : 'text-gray-600'}`}>
                     <DiscAlbum className={`h-6 w-6 ${pathname.startsWith('/admin/edit') ? 'outline-[#a7783a]' : 'outline-gray-600'}`} />
                     <span className="text-xs mt-1">Programs</span>
                 </Button>
@@ -64,7 +64,7 @@ const AdminMenuPanel: React.FC = () => {
     const UsersDropdown = () => (
         <DropdownMenu open={isUsersOpen} onOpenChange={setIsUsersOpen}>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className={`col-span-1 flex flex-col items-center py-2 px-4 h-auto ${pathname.startsWith('/admin/users') ? 'text-[#a7783a]' : 'text-gray-600'}`}>
+                <Button variant="ghost" className={`col-span-1 flex flex-col items-center py-2 px-4 h-auto ${pathname.startsWith('/admin/users') ? 'text-[#a7783a] font-bold' : 'text-gray-600'}`}>
                     <Users className={`h-6 w-6 ${pathname.startsWith('/admin/users') ? 'outline-[#a7783a]' : 'outline-gray-600'}`} />
                     <span className="text-xs mt-1">Users</span>
                 </Button>
@@ -91,7 +91,7 @@ const AdminMenuPanel: React.FC = () => {
         <div className="fixed bottom-0 left-0 right-0 bg-gray-100 shadow-lg md:hidden z-50 border-t border-gray-400">
             <nav className="grid grid-cols-3 justify-around items-center">
                 <ProgramsDropdown />
-                <Link href="/admin/issue" className={`col-span-1 flex flex-col items-center py-2 px-4 ${pathname === '/admin/issue' ? 'text-[#a7783a]' : 'text-white'}`}>
+                <Link href="/admin/issue" className={`col-span-1 flex flex-col items-center py-2 px-4 ${pathname === '/admin/issue' ? 'text-[#a7783a] font-bold' : 'text-white'}`}>
                     <Barcode className={`h-6 w-6 ${pathname === '/admin/issue' ? 'outline-white' : 'outline-white'}`} />
                     <span className="text-md mt-1">Issue</span>
                     <div className="bg-gray-900 rounded-full w-24 h-24 absolute z-[-1] top-[50%] translate-y-[-50%] border border-gray-400"></div>
