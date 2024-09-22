@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Barcode, DiscAlbum, Users } from 'lucide-react';
@@ -20,6 +20,12 @@ const AdminMenuPanel: React.FC = () => {
     const { account } = useWallet();
     const { programs, fetchPrograms, shouldRefetch } = useProgramStore();
     const [isLoading, setIsLoading] = useState(true);
+    const [isOpen, setIsOpen] = useState(false);
+
+    const closeDropdown = useCallback(() => {
+        console.log('closeDropdown');
+        setIsOpen(false);
+    }, []);
 
     useEffect(() => {
         if (account?.address) {
@@ -29,7 +35,7 @@ const AdminMenuPanel: React.FC = () => {
     }, [account?.address, shouldRefetch, fetchPrograms]);
 
     const renderProgramsDropdown = () => (
-        <DropdownMenu>
+        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className={`flex flex-col items-center py-2 px-4 h-auto ${pathname === '/admin/issue' ? 'text-[#a7783a]' : 'text-gray-600'
                     }`}>
@@ -45,13 +51,13 @@ const AdminMenuPanel: React.FC = () => {
                     <>
                         {programs.map((program) => (
                             <DropdownMenuItem key={`program-${program.id}`}>
-                                <Link href={`/admin/edit/${program.id}`} className="w-full">
+                                <Link href={`/admin/edit/${program.id}`} className="w-full" onClick={closeDropdown}>
                                     {program.name}
                                 </Link>
                             </DropdownMenuItem>
                         ))}
                         <DropdownMenuItem className="bg-gray-100">
-                            <Link href="/admin/new" className="w-full">
+                            <Link href="/admin/new" className="w-full" onClick={closeDropdown}>
                                 + New Program
                             </Link>
                         </DropdownMenuItem>
