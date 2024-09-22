@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { CustomerTable } from '@/components/admin/CustomerTable';
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/utils/aptos';
@@ -202,11 +202,14 @@ const ProgramDetails = ({ program, isLoading }: { program: LoyaltyProgram, isLoa
         if (!customers.length) return null;
 
         return (
-            <ScrollArea className="h-[400px]">
-                <CustomerTable
-                    columns={columns}
-                    data={customers}
-                />
+            <ScrollArea className="h-[400px] w-full">
+                <div className="w-full min-w-[600px]">
+                    <CustomerTable
+                        columns={columns}
+                        data={customers}
+                    />
+                </div>
+                <ScrollBar orientation="horizontal" />
             </ScrollArea>
         );
     };
@@ -305,11 +308,13 @@ const ProgramDetails = ({ program, isLoading }: { program: LoyaltyProgram, isLoa
             </div>
 
             <Dialog open={isCustomersModalOpen} onOpenChange={setIsCustomersModalOpen}>
-                <DialogContent className="max-w-3xl">
+                <DialogContent className="max-w-3xl max-h-[80vh]">
                     <DialogHeader>
                         <DialogTitle>Customers</DialogTitle>
                     </DialogHeader>
-                    {program ? renderCustomersTable() : <SkeletonCustomerTable />}
+                    <div className="overflow-hidden">
+                        {program ? renderCustomersTable() : <SkeletonCustomerTable />}
+                    </div>
                 </DialogContent>
             </Dialog>
 

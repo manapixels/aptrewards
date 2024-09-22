@@ -36,6 +36,9 @@ const ProgramTiers = ({ program, isLoading }: { program: LoyaltyProgram, isLoadi
     const [isTierCustomersDialogOpen, setIsTierCustomersDialogOpen] = useState(false);
     const [selectedTier, setSelectedTier] = useState<string | null>(null);
 
+    // max 3 columns
+    const tierGridClassName = `grid grid-cols-${program?.tiers?.length ? (program.tiers.length >= 3 ? 3 : program.tiers.length) : 1} border`;
+
     const handleTierAction = async (action: 'add' | 'edit' | 'remove', tier: Tier) => {
         try {
             if (!account) throw new Error("No account connected");
@@ -366,7 +369,7 @@ const ProgramTiers = ({ program, isLoading }: { program: LoyaltyProgram, isLoadi
                     ))}
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 border">
+                <div className={tierGridClassName}>
                     {program?.tiers?.map((tier: Tier) => (
                         <button
                             key={tier.id}
