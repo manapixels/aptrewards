@@ -129,6 +129,18 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
         });
     };
 
+    const generateQRCodeData = () => {
+        if (!account?.address || !userDetails) return '';
+
+        const qrData = {
+            programId: loyaltyProgramId,
+            customer: account.address,
+            // We're not including voucherId or name here as this QR code is for earning points, not redeeming
+        };
+
+        return JSON.stringify(qrData);
+    };
+
     if (!userDetails) {
         return (
             <div className="space-y-4 md:-mt-4">
@@ -195,7 +207,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 </div>
                 <div className="flex flex-col w-full md:w-auto items-center gap-2 pt-4 md:pt-0 md:pl-8 border-t md:border-t-0 md:border-l border-gray-200">
                     <span className="text-lg font-semibold">Scan to earn points</span>
-                    <QRCodeSVG value={account?.address || ''} size={150} />
+                    <QRCodeSVG value={generateQRCodeData()} size={150} />
                 </div>
             </div>
             <hr className="my-8" />
