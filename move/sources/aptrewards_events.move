@@ -24,7 +24,7 @@ module aptrewards_addr::AptRewardsEvents {
         name: String,
         points_required: u64,
         description: String,
-        expiration_date: u64,
+        validity_days: u64,
         max_redemptions: u64,
         terms_and_conditions: String,
     }
@@ -122,7 +122,7 @@ module aptrewards_addr::AptRewardsEvents {
         name: String,
         points_required: u64,
         description: String,
-        expiration_date: u64,
+        validity_days: u64,
         max_redemptions: u64,
         terms_and_conditions: String
     ) {
@@ -132,7 +132,7 @@ module aptrewards_addr::AptRewardsEvents {
             name,
             points_required,
             description,
-            expiration_date,
+            validity_days,
             max_redemptions,
             terms_and_conditions
         });

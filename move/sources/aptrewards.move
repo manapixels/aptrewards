@@ -1,6 +1,6 @@
 module aptrewards_addr::AptRewardsMain {
     use std::vector;
-    use aptrewards_addr::AptRewardsEvents::{Self, emit_create_loyalty_program};
+    use aptrewards_addr::AptRewardsEvents::{Self};
     use std::signer::{address_of};
     use std::string::{String, utf8};
     use aptos_framework::timestamp;
@@ -12,11 +12,13 @@ module aptrewards_addr::AptRewardsMain {
         name: String,
         points_required: u64,
         description: String,
-        expiration_date: u64,
+        validity_days: u64,
         max_redemptions: u64,
         redeemed_by: vector<address>,
+        is_active: bool,
         is_used: bool,
         terms_and_conditions: String,
+        redemption_expiration_dates: SimpleMap<address, u64>,
     }
 
     struct Tier has store, drop, copy {
@@ -63,16 +65,16 @@ module aptrewards_addr::AptRewardsMain {
 
     const E_NOT_OWNER: u64 = 1;
     const E_PROGRAM_NOT_FOUND: u64 = 2;
-    const E_COUPON_NOT_FOUND: u64 = 3;
-    const E_CUSTOMER_NOT_FOUND: u64 = 4;
-    const E_INSUFFICIENT_STAMPS: u64 = 5;
-    const E_NOT_AUTHORIZED: u64 = 6;
-    const E_COUPON_LIMIT_REACHED: u64 = 7;
-    const E_COUPON_EXPIRED: u64 = 8;
-    const E_TIER_NOT_FOUND: u64 = 11;
-    const E_INVALID_SPIN_CONFIG: u64 = 12;
-    const E_COUPON_ALREADY_REDEEMED: u64 = 13;
-    const E_VOUCHER_ALREADY_USED: u64 = 14;
+    const E_VOUCHER_NOT_FOUND: u64 = 3;
+    const E_VOUCHER_INACTIVE: u64 = 4;
+    const E_VOUCHER_LIMIT_REACHED: u64 = 5;
+    const E_VOUCHER_EXPIRED: u64 = 6;
+    const E_VOUCHER_ALREADY_REDEEMED: u64 = 7;
+    const E_VOUCHER_ALREADY_USED: u64 = 8;
+    const E_CUSTOMER_NOT_FOUND: u64 = 9;
+    const E_INSUFFICIENT_STAMPS: u64 = 10;
+    const E_NOT_AUTHORIZED: u64 = 11;
+    const E_TIER_NOT_FOUND: u64 = 12;
 
     fun init_module(aptrewards_addr: &signer) {
         let factory = LoyaltyProgramFactory {
@@ -107,7 +109,7 @@ module aptrewards_addr::AptRewardsMain {
         let user_programs = simple_map::borrow_mut(&mut factory.user_programs, &owner_address);
         vector::push_back(user_programs, program_id);
 
-        emit_create_loyalty_program(program_id, owner_address, point_validity_days);
+        AptRewardsEvents::emit_create_loyalty_program(program_id, owner_address, point_validity_days);
     }
 
     public entry fun edit_loyalty_program(
@@ -167,7 +169,7 @@ module aptrewards_addr::AptRewardsMain {
         name: String,
         description: String,
         points_required: u64,
-        expiration_date: u64,
+        validity_days: u64,
         max_redemptions: u64,
         terms_and_conditions: String
     ) acquires LoyaltyProgramFactory {
@@ -182,16 +184,18 @@ module aptrewards_addr::AptRewardsMain {
             name,
             description,
             points_required,
-            expiration_date,
+            validity_days,
             max_redemptions,
             redeemed_by: vector::empty<address>(),
             is_used: false,
+            is_active: true,
             terms_and_conditions,
+            redemption_expiration_dates: simple_map::create<address, u64>(),
         };
 
         simple_map::add(&mut program.vouchers, voucher.id, voucher);
 
-        AptRewardsEvents::emit_create_voucher(program_id, voucher.id, name, points_required, description, expiration_date, max_redemptions, terms_and_conditions);
+        AptRewardsEvents::emit_create_voucher(program_id, voucher.id, name, points_required, description, validity_days, max_redemptions, terms_and_conditions);
     }
 
     public entry fun add_tier(
@@ -301,20 +305,20 @@ module aptrewards_addr::AptRewardsMain {
         AptRewardsEvents::emit_set_customer_name(program_id, customer_address, name);
     }
 
-    public entry fun exchange_points_for_voucher(sender: &signer, program_id: u64, voucher_id: u64) acquires LoyaltyProgramFactory {
+   public entry fun exchange_points_for_voucher(sender: &signer, program_id: u64, voucher_id: u64) acquires LoyaltyProgramFactory {
         let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
         assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
         
         let program = simple_map::borrow_mut(&mut factory.programs, &program_id);
-        assert!(simple_map::contains_key(&program.vouchers, &voucher_id), E_COUPON_NOT_FOUND);
+        assert!(simple_map::contains_key(&program.vouchers, &voucher_id), E_VOUCHER_NOT_FOUND);
         
         let customer = address_of(sender);
         assert!(simple_map::contains_key(&program.customer_data, &customer), E_CUSTOMER_NOT_FOUND);
         
         let voucher = simple_map::borrow_mut(&mut program.vouchers, &voucher_id);
-        assert!(vector::length(&voucher.redeemed_by) < voucher.max_redemptions, E_COUPON_LIMIT_REACHED);
-        assert!(timestamp::now_seconds() <= voucher.expiration_date, E_COUPON_EXPIRED);
-        assert!(!vector::contains(&voucher.redeemed_by, &customer), E_COUPON_ALREADY_REDEEMED);
+        assert!(vector::length(&voucher.redeemed_by) < voucher.max_redemptions, E_VOUCHER_LIMIT_REACHED);
+        assert!(voucher.is_active, E_VOUCHER_INACTIVE);
+        assert!(!vector::contains(&voucher.redeemed_by, &customer), E_VOUCHER_ALREADY_REDEEMED);
         
         // Check for expired points before redemption
         let customer_data = simple_map::borrow_mut(&mut program.customer_data, &customer);
@@ -327,7 +331,11 @@ module aptrewards_addr::AptRewardsMain {
         customer_data.points = customer_data.points - voucher.points_required;
         vector::push_back(&mut voucher.redeemed_by, customer);
         
-        AptRewardsEvents::emit_exchange_points_for_voucher(program_id, customer, voucher_id, vector::length(&voucher.redeemed_by), voucher.description);
+        // Set individual expiration date for the redeemed voucher
+        let individual_expiration_date = timestamp::now_seconds() + (program.point_validity_days * 24 * 60 * 60);
+        simple_map::add(&mut voucher.redemption_expiration_dates, customer, individual_expiration_date);
+
+        AptRewardsEvents::emit_exchange_points_for_voucher(program_id, customer, voucher_id, voucher.points_required, voucher.description);
     }
 
     public entry fun redeem_voucher(sender: &signer, program_id: u64, customer: address, voucher_id: u64) acquires LoyaltyProgramFactory {
@@ -335,15 +343,19 @@ module aptrewards_addr::AptRewardsMain {
         assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
         
         let program = simple_map::borrow_mut(&mut factory.programs, &program_id);
-        assert!(simple_map::contains_key(&program.vouchers, &voucher_id), E_COUPON_NOT_FOUND);
+        assert!(simple_map::contains_key(&program.vouchers, &voucher_id), E_VOUCHER_NOT_FOUND);
         
         let sender_address = address_of(sender);
         assert!(sender_address == program.owner || sender_address == customer, E_NOT_AUTHORIZED);
         
         let voucher = simple_map::borrow_mut(&mut program.vouchers, &voucher_id);
-        assert!(vector::contains(&voucher.redeemed_by, &customer), E_COUPON_NOT_FOUND);
+        assert!(vector::contains(&voucher.redeemed_by, &customer), E_VOUCHER_NOT_FOUND);
         assert!(!voucher.is_used, E_VOUCHER_ALREADY_USED);
-        assert!(timestamp::now_seconds() <= voucher.expiration_date, E_COUPON_EXPIRED);
+        
+        // Check individual expiration date
+        let now = timestamp::now_seconds();
+        let individual_expiration_date = *simple_map::borrow(&voucher.redemption_expiration_dates, &customer);
+        assert!(now <= individual_expiration_date, E_VOUCHER_EXPIRED);
         
         voucher.is_used = true;
         
@@ -781,7 +793,7 @@ module aptrewards_addr::AptRewardsMain {
     // First redemption should succeed
     // Second redemption should fail due to reaching the redemption limit
     #[test(fx = @aptos_framework, owner = @0x123, customer1 = @0x456, customer2 = @0x789)]
-    #[expected_failure(abort_code = E_COUPON_LIMIT_REACHED)]
+    #[expected_failure(abort_code = E_VOUCHER_LIMIT_REACHED)]
     public fun test_voucher_redemption_limit(fx: &signer, owner: &signer, customer1: &signer, customer2: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
@@ -853,7 +865,7 @@ module aptrewards_addr::AptRewardsMain {
     }
 
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
-    #[expected_failure(abort_code = E_COUPON_EXPIRED)]
+    #[expected_failure(abort_code = E_VOUCHER_EXPIRED)]
     public fun test_voucher_expiration(fx: &signer, owner: &signer, customer: &signer) acquires LoyaltyProgramFactory {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
