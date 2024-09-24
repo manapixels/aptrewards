@@ -1,6 +1,6 @@
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { Html5QrcodeScannerConfig } from 'html5-qrcode/esm/html5-qrcode-scanner';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 const qrcodeRegionId = "html5qr-code-full-region";
@@ -33,23 +33,32 @@ const createConfig = (props: Html5QrcodePluginProps): Html5QrcodeScannerConfig =
 };
 
 const Html5QrcodePlugin = (props: Html5QrcodePluginProps) => {
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+
   useEffect(() => {
     // when component mounts
     const config = createConfig(props);
     const verbose = props.verbose === true;
-    // Success callback is required.
+    
     if (!props.qrCodeSuccessCallback) {
       throw new Error("qrCodeSuccessCallback is required callback.");
     }
-    const html5QrcodeScanner = new Html5QrcodeScanner(qrcodeRegionId, config, verbose);
-    html5QrcodeScanner.render(props.qrCodeSuccessCallback, props.qrCodeErrorCallback);
+
+    // Check if a scanner instance already exists
+    if (!scannerRef.current) {
+      scannerRef.current = new Html5QrcodeScanner(qrcodeRegionId, config, verbose);
+      scannerRef.current.render(props.qrCodeSuccessCallback, props.qrCodeErrorCallback);
+    }
 
     // cleanup function when component will unmount
     return () => {
-      html5QrcodeScanner.clear().catch(error => {
-        console.error("Failed to clear html5QrcodeScanner. ", error);
-        toast.error("Failed to scan QR code. Please try again.");
-      });
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(error => {
+          console.error("Failed to clear html5QrcodeScanner. ", error);
+          toast.error("Failed to scan QR code. Please try again.");
+        });
+        scannerRef.current = null;
+      }
     };
   }, [props]);
 
