@@ -14,7 +14,6 @@ import {
   WalletItem,
   WalletSortingOptions,
 } from '@aptos-labs/wallet-adapter-react';
-import { AccountAddress } from '@aptos-labs/ts-sdk';
 import { ArrowLeft, ArrowRight, ChevronDown, Copy, LogOut, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -23,15 +22,13 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { getAptosClient } from '@/utils/aptos';
-import { moduleAddress, moduleName } from '@/constants';
-import { UserProgramDetails } from '@/types/aptrewards';
+import { useProgramStore } from '@/store/programStore';
 
 export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
   const { account, connected, disconnect, wallet, network } = useWallet();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [userDetails, setUserDetails] = useState<UserProgramDetails[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { userJoinedPrograms, fetchUserJoinedPrograms } = useProgramStore();
 
   const closeDialog = useCallback(() => setIsDialogOpen(false), []);
 
@@ -46,49 +43,10 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
   }, [account?.address]);
 
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      if (!account?.address) return;
-
-      try {
-        const resource = await getAptosClient().view({
-          payload: {
-            function: `${moduleAddress}::${moduleName}::get_all_user_program_details`,
-            functionArguments: [AccountAddress.fromString(account.address)],
-          }
-        });
-
-        const rawDataArray = resource[0] as any[];
-
-        const formattedUserDetails: UserProgramDetails[] = rawDataArray.map((program: any) => {
-          const currentTier = program.tiers.reduce((prev: any, current: any) =>
-            program.points >= current.pointsRequired ? current : prev
-          );
-
-          const nextTier = program.tiers.find((tier: any) => tier.pointsRequired > program.points);
-
-          return {
-            programId: program.program_id,
-            programName: program.program_name,
-            points: program.points,
-            lifetimePoints: program.lifetime_points,
-            pointValidityDays: program.point_validity_days,
-            ownedVouchers: program.owned_vouchers,
-            allVouchers: program.all_vouchers,
-            tiers: program.tiers,
-            currentTier,
-            nextTier,
-            pointsToNextTier: nextTier ? nextTier.pointsRequired - program.points : null,
-          }
-        });
-
-        setUserDetails(formattedUserDetails);
-      } catch (error) {
-        console.error("Error fetching user program details:", error);
-      }
-    };
-
-    fetchUserDetails();
-  }, [account]);
+    if (account?.address) {
+      fetchUserJoinedPrograms(account.address);
+    }
+  }, [account, fetchUserJoinedPrograms]);
 
   const networkSupported = network?.name.toLowerCase() === process.env.NEXT_PUBLIC_NETWORK
   const userDisplayName = account?.ansName || truncateAddress(account?.address) || ''
@@ -106,7 +64,7 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
         <div className="py-2">
           <div className="text-lg font-semibold my-3 px-4">{userDisplayName}</div>
           <div className="bg-gray-100 rounded-md p-1.5 flex flex-col gap-2">
-            {userDetails.map((program) => (
+            {userJoinedPrograms.map((program) => (
               <Button
                 variant="ghost"
                 key={program.programId}

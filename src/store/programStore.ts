@@ -1,13 +1,16 @@
 import { create } from 'zustand';
 import { getAptosClient } from "@/utils/aptos";
-import { LoyaltyProgram, Tier, LoyaltyProgramSummary, CustomerWithPoints } from "@/types/aptrewards";
+import { LoyaltyProgram, Tier, LoyaltyProgramSummary, CustomerWithPoints, UserProgramDetails } from "@/types/aptrewards";
 import { moduleAddress, moduleName } from "@/constants";
+import { AccountAddress } from '@aptos-labs/ts-sdk';
 
 type ProgramStore = {
     programs: LoyaltyProgram[];
+    userJoinedPrograms: UserProgramDetails[];
     shouldRefetch: boolean;
     fetchPrograms: (address: string) => Promise<void>;
     fetchProgramDetails: (programId: string) => Promise<void>;
+    fetchUserJoinedPrograms: (address: string) => Promise<void>;
     triggerRefetch: () => void;
     getTierForCustomer: (program: LoyaltyProgram, points: number) => string;
 };
@@ -86,8 +89,48 @@ const getTierForCustomer = (program: LoyaltyProgram, points: number): string => 
     return 'No Tier';
 };
 
+const fetchUserJoinedPrograms = async (address: string): Promise<UserProgramDetails[]> => {
+    if (!moduleAddress || !moduleName) throw new Error("No module address or name");
+    try {
+        const resource = await getAptosClient().view({
+            payload: {
+                function: `${moduleAddress}::${moduleName}::get_all_user_program_details`,
+                functionArguments: [AccountAddress.fromString(address)],
+            }
+        });
+
+        const rawDataArray = resource[0] as any[];
+
+        return rawDataArray.map((program: any) => {
+            const currentTier = program.tiers.reduce((prev: any, current: any) =>
+                program.points >= current.pointsRequired ? current : prev
+            );
+
+            const nextTier = program.tiers.find((tier: any) => tier.pointsRequired > program.points);
+
+            return {
+                programId: program.program_id,
+                programName: program.program_name,
+                points: program.points,
+                lifetimePoints: program.lifetime_points,
+                pointValidityDays: program.point_validity_days,
+                ownedVouchers: program.owned_vouchers,
+                allVouchers: program.all_vouchers,
+                tiers: program.tiers,
+                currentTier,
+                nextTier,
+                pointsToNextTier: nextTier ? nextTier.pointsRequired - program.points : null,
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching user program details:", error);
+        return [];
+    }
+};
+
 export const useProgramStore = create<ProgramStore>((set, get) => ({
     programs: [],
+    userJoinedPrograms: [],
     shouldRefetch: false,
     fetchPrograms: async (address: string) => {
         try {
@@ -120,6 +163,14 @@ export const useProgramStore = create<ProgramStore>((set, get) => ({
             });
         } catch (error) {
             console.error("Error fetching program details:", error);
+        }
+    },
+    fetchUserJoinedPrograms: async (address: string) => {
+        try {
+            const userPrograms = await fetchUserJoinedPrograms(address);
+            set({ userJoinedPrograms: userPrograms });
+        } catch (error) {
+            console.error("Error fetching user joined programs:", error);
         }
     },
     triggerRefetch: () => set({ shouldRefetch: true }),

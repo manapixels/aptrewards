@@ -43,8 +43,6 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 }
             });
 
-            console.log(resource);
-
             const {
                 program_id,
                 program_name,
@@ -63,7 +61,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
             const nextTier = tiers.find((tier: any) => Number(tier.points_required) > Number(points));
 
             const userDetails: UserProgramDetails = {
-                programId: parseInt(program_id),
+                programId: program_id,
                 programName: program_name,
                 points: parseInt(points),
                 lifetimePoints: parseInt(lifetime_points),

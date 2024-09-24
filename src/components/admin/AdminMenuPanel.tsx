@@ -34,7 +34,7 @@ const AdminMenuPanel: React.FC = () => {
         <DropdownMenu open={isProgramsOpen} onOpenChange={setIsProgramsOpen}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className={`col-span-1 flex flex-col items-center py-2 px-4 h-auto ${pathname.startsWith('/admin/edit') ? 'text-[#a7783a] font-bold' : 'text-gray-600'}`}>
-                    <DiscAlbum className={`h-6 w-6 ${pathname.startsWith('/admin/edit') ? 'outline-[#a7783a]' : 'outline-gray-600'}`} />
+                    <DiscAlbum className={`h-6 w-6 ${pathname.startsWith('/admin/edit') ? 'stroke-[#a7783a]' : 'stroke-gray-600'}`} />
                     <span className="text-xs mt-1">Programs</span>
                 </Button>
             </DropdownMenuTrigger>
@@ -65,7 +65,7 @@ const AdminMenuPanel: React.FC = () => {
         <DropdownMenu open={isUsersOpen} onOpenChange={setIsUsersOpen}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className={`col-span-1 flex flex-col items-center py-2 px-4 h-auto ${pathname.startsWith('/admin/users') ? 'text-[#a7783a] font-bold' : 'text-gray-600'}`}>
-                    <Users className={`h-6 w-6 ${pathname.startsWith('/admin/users') ? 'outline-[#a7783a]' : 'outline-gray-600'}`} />
+                    <Users className={`h-6 w-6 ${pathname.startsWith('/admin/users') ? 'stroke-[#a7783a]' : 'stroke-gray-600'}`} />
                     <span className="text-xs mt-1">Users</span>
                 </Button>
             </DropdownMenuTrigger>

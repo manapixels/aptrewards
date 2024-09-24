@@ -46,7 +46,7 @@ export interface CustomerWithPoints {
 }
 
 export interface UserProgramDetails {
-    programId: number;
+    programId: string;
     programName: string;
     points: number;
     lifetimePoints: number;
