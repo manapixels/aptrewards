@@ -28,6 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
     const { account } = useWallet();
     const [userDetails, setUserDetails] = useState<UserProgramDetails | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const fetchUserProgramDetails = async () => {
         if (!account?.address) return;
@@ -213,9 +214,13 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
             <hr className="my-8" />
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">My Vouchers <span className="bg-black text-gray-200 px-2 py-1 rounded-md font-mono text-sm">{userDetails.ownedVouchers.length}</span></h2>
-                <Dialog>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="outline"><span className="hidden md:block">Exchange for Vouchers</span> <ArrowRight className="w-4 h-4 ml-1 hidden md:block" /> <ArrowRightLeft className="w-4 h-4 ml-1 block md:hidden" /></Button>
+                        <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+                            <span className="hidden md:block">Exchange for Vouchers</span>
+                            <ArrowRight className="w-4 h-4 ml-1 hidden md:block" />
+                            <ArrowRightLeft className="w-4 h-4 ml-1 block md:hidden" />
+                        </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
@@ -237,8 +242,8 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                                     maxRedemptions={voucher.maxRedemptions}
                                     redemptions={voucher.redemptions}
                                     onExchangeSuccess={() => {
-                                        // Refresh the user details
                                         fetchUserProgramDetails();
+                                        setIsDialogOpen(false);
                                     }}
                                     programId={loyaltyProgramId}
                                 />
@@ -248,16 +253,25 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 </Dialog>
             </div>
             <div className="space-y-4">
-                {userDetails.ownedVouchers.map((voucher, index) => (
-                    <MyVoucherItem
-                        key={index}
-                        id={voucher.id}
-                        name={voucher.description}
-                        description="Ready to use"
-                        expirationDate={voucher.expirationDate}
-                        termsAndConditions={voucher.termsAndConditions}
-                    />
-                ))}
+                {userDetails.ownedVouchers.length > 0 ? (
+                    userDetails.ownedVouchers.map((voucher, index) => (
+                        <MyVoucherItem
+                            key={index}
+                            id={voucher.id}
+                            name={voucher.description}
+                            description="Ready to use"
+                            expirationDate={voucher.expirationDate}
+                            termsAndConditions={voucher.termsAndConditions}
+                        />
+                    ))
+                ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <p className="text-gray-600 mb-4">You don't have any vouchers yet.</p>
+                        <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+                            View Redeemable Vouchers
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
     );
