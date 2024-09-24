@@ -100,7 +100,7 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
   return connected ? (
     <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
       <DropdownMenuTrigger asChild>
-        <Button className="welcome-text">{displayText}</Button>
+        <Button className="welcome-text border border-gray-400" variant="secondary">{displayText}</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <div className="py-2">
