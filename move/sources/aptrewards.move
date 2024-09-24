@@ -10,15 +10,15 @@ module aptrewards_addr::AptRewardsMain {
     struct Voucher has store, drop, copy {
         id: u64,
         name: String,
-        points_required: u64,
         description: String,
+        points_required: u64,
         validity_days: u64,
         max_redemptions: u64,
         redeemed_by: vector<address>,
         is_active: bool,
         is_used: bool,
         terms_and_conditions: String,
-        redemption_expiration_dates: SimpleMap<address, u64>,
+        redemption_expiration_timestamps: SimpleMap<address, u64>,
     }
 
     struct Tier has store, drop, copy {
@@ -190,7 +190,7 @@ module aptrewards_addr::AptRewardsMain {
             is_used: false,
             is_active: true,
             terms_and_conditions,
-            redemption_expiration_dates: simple_map::create<address, u64>(),
+            redemption_expiration_timestamps: simple_map::create<address, u64>(),
         };
 
         simple_map::add(&mut program.vouchers, voucher.id, voucher);
@@ -332,8 +332,8 @@ module aptrewards_addr::AptRewardsMain {
         vector::push_back(&mut voucher.redeemed_by, customer);
         
         // Set individual expiration date for the redeemed voucher
-        let individual_expiration_date = timestamp::now_seconds() + (program.point_validity_days * 24 * 60 * 60);
-        simple_map::add(&mut voucher.redemption_expiration_dates, customer, individual_expiration_date);
+        let expiration_timestamp = timestamp::now_seconds() + (voucher.validity_days * 24 * 60 * 60);
+        simple_map::add(&mut voucher.redemption_expiration_timestamps, customer, expiration_timestamp);
 
         AptRewardsEvents::emit_exchange_points_for_voucher(program_id, customer, voucher_id, voucher.points_required, voucher.description);
     }
@@ -354,8 +354,8 @@ module aptrewards_addr::AptRewardsMain {
         
         // Check individual expiration date
         let now = timestamp::now_seconds();
-        let individual_expiration_date = *simple_map::borrow(&voucher.redemption_expiration_dates, &customer);
-        assert!(now <= individual_expiration_date, E_VOUCHER_EXPIRED);
+        let expiration_timestamp = *simple_map::borrow(&voucher.redemption_expiration_timestamps, &customer);
+        assert!(now <= expiration_timestamp, E_VOUCHER_EXPIRED);
         
         voucher.is_used = true;
         
@@ -870,16 +870,15 @@ module aptrewards_addr::AptRewardsMain {
         setup_test(fx, owner);
         create_loyalty_program(owner, utf8(b"Test Program"), 30);
         
-        let current_time = timestamp::now_seconds();
-        create_voucher(owner, 1, utf8(b"Expired Voucher"), utf8(b"Test Description"), 10, current_time + 10, 1, utf8(b"Test Terms and Conditions"));
+        create_voucher(owner, 1, utf8(b"Expired Voucher"), utf8(b"Test Description"), 10, 7, 1, utf8(b"Test Terms and Conditions"));
         
         account::create_account_for_test(address_of(customer));
         earn_points(owner, 1, address_of(customer), 10);        
         // Exchange points for the voucher
         exchange_points_for_voucher(customer, 1, 0);
         
-        // Advance time by 11 seconds to make the voucher expire
-        timestamp::fast_forward_seconds(11);
+        // Advance time by 8 days to make the voucher expire
+        timestamp::fast_forward_seconds(8 * 24 * 60 * 60);
         
         // This should fail due to voucher expiration
         redeem_voucher(owner, 1, address_of(customer), 0);
