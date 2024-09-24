@@ -9,16 +9,15 @@ module aptrewards_addr::AptRewardsMain {
 
     struct Voucher has store, drop, copy {
         id: u64,
+        is_active: bool,
         name: String,
         description: String,
         points_required: u64,
         validity_days: u64,
         max_redemptions: u64,
-        redeemed_by: vector<address>,
-        is_active: bool,
-        is_used: bool,
         terms_and_conditions: String,
         redemption_expiration_timestamps: SimpleMap<address, u64>,
+        user_voucher_counts: SimpleMap<address, u64>, // New field to track voucher counts per user
     }
 
     struct Tier has store, drop, copy {
@@ -180,22 +179,64 @@ module aptrewards_addr::AptRewardsMain {
 
         let voucher = Voucher {
             id: simple_map::length(&program.vouchers),
+            is_active: true,
             name,
             description,
             points_required,
             validity_days,
             max_redemptions,
-            redeemed_by: vector::empty<address>(),
-            is_used: false,
-            is_active: true,
             terms_and_conditions,
             redemption_expiration_timestamps: simple_map::create<address, u64>(),
+            user_voucher_counts: simple_map::create<address, u64>(), // Initialize the new field
         };
 
         simple_map::add(&mut program.vouchers, voucher.id, voucher);
 
         AptRewardsEvents::emit_create_voucher(program_id, voucher.id, name, points_required, description, validity_days, max_redemptions, terms_and_conditions);
     }
+
+    public entry fun edit_voucher(
+        account: &signer,
+        program_id: u64,
+        voucher_id: u64,
+        new_name: Option<String>,
+        new_description: Option<String>,
+        new_points_required: Option<u64>,
+        new_validity_days: Option<u64>,
+        new_max_redemptions: Option<u64>,
+        new_terms_and_conditions: Option<String>
+    ) acquires LoyaltyProgramFactory {
+        let factory = borrow_global_mut<LoyaltyProgramFactory>(@aptrewards_addr);
+        assert!(simple_map::contains_key(&factory.programs, &program_id), E_PROGRAM_NOT_FOUND);
+        
+        let program = simple_map::borrow_mut(&mut factory.programs, &program_id);
+        assert!(program.owner == address_of(account), E_NOT_OWNER);
+        assert!(simple_map::contains_key(&program.vouchers, &voucher_id), E_VOUCHER_NOT_FOUND);
+
+        let voucher = simple_map::borrow_mut(&mut program.vouchers, &voucher_id);
+
+        if (option::is_some(&new_name)) {
+            voucher.name = option::extract(&mut new_name);
+        };
+        if (option::is_some(&new_description)) {
+            voucher.description = option::extract(&mut new_description);
+        };
+        if (option::is_some(&new_points_required)) {
+            voucher.points_required = option::extract(&mut new_points_required);
+        };
+        if (option::is_some(&new_validity_days)) {
+            voucher.validity_days = option::extract(&mut new_validity_days);
+        };
+        if (option::is_some(&new_max_redemptions)) {
+            voucher.max_redemptions = option::extract(&mut new_max_redemptions);
+        };
+        if (option::is_some(&new_terms_and_conditions)) {
+            voucher.terms_and_conditions = option::extract(&mut new_terms_and_conditions);
+        };
+
+        AptRewardsEvents::emit_edit_voucher(program_id, voucher_id, voucher.name, voucher.points_required, voucher.description, voucher.validity_days, voucher.max_redemptions, voucher.terms_and_conditions);
+    }
+
 
     public entry fun add_tier(
         sender: &signer,
@@ -313,9 +354,8 @@ module aptrewards_addr::AptRewardsMain {
         assert!(simple_map::contains_key(&program.customer_data, &customer), E_CUSTOMER_NOT_FOUND);
         
         let voucher = simple_map::borrow_mut(&mut program.vouchers, &voucher_id);
-        assert!(vector::length(&voucher.redeemed_by) < voucher.max_redemptions, E_VOUCHER_LIMIT_REACHED);
+        assert!(simple_map::length(&voucher.redemption_expiration_timestamps) < voucher.max_redemptions, E_VOUCHER_LIMIT_REACHED);
         assert!(voucher.is_active, E_VOUCHER_INACTIVE);
-        assert!(!vector::contains(&voucher.redeemed_by, &customer), E_VOUCHER_ALREADY_REDEEMED);
         
         // Check for expired points before redemption
         let customer_data = simple_map::borrow_mut(&mut program.customer_data, &customer);
@@ -326,7 +366,14 @@ module aptrewards_addr::AptRewardsMain {
         assert!(customer_data.points >= voucher.points_required, E_INSUFFICIENT_STAMPS);
         
         customer_data.points = customer_data.points - voucher.points_required;
-        vector::push_back(&mut voucher.redeemed_by, customer);
+        
+        // Increment the user's voucher count
+        if (simple_map::contains_key(&voucher.user_voucher_counts, &customer)) {
+            let user_voucher_count = simple_map::borrow_mut(&mut voucher.user_voucher_counts, &customer);
+            *user_voucher_count = *user_voucher_count + 1;
+        } else {
+            simple_map::add(&mut voucher.user_voucher_counts, customer, 1);
+        };
         
         // Set individual expiration date for the redeemed voucher
         let expiration_timestamp = timestamp::now_seconds() + (voucher.validity_days * 24 * 60 * 60);
@@ -346,15 +393,17 @@ module aptrewards_addr::AptRewardsMain {
         assert!(sender_address == program.owner || sender_address == customer, E_NOT_AUTHORIZED);
         
         let voucher = simple_map::borrow_mut(&mut program.vouchers, &voucher_id);
-        assert!(vector::contains(&voucher.redeemed_by, &customer), E_VOUCHER_NOT_FOUND);
-        assert!(!voucher.is_used, E_VOUCHER_ALREADY_USED);
+        assert!(simple_map::contains_key(&voucher.user_voucher_counts, &customer), E_VOUCHER_NOT_FOUND);
         
         // Check individual expiration date
         let now = timestamp::now_seconds();
         let expiration_timestamp = *simple_map::borrow(&voucher.redemption_expiration_timestamps, &customer);
         assert!(now <= expiration_timestamp, E_VOUCHER_EXPIRED);
         
-        voucher.is_used = true;
+        // Decrement the user's voucher count
+        let user_voucher_count = simple_map::borrow_mut(&mut voucher.user_voucher_counts, &customer);
+        assert!(*user_voucher_count > 0, E_VOUCHER_NOT_FOUND);
+        *user_voucher_count = *user_voucher_count - 1;
         
         AptRewardsEvents::emit_redeem_voucher(program_id, customer, voucher_id, voucher.description);
     }
@@ -530,7 +579,7 @@ module aptrewards_addr::AptRewardsMain {
         while (i < len) {
             let voucher_id = *vector::borrow(&keys, i);
             let voucher = simple_map::borrow(&program.vouchers, &voucher_id);
-            if (vector::contains(&voucher.redeemed_by, &user_address)) {
+            if (simple_map::contains_key(&voucher.user_voucher_counts, &user_address)) {
                 simple_map::add(&mut owned_vouchers, copy voucher_id, *voucher);
             };
             i = i + 1;
@@ -668,6 +717,9 @@ module aptrewards_addr::AptRewardsMain {
         let program = simple_map::borrow(&factory.programs, &1);
         // Checks if the length of the merchant's vouchers vector is equal to 1, indicating a single voucher was created successfully.
         assert!(simple_map::length(&program.vouchers) == 1, 0);
+        let voucher = simple_map::borrow(&program.vouchers, &0);
+        // Check if the new field is initialized correctly
+        assert!(simple_map::length(&voucher.user_voucher_counts) == 0, 1);
     }
 
     #[test(fx = @aptos_framework, owner = @0x123)]
@@ -766,6 +818,9 @@ module aptrewards_addr::AptRewardsMain {
         let program = simple_map::borrow(&factory.programs, &1);
         // Checks if the customer's point count is 0 after exchanging points for a voucher
         assert!(simple_map::borrow(&program.customer_data, &address_of(customer)).points == 0, 0);
+        let voucher = simple_map::borrow(&program.vouchers, &0);
+        // Check if the user's voucher count is incremented correctly
+        assert!(*simple_map::borrow(&voucher.user_voucher_counts, &address_of(customer)) == 1, 1);
     }
 
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]
@@ -783,8 +838,8 @@ module aptrewards_addr::AptRewardsMain {
         let factory = borrow_global<LoyaltyProgramFactory>(@aptrewards_addr);
         let program = simple_map::borrow(&factory.programs, &1);
         let voucher = simple_map::borrow(&program.vouchers, &0);
-        // Checks if the voucher is marked as used after redemption
-        assert!(voucher.is_used, 0);
+        // Check if the user's voucher count is decremented correctly
+        assert!(*simple_map::borrow(&voucher.user_voucher_counts, &address_of(customer)) == 0, 0);
     }
 
     // First redemption should succeed

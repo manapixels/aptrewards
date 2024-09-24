@@ -11,6 +11,13 @@ module aptrewards_addr::AptRewardsEvents {
     }
 
     #[event]
+    struct EditLoyaltyProgram has store, drop {
+        program_id: u64,
+        new_name: String,
+        new_point_validity_days: u64,
+    }
+
+    #[event]
     struct TransferOwnership has store, drop {
         program_id: u64,
         old_owner: address,
@@ -27,6 +34,18 @@ module aptrewards_addr::AptRewardsEvents {
         validity_days: u64,
         max_redemptions: u64,
         terms_and_conditions: String,
+    }
+
+    #[event]
+    struct EditVoucher has store, drop {
+        program_id: u64,
+        voucher_id: u64,
+        new_name: String,
+        new_points_required: u64,
+        new_description: String,
+        new_validity_days: u64,
+        new_max_redemptions: u64,
+        new_terms_and_conditions: String,
     }
 
     #[event]
@@ -67,13 +86,6 @@ module aptrewards_addr::AptRewardsEvents {
         new_name: String,
         new_benefits: vector<String>,
         new_points_required: u64,
-    }
-
-    #[event]
-    struct EditLoyaltyProgram has store, drop {
-        program_id: u64,
-        new_name: String,
-        new_point_validity_days: u64,
     }
 
     #[event]
@@ -135,6 +147,28 @@ module aptrewards_addr::AptRewardsEvents {
             validity_days,
             max_redemptions,
             terms_and_conditions
+        });
+    }
+
+    public(friend) fun emit_edit_voucher(
+        program_id: u64,
+        voucher_id: u64,
+        new_name: String,
+        new_points_required: u64,
+        new_description: String,
+        new_validity_days: u64,
+        new_max_redemptions: u64,
+        new_terms_and_conditions: String
+    ) {
+        event::emit(EditVoucher {
+            program_id,
+            voucher_id,
+            new_name,
+            new_points_required,
+            new_description,
+            new_validity_days,
+            new_max_redemptions,
+            new_terms_and_conditions
         });
     }
 
