@@ -10,7 +10,7 @@ const CustomerMenuPanel: React.FC = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg md:hidden z-50 border-t border-gray-300">
-      <nav className="flex justify-around">
+      <nav className="grid grid-cols-3 justify-around items-center">
         <Link href="/customer/programs" className={`flex flex-col items-center py-2 px-4 ${
           pathname === '/customer/programs' ? 'text-blue-600' : 'text-gray-600'
         }`}>
