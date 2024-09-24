@@ -11,7 +11,7 @@ import { moduleAddress, moduleName } from '@/constants';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { QrCode } from 'lucide-react';
+import { Loader2, QrCode } from 'lucide-react';
 import Html5QrcodePlugin from '@/components/ui/Html5QrCodePlugin';
 
 const IssuePage = () => {
@@ -19,16 +19,17 @@ const IssuePage = () => {
     const [scanning, setScanning] = useState(false);
     const [pointsToIssue, setPointsToIssue] = useState<number>(0);
     const [activeTab, setActiveTab] = useState<string>('issue');
+    const [isFetching, setIsFetching] = useState(false);
 
     const { account, signAndSubmitTransaction } = useWallet();
     const client = getAptosClient();
 
     const handleScanSuccess = (decodedText: string) => {
         setData(decodedText);
-        
+        console.log('handleScanSuccess', decodedText);
+
         try {
             const parsedData = JSON.parse(decodedText);
-            console.log(parsedData)
             if (parsedData.voucherId !== undefined) {
                 setActiveTab('redeem');
             } else {
@@ -37,6 +38,8 @@ const IssuePage = () => {
         } catch (error) {
             console.error('Failed to parse scanned data:', error);
             toast.error("Invalid QR code data. Please try again.");
+        } finally {
+            setScanning(false);
         }
     };
 
@@ -58,6 +61,8 @@ const IssuePage = () => {
             return;
         }
 
+        setIsFetching(true);
+
         try {
             const customerData = JSON.parse(data);
 
@@ -76,12 +81,14 @@ const IssuePage = () => {
 
             await client.waitForTransaction({ transactionHash: response.hash });
 
-            toast.success(`${pointsToIssue} points have been issued successfully.`);
+            toast.success(`${pointsToIssue} points have been issued successfully to ${customerData.customer}.`);
             setData(null);
             setPointsToIssue(0);
         } catch (error) {
             console.error('Failed to issue points:', error);
             toast.error("Failed to issue points. Please try again.");
+        } finally {
+            setIsFetching(false);
         }
     };
 
@@ -89,6 +96,8 @@ const IssuePage = () => {
         if (!account) throw new Error("No account connected");
         if (!data) throw new Error("No voucher data");
         if (!moduleAddress || !moduleName) throw new Error("No module address or name");
+
+        setIsFetching(true);
 
         try {
             const voucherData = JSON.parse(data);
@@ -113,18 +122,9 @@ const IssuePage = () => {
         } catch (error) {
             console.error('Failed to redeem voucher:', error);
             toast.error("Failed to redeem voucher. Please try again.");
+        } finally {
+            setIsFetching(false);
         }
-    };
-
-    // Simulate scanning a QR code with dummy data
-    const simulateScan = () => {
-        const dummyData = JSON.stringify({
-            programId: "1",
-            customer: "0x991d4766be3306bc138fcda1d3e4e1ebb2dd0858fc7932c1a273964a2e0e5718",
-            voucherId: "0",
-            name: "Dummy Voucher"
-        });
-        handleScanSuccess(dummyData);
     };
 
     return (
@@ -137,7 +137,7 @@ const IssuePage = () => {
             </div>
             <Card>
                 <CardContent className="pt-6">
-                    {scanning ? (
+                    {scanning && (
                         <div className="mb-4">
                             <div id="reader" className="w-full"></div>
                             <Html5QrcodePlugin
@@ -147,10 +147,6 @@ const IssuePage = () => {
                                 qrCodeSuccessCallback={handleScanSuccess}
                             />
                             <Button onClick={() => setScanning(false)} className="mt-2">Cancel</Button>
-                        </div>
-                    ) : (
-                        <div className="flex gap-4">
-                            <Button onClick={simulateScan} className="mb-4">Simulate Scan</Button>
                         </div>
                     )}
                     {data && (
@@ -179,7 +175,10 @@ const IssuePage = () => {
                                                 className="mt-1"
                                             />
                                         </div>
-                                        <Button onClick={handleIssuePoints} className="mt-4">Issue Points</Button>
+                                        <Button onClick={handleIssuePoints} className="mt-4 w-full py-4 h-auto" disabled={isFetching}>
+                                            {isFetching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            Issue Points
+                                        </Button>
                                     </div>
                                 </TabsContent>
                                 <TabsContent value="redeem">
@@ -189,7 +188,10 @@ const IssuePage = () => {
                                             <pre className="p-4">{JSON.stringify(JSON.parse(data), null, 2)}</pre>
                                             <ScrollBar orientation="horizontal" />
                                         </ScrollArea>
-                                        <Button onClick={handleRedeemVoucher} className="mt-4">Redeem Voucher</Button>
+                                        <Button onClick={handleRedeemVoucher} className="mt-4 w-full py-4 h-auto" disabled={isFetching}>
+                                            {isFetching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            Redeem Voucher
+                                        </Button>
                                     </div>
                                 </TabsContent>
                             </div>

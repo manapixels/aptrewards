@@ -38,10 +38,12 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                     function: `${moduleAddress}::${moduleName}::get_user_program_details`,
                     functionArguments: [
                         new U64(parseInt(loyaltyProgramId)),
-                        AccountAddress.fromString('0x991d4766be3306bc138fcda1d3e4e1ebb2dd0858fc7932c1a273964a2e0e5718')
+                        AccountAddress.fromString(account.address)
                     ],
                 }
             });
+
+            console.log(resource);
 
             const {
                 program_id,

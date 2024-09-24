@@ -53,7 +53,7 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
         const resource = await getAptosClient().view({
           payload: {
             function: `${moduleAddress}::${moduleName}::get_all_user_program_details`,
-            functionArguments: [AccountAddress.fromString('0x991d4766be3306bc138fcda1d3e4e1ebb2dd0858fc7932c1a273964a2e0e5718')],
+            functionArguments: [AccountAddress.fromString(account.address)],
           }
         });
 
