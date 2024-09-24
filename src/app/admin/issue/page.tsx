@@ -2,46 +2,28 @@
 
 import { useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
-import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { getAptosClient } from '@/utils/aptos';
 import { moduleAddress, moduleName } from '@/constants';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { QrCode } from 'lucide-react';
+import Html5QrcodePlugin from '@/components/ui/Html5QrCodePlugin';
 
 const IssuePage = () => {
     const [data, setData] = useState<string | null>(null);
     const [scanning, setScanning] = useState(false);
     const [pointsToIssue, setPointsToIssue] = useState<number>(0);
     const [activeTab, setActiveTab] = useState<string>('issue');
-    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
     const { account, signAndSubmitTransaction } = useWallet();
     const client = getAptosClient();
 
-    const startScanning = () => {
-        setScanning(true);
-        scannerRef.current = new Html5QrcodeScanner(
-            "reader",
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            /* verbose= */ false
-        );
-        scannerRef.current.render(handleScan, handleError);
-    };
-
-    const stopScanning = () => {
-        if (scannerRef.current) {
-            scannerRef.current.clear();
-        }
-        setScanning(false);
-    };
-
-    const handleScan = (decodedText: string) => {
+    const handleScanSuccess = (decodedText: string) => {
         setData(decodedText);
         
         try {
@@ -56,13 +38,6 @@ const IssuePage = () => {
             console.error('Failed to parse scanned data:', error);
             toast.error("Invalid QR code data. Please try again.");
         }
-        
-        stopScanning();
-    };
-
-    const handleError = (err: any) => {
-        console.error(err);
-        toast.error("Failed to scan QR code. Please try again.");
     };
 
     const handleIssuePoints = async () => {
@@ -149,14 +124,14 @@ const IssuePage = () => {
             voucherId: "0",
             name: "Dummy Voucher"
         });
-        handleScan(dummyData);
+        handleScanSuccess(dummyData);
     };
 
     return (
         <div className="container mx-auto p-4">
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold mb-4">Issue Points & Redeem Vouchers</h1>
-                <Button onClick={startScanning} className="mb-4">
+                <Button onClick={() => setScanning(true)} className="mb-4">
                     <QrCode className="w-4 h-4 mr-2" />Scan
                 </Button>
             </div>
@@ -165,7 +140,13 @@ const IssuePage = () => {
                     {scanning ? (
                         <div className="mb-4">
                             <div id="reader" className="w-full"></div>
-                            <Button onClick={stopScanning} className="mt-2">Cancel</Button>
+                            <Html5QrcodePlugin
+                                fps={10}
+                                qrbox={250}
+                                disableFlip={false}
+                                qrCodeSuccessCallback={handleScanSuccess}
+                            />
+                            <Button onClick={() => setScanning(false)} className="mt-2">Cancel</Button>
                         </div>
                     ) : (
                         <div className="flex gap-4">
