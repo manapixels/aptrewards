@@ -69,7 +69,9 @@ const ProgramListSidebar = () => {
             {account ? (
                 renderProgramList()
             ) : (
-                <div>Connect your wallet to view your programs</div>
+                <div>
+                    <div className="hidden md:block">Connect your wallet to view your programs</div>
+                </div>
             )}
         </>
     )
