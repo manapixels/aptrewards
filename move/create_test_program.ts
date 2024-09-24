@@ -136,11 +136,11 @@ async function main() {
 
     // Create vouchers
     const vouchers = [
-        { name: "10% off", points: 5000, description: "", maxRedemptions: 100, termsAndConditions: "Valid for 30 days from issuance." },
-        { name: "$5 off", points: 10000, description: "", maxRedemptions: 50, termsAndConditions: "Minimum purchase of $20 required." },
-        { name: "Free item", points: 20000, description: "Choose any item up to $10 value", maxRedemptions: 25, termsAndConditions: "One free item per transaction." },
-        { name: "$10 off", points: 30000, description: "", maxRedemptions: 20, termsAndConditions: "Cannot be combined with other offers." },
-        { name: "VIP experience", points: 50000, description: "Exclusive in-store personal shopping session", maxRedemptions: 10, termsAndConditions: "Reservation required. Subject to availability." }
+        { name: "10% off", points: 5000, description: "", validityDays: 30, maxRedemptions: 100, termsAndConditions: "Valid for 30 days from issuance." },
+        { name: "$5 off", points: 10000, description: "", validityDays: 50, maxRedemptions: 50, termsAndConditions: "Minimum purchase of $20 required." },
+        { name: "Free item", points: 20000, description: "Choose any item up to $10 value", validityDays: 31, maxRedemptions: 25, termsAndConditions: "One free item per transaction." },
+        { name: "$10 off", points: 30000, description: "", validityDays: 70, maxRedemptions: 20, termsAndConditions: "Cannot be combined with other offers." },
+        { name: "VIP experience", points: 50000, description: "Exclusive in-store personal shopping session", validityDays: 90, maxRedemptions: 10, termsAndConditions: "Reservation required. Subject to availability." }
     ];
 
     for (const voucher of vouchers) {
@@ -154,7 +154,7 @@ async function main() {
                     voucher.name,
                     voucher.description,
                     voucher.points,
-                    Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // Expiration date (30 days from now)
+                    voucher.validityDays, // Expiration date (30 days from now)
                     voucher.maxRedemptions,
                     voucher.termsAndConditions
                 ]
