@@ -85,6 +85,13 @@ module aptrewards_addr::AptRewardsEvents {
         description: String,
     }
 
+    #[event]
+    struct SetCustomerName has store, drop {
+        program_id: u64,
+        customer: address,
+        name: String,
+    }
+
     public(friend) fun emit_create_loyalty_program(
         program_id: u64, 
         owner: address,
@@ -226,6 +233,18 @@ module aptrewards_addr::AptRewardsEvents {
             program_id,
             new_name,
             new_point_validity_days
+        });
+    }
+
+    public(friend) fun emit_set_customer_name(
+        program_id: u64,
+        customer: address,
+        name: String
+    ) {
+        event::emit(SetCustomerName {
+            program_id,
+            customer,
+            name
         });
     }
 }
