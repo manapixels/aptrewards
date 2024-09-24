@@ -18,6 +18,7 @@ const IssuePage = () => {
     const [data, setData] = useState<string | null>(null);
     const [scanning, setScanning] = useState(false);
     const [pointsToIssue, setPointsToIssue] = useState<number>(0);
+    const [activeTab, setActiveTab] = useState<string>('issue');
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
     const { account, signAndSubmitTransaction } = useWallet();
@@ -42,6 +43,20 @@ const IssuePage = () => {
 
     const handleScan = (decodedText: string) => {
         setData(decodedText);
+        
+        try {
+            const parsedData = JSON.parse(decodedText);
+            console.log(parsedData)
+            if (parsedData.voucherId !== undefined) {
+                setActiveTab('redeem');
+            } else {
+                setActiveTab('issue');
+            }
+        } catch (error) {
+            console.error('Failed to parse scanned data:', error);
+            toast.error("Invalid QR code data. Please try again.");
+        }
+        
         stopScanning();
     };
 
@@ -134,7 +149,7 @@ const IssuePage = () => {
             voucherId: "0",
             name: "Dummy Voucher"
         });
-        setData(dummyData);
+        handleScan(dummyData);
     };
 
     return (
@@ -158,7 +173,7 @@ const IssuePage = () => {
                         </div>
                     )}
                     {data && (
-                        <Tabs defaultValue="issue" className="w-full">
+                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="issue">Issue Points</TabsTrigger>
                                 <TabsTrigger value="redeem">Redeem Voucher</TabsTrigger>
@@ -167,7 +182,7 @@ const IssuePage = () => {
                                 <TabsContent value="issue">
                                     <div>
                                         <h2 className="text-lg font-semibold mb-2">Scanned Customer Data:</h2>
-                                        <ScrollArea className="h-[130px] w-full rounded-md border">
+                                        <ScrollArea className="w-full rounded-md border">
                                             <pre className="p-4">{JSON.stringify(JSON.parse(data), null, 2)}</pre>
                                             <ScrollBar orientation="horizontal" />
                                         </ScrollArea>
@@ -189,7 +204,7 @@ const IssuePage = () => {
                                 <TabsContent value="redeem">
                                     <div>
                                         <h2 className="text-lg font-semibold mb-2">Scanned Voucher Data:</h2>
-                                        <ScrollArea className="h-[130px] w-full rounded-md border">
+                                        <ScrollArea className="w-full rounded-md border">
                                             <pre className="p-4">{JSON.stringify(JSON.parse(data), null, 2)}</pre>
                                             <ScrollBar orientation="horizontal" />
                                         </ScrollArea>
