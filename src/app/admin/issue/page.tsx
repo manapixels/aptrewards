@@ -11,6 +11,8 @@ import { getAptosClient } from '@/utils/aptos';
 import { moduleAddress, moduleName } from '@/constants';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { QrCode } from 'lucide-react';
 
 const IssuePage = () => {
     const [data, setData] = useState<string | null>(null);
@@ -49,14 +51,26 @@ const IssuePage = () => {
     };
 
     const handleIssuePoints = async () => {
-        if (!account) throw new Error("No account connected");
-        if (!data) throw new Error("No customer data");
-        if (!moduleAddress || !moduleName) throw new Error("No module address or name");
-        if (pointsToIssue <= 0) throw new Error("Invalid points amount");
+        if (!account) {
+            toast.error("No account connected. Please connect your wallet.");
+            return;
+        }
+        if (!data) {
+            toast.error("No customer data. Please scan a QR code first.");
+            return;
+        }
+        if (!moduleAddress || !moduleName) {
+            toast.error("Module configuration is missing. Please check your setup.");
+            return;
+        }
+        if (pointsToIssue <= 0) {
+            toast.error("Invalid points amount. Please enter a positive number.");
+            return;
+        }
 
         try {
             const customerData = JSON.parse(data);
-            
+
             const response = await signAndSubmitTransaction({
                 sender: account.address,
                 data: {
@@ -88,7 +102,7 @@ const IssuePage = () => {
 
         try {
             const voucherData = JSON.parse(data);
-            
+
             const response = await signAndSubmitTransaction({
                 sender: account.address,
                 data: {
@@ -112,21 +126,36 @@ const IssuePage = () => {
         }
     };
 
+    // Simulate scanning a QR code with dummy data
+    const simulateScan = () => {
+        const dummyData = JSON.stringify({
+            programId: "1",
+            customer: "0x991d4766be3306bc138fcda1d3e4e1ebb2dd0858fc7932c1a273964a2e0e5718",
+            voucherId: "0",
+            name: "Dummy Voucher"
+        });
+        setData(dummyData);
+    };
+
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Issue Points & Redeem Vouchers</h1>
+            <div className="flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-bold mb-4">Issue Points & Redeem Vouchers</h1>
+                <Button onClick={startScanning} className="mb-4">
+                    <QrCode className="w-4 h-4 mr-2" />Scan
+                </Button>
+            </div>
             <Card>
-                <CardHeader>
-                    <CardTitle>Scan QR Code</CardTitle>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                     {scanning ? (
                         <div className="mb-4">
                             <div id="reader" className="w-full"></div>
                             <Button onClick={stopScanning} className="mt-2">Cancel</Button>
                         </div>
                     ) : (
-                        <Button onClick={startScanning} className="mb-4">Start Scanning</Button>
+                        <div className="flex gap-4">
+                            <Button onClick={simulateScan} className="mb-4">Simulate Scan</Button>
+                        </div>
                     )}
                     {data && (
                         <Tabs defaultValue="issue" className="w-full">
@@ -134,32 +163,40 @@ const IssuePage = () => {
                                 <TabsTrigger value="issue">Issue Points</TabsTrigger>
                                 <TabsTrigger value="redeem">Redeem Voucher</TabsTrigger>
                             </TabsList>
-                            <TabsContent value="issue">
-                                <div>
-                                    <h2 className="text-lg font-semibold mb-2">Scanned Customer Data:</h2>
-                                    <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(JSON.parse(data), null, 2)}</pre>
-                                    <div className="mt-4">
-                                        <label htmlFor="points" className="block text-sm font-medium text-gray-700">
-                                            Points to Issue
-                                        </label>
-                                        <Input
-                                            type="number"
-                                            id="points"
-                                            value={pointsToIssue}
-                                            onChange={(e) => setPointsToIssue(Number(e.target.value))}
-                                            className="mt-1"
-                                        />
+                            <div className="p-4">
+                                <TabsContent value="issue">
+                                    <div>
+                                        <h2 className="text-lg font-semibold mb-2">Scanned Customer Data:</h2>
+                                        <ScrollArea className="h-[130px] w-full rounded-md border">
+                                            <pre className="p-4">{JSON.stringify(JSON.parse(data), null, 2)}</pre>
+                                            <ScrollBar orientation="horizontal" />
+                                        </ScrollArea>
+                                        <div className="mt-4">
+                                            <label htmlFor="points" className="block text-sm font-medium text-gray-700">
+                                                Points to Issue
+                                            </label>
+                                            <Input
+                                                type="number"
+                                                id="points"
+                                                value={pointsToIssue}
+                                                onChange={(e) => setPointsToIssue(Number(e.target.value))}
+                                                className="mt-1"
+                                            />
+                                        </div>
+                                        <Button onClick={handleIssuePoints} className="mt-4">Issue Points</Button>
                                     </div>
-                                    <Button onClick={handleIssuePoints} className="mt-4">Issue Points</Button>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="redeem">
-                                <div>
-                                    <h2 className="text-lg font-semibold mb-2">Scanned Voucher Data:</h2>
-                                    <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(JSON.parse(data), null, 2)}</pre>
-                                    <Button onClick={handleRedeemVoucher} className="mt-4">Redeem Voucher</Button>
-                                </div>
-                            </TabsContent>
+                                </TabsContent>
+                                <TabsContent value="redeem">
+                                    <div>
+                                        <h2 className="text-lg font-semibold mb-2">Scanned Voucher Data:</h2>
+                                        <ScrollArea className="h-[130px] w-full rounded-md border">
+                                            <pre className="p-4">{JSON.stringify(JSON.parse(data), null, 2)}</pre>
+                                            <ScrollBar orientation="horizontal" />
+                                        </ScrollArea>
+                                        <Button onClick={handleRedeemVoucher} className="mt-4">Redeem Voucher</Button>
+                                    </div>
+                                </TabsContent>
+                            </div>
                         </Tabs>
                     )}
                 </CardContent>
