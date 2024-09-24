@@ -60,7 +60,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 points >= current.points_required ? current : prev
             );
 
-            const nextTier = tiers.find((tier: any) => tier.points_required > points);
+            const nextTier = tiers.find((tier: any) => Number(tier.points_required) > Number(points));
 
             const userDetails: UserProgramDetails = {
                 programId: parseInt(program_id),
