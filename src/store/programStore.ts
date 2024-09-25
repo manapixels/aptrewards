@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getAptosClient } from "@/utils/aptos";
-import { LoyaltyProgram, Tier, LoyaltyProgramSummary, CustomerWithPoints, UserProgramDetails } from "@/types/aptrewards";
+import { LoyaltyProgram, Tier, LoyaltyProgramSummary, CustomerData, UserProgramDetails } from "@/types/aptrewards";
 import { moduleAddress, moduleName } from "@/constants";
 import { AccountAddress } from '@aptos-labs/ts-sdk';
 
@@ -70,7 +70,7 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
             customerCount: Number(tier.customer_count),
         })).sort((a, b) => a.pointsRequired - b.pointsRequired) as Tier[] || [],
         totalPointsIssued: Number(response[6]),
-        customersWithPoints: response[7] as CustomerWithPoints[],
+        customerData: response[7] as CustomerData[],
     };
 
     return transformedProgramDetails;

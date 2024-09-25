@@ -2,6 +2,7 @@ import { useState, useEffect, useLayoutEffect } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import toast from 'react-hot-toast';
 import { moduleAddress } from '@/constants';
+import { CustomerData } from '../types/aptrewards';
 
 interface Event {
   version: string;

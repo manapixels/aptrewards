@@ -21,16 +21,23 @@ export interface Tier {
     customerCount?: number;
 }
 
+export interface CustomerData {
+    name: string;
+    address: string;
+    points: number;
+    lifetimePoints: number;
+    lastPointDate: string;
+}
+
 export interface LoyaltyProgram {
     id: string;
     name: string;
     owner: string;
     vouchers?: RedeemableVoucher[];
-    voucherCount?: number;
     pointValidityDays?: number;
     tiers?: Tier[];
     totalPointsIssued?: number;
-    customersWithPoints?: CustomerWithPoints[];
+    customerData?: CustomerData[];
 };
 
 export interface LoyaltyProgramSummary {
@@ -38,11 +45,6 @@ export interface LoyaltyProgramSummary {
     name: string;
     owner: string;
     customerCount: number;
-}
-
-export interface CustomerWithPoints {
-    customer: string;
-    points: number;
 }
 
 export interface UserProgramDetails {

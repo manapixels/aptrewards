@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 

@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress"
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/utils/aptos';
 import { useProgramStore } from '@/store/programStore';
-import { CustomerWithPoints, LoyaltyProgram, Tier } from '@/types/aptrewards';
+import { CustomerData, LoyaltyProgram, Tier } from '@/types/aptrewards';
 import { MoveString, MoveVector, U64 } from '@aptos-labs/ts-sdk';
 import { CustomerTable } from '@/components/admin/users/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -188,9 +188,9 @@ const ProgramTiers = ({ program, isLoading }: { program: LoyaltyProgram, isLoadi
     const renderCustomersTable = () => {
         if (!program || !selectedTier) return null;
 
-        const customers = program?.customersWithPoints
-            ?.map((customer: CustomerWithPoints, index: number) => ({
-                address: customer.customer,
+        const customers = program?.customerData
+            ?.map((customer: CustomerData, index: number) => ({
+                address: customer.address,
                 points: customer.points,
                 tier: getTierForCustomer(program, customer.points),
             }))

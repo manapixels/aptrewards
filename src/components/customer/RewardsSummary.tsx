@@ -25,14 +25,18 @@ import {
 import { UserProgramDetails } from '@/types/aptrewards';
 import { Skeleton } from "@/components/ui/skeleton";
 import CustomerEventListeners from '@/components/CustomerEventListeners';
+import JoinProgram from './JoinProgram';
 
 const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
     const { account } = useWallet();
     const [userDetails, setUserDetails] = useState<UserProgramDetails | null>(null);
+    const [isFetchError, setIsFetchError] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const fetchUserProgramDetails = async () => {
         if (!account?.address) return;
+
+        if (isFetchError) { setIsFetchError(false); }
 
         try {
             const resource = await getAptosClient().view({
@@ -115,6 +119,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
         } catch (error) {
             console.error("Error fetching user program details:", error);
             toast.error("Failed to fetch user program details");
+            setIsFetchError(true);
         }
     };
 
@@ -142,8 +147,9 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
 
         return JSON.stringify(qrData);
     };
+    
 
-    if (!userDetails) {
+    if (!userDetails && !isFetchError) {
         return (
             <div className="space-y-4 md:-mt-4">
                 <div className="relative flex justify-center">
@@ -174,17 +180,26 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
         );
     }
 
-    const redeemableVouchers = userDetails.allVouchers.filter(voucher =>
-        !userDetails.ownedVouchers.some(owned => owned.id === voucher.id)
+    if (isFetchError) {
+        return (
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+                <p className="text-gray-600 mb-4">Looks like you're not part of this program yet.</p>
+                <JoinProgram programId={loyaltyProgramId} onJoinSuccess={fetchUserProgramDetails} />
+            </div>
+        );
+    }
+
+    const redeemableVouchers = userDetails?.allVouchers.filter(voucher =>
+        !userDetails?.ownedVouchers.some(owned => owned.id === voucher.id)
     );
 
     return (
         <div className="space-y-4 md:-mt-4">
-            <CustomerEventListeners />
+            {userDetails && <CustomerEventListeners />}
             <div className="relative flex justify-center ">
                 <div className="absolute top-[50%] translate-y-[-50%] left-0 border-t border-gray-200 w-full"></div>
                 <div className="text-sm font-semibold text-gray-400 px-8 py-2 rounded-md tracking-widest bg-white relative z-10 font-mono uppercase">
-                    {userDetails.programName}
+                    {userDetails?.programName}
                 </div>
             </div>
             <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 justify-center md:justify-between">
@@ -197,11 +212,11 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                         />
                     </div>
                     <div className="flex flex-row items-center gap-2 text-[#ae7427] mt-1 mb-2">
-                        <span className="text-lg font-semibold">{userDetails.points?.toLocaleString()} points</span>
+                        <span className="text-lg font-semibold">{userDetails?.points?.toLocaleString()} points</span>
                         <div className="w-[1px] h-4 bg-[#ae7427]"></div>
-                        <span className="text-lg font-semibold ">{userDetails.currentTier?.name}</span>
+                        <span className="text-lg font-semibold ">{userDetails?.currentTier?.name}</span>
                     </div>
-                    {userDetails.nextTier && (
+                    {userDetails?.nextTier && (
                         <>
                             <div className="text-sm text-gray-600">Expiring {formatDate(new Date(Date.now() + Number(userDetails.pointValidityDays) * 24 * 60 * 60 * 1000).toLocaleDateString())}</div>
                             <div className="text-sm text-gray-600">{userDetails.pointsToNextTier?.toLocaleString()} more points to unlock {userDetails.nextTier?.name}</div>
@@ -215,7 +230,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
             </div>
             <hr className="my-8" />
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">My Vouchers <span className="bg-black text-gray-200 px-2 py-1 rounded-md font-mono text-sm">{userDetails.ownedVouchers.length}</span></h2>
+                <h2 className="text-lg font-semibold">My Vouchers <span className="bg-black text-gray-200 px-2 py-1 rounded-md font-mono text-sm">{userDetails?.ownedVouchers.length}</span></h2>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
@@ -232,7 +247,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                            {redeemableVouchers.map((voucher, index) => (
+                            {redeemableVouchers?.map((voucher, index) => (
                                 <RedeemableVoucherItem
                                     key={index}
                                     id={voucher.id}
@@ -255,10 +270,10 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 </Dialog>
             </div>
             <div className="space-y-4">
-                {userDetails.ownedVouchers.length > 0 ? (
+                {userDetails?.ownedVouchers && userDetails.ownedVouchers.length > 0 ? (
                     userDetails.ownedVouchers.map((voucher, index) => (
                         <MyVoucherItem
-                            key={index}
+                            key={voucher.id}
                             id={voucher.id}
                             name={voucher.description}
                             description="Ready to use"

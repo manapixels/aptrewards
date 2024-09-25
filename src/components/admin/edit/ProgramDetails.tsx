@@ -94,8 +94,8 @@ const ProgramDetails = ({ program, isLoading }: { program: LoyaltyProgram, isLoa
     const filteredAndSortedCustomers = () => {
         if (!program) return [];
 
-        let customers = program?.customersWithPoints?.map((customer, index) => ({
-            address: customer.customer,
+        let customers = program?.customerData?.map((customer, index) => ({
+            address: customer.address,
             points: customer.points,
             tier: getTierForCustomer(program, customer.points),
         }));
@@ -292,7 +292,7 @@ const ProgramDetails = ({ program, isLoading }: { program: LoyaltyProgram, isLoa
                         Customers
                     </span>
                     <span className="text-lg font-bold leading-none sm:text-3xl">
-                        {program?.customersWithPoints?.length || 'N/A'}
+                        {program?.customerData?.length || 'N/A'}
                     </span>
                 </button>
                 <div
