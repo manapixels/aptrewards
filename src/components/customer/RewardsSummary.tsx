@@ -66,13 +66,15 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
 
             const nextTier = tiers.find((tier: any) => Number(tier.points_required) > Number(points));
 
+            console.log(resource[0])
+
             const userDetails: UserProgramDetails = {
                 programId: program_id,
                 programName: program_name,
                 points: parseInt(points),
                 lifetimePoints: parseInt(lifetime_points),
                 pointValidityDays: parseInt(point_validity_days),
-                ownedVouchers: owned_vouchers.map((voucher: any) => ({
+                ownedVouchers: owned_vouchers?.data.map((voucher: any) => ({
                     id: voucher.id,
                     name: voucher.name,
                     description: voucher.description,
@@ -80,7 +82,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                     termsAndConditions: voucher.terms_and_conditions,
                     imageUrl: voucher.image_url,
                 })),
-                allVouchers: all_vouchers.map((voucher: any) => ({
+                allVouchers: all_vouchers?.data.map((voucher: any) => ({
                     id: voucher.id,
                     name: voucher.name,
                     description: voucher.description,
