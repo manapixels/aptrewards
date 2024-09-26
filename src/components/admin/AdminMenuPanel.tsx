@@ -94,7 +94,8 @@ const AdminMenuPanel: React.FC = () => {
                 <Link href="/admin/issue" className={`col-span-1 flex flex-col items-center py-2 px-4 ${pathname === '/admin/issue' ? 'text-[#a7783a] font-bold' : 'text-white'}`}>
                     <Barcode className={`h-6 w-6 ${pathname === '/admin/issue' ? 'outline-white' : 'outline-white'}`} />
                     <span className="text-md mt-1">Scan</span>
-                    <div className="bg-gray-900 rounded-full w-24 h-24 absolute z-[-1] top-[50%] translate-y-[-50%] border border-gray-400"></div>
+                    {/* <div className="bg-gray-900 rounded-full w-24 h-24 absolute z-[-1] top-[50%] translate-y-[-50%] border border-gray-400"></div> */}
+                    <div className="bg-gray-900 rounded-full w-24 h-24 fixed z-[-1] -bottom-12 border border-gray-400"></div>
                 </Link>
                 <UsersDropdown />
             </nav>
