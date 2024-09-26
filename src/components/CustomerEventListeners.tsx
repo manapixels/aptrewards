@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import toast from 'react-hot-toast';
 import { getAptosClient } from '@/utils/aptos';
@@ -6,25 +6,30 @@ import { GetEventsResponse } from '@aptos-labs/ts-sdk';
 
 const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
   const { account } = useWallet();
-  const [lastCheckedVersion, setLastCheckedVersion] = useState<string | null>(null);
+  const [lastCheckedVersions, setLastCheckedVersions] = useState({
+    EarnPoints: BigInt(0),
+    RedeemVoucher: BigInt(0)
+  });
+  const [isInitialized, setIsInitialized] = useState(false);
   const [pauseFetching, setPauseFetching] = useState(false);
   const aptos = getAptosClient();
 
-  const onVisibilityChange = () => {
-    if (document.visibilityState === 'visible' && pauseFetching) {
+  const onVisibilityChange = useCallback(() => {
+    console.log('document.visibilityState', document.visibilityState, pauseFetching)
+    if (document.visibilityState === 'visible') {
       console.log("Tab reopened, resume fetching events");
       setPauseFetching(false);
-    } else if (document.visibilityState === 'hidden' && !pauseFetching) {
+    } else if (document.visibilityState === 'hidden') {
       console.log("Tab closed, pause fetching events");
       setPauseFetching(true);
     }
-  };
+  }, [pauseFetching]);
 
   useLayoutEffect(() => {
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
-  }, []);
+  }, [onVisibilityChange]);
 
   const fetchEvents = async (eventHandle: string) => {
     if (!account?.address) return;
@@ -56,55 +61,78 @@ const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
     return resp as GetEventsResponse;
   };
 
-  const processEvents = useCallback((events: GetEventsResponse, eventType: string) => {
+  const processEvents = useCallback((events: GetEventsResponse, eventType: string, showToasts: boolean) => {
     let hasUpdates = false;
+    let highestVersion = lastCheckedVersions[eventType as keyof typeof lastCheckedVersions];
+
     // Sort events by version in ascending order
     const sortedEvents = events.sort((a, b) => 
       Number(BigInt(a.transaction_version) - BigInt(b.transaction_version))
     );
 
     for (const event of sortedEvents) {
-      if (BigInt(event.transaction_version) > BigInt(lastCheckedVersion || "0")) {
+      const eventVersion = BigInt(event.transaction_version);
+      console.log(eventVersion > highestVersion)
+      if (eventVersion > highestVersion) {
         if (event.data.customer === account?.address) {
-          if (eventType === 'EarnPoints') {
-            toast.success(`You earned ${event.data.amount} points in program ${event.data.program_id}`);
-            hasUpdates = true;
-          } else if (eventType === 'RedeemVoucher') {
-            toast.success(`You redeemed voucher ${event.data.voucher_id} in program ${event.data.program_id}`);
-            hasUpdates = true;
+          if (showToasts) {
+            if (eventType === 'EarnPoints') {
+              toast.success(`You earned ${event.data.amount} points in program ${event.data.program_id}`);
+            } else if (eventType === 'RedeemVoucher') {
+              toast.success(`You redeemed voucher ${event.data.voucher_id} in program ${event.data.program_id}`);
+            }
           }
+          hasUpdates = true;
         }
-        setLastCheckedVersion(event.transaction_version);
+        highestVersion = eventVersion > highestVersion ? eventVersion : highestVersion;
       }
+    }
+
+    if (highestVersion > lastCheckedVersions[eventType as keyof typeof lastCheckedVersions]) {
+      setLastCheckedVersions(prev => ({
+        ...prev,
+        [eventType]: highestVersion
+      }));
     }
 
     if (hasUpdates) {
       onUpdate();
     }
-  }, [lastCheckedVersion, account?.address, onUpdate]);
+  }, [lastCheckedVersions, account?.address, onUpdate]);
 
-  const checkForNewEvents = async () => {
-    if (pauseFetching) return;
+  const checkForNewEvents = useCallback(async () => {
+    if (pauseFetching) {
+      console.log('Fetching paused, skipping this interval');
+      return;
+    }
 
     try {
       const earnPointsEvents = await fetchEvents('EarnPoints');
       const redeemVoucherEvents = await fetchEvents('RedeemVoucher');
 
-      if (earnPointsEvents) processEvents(earnPointsEvents, 'EarnPoints');
-      if (redeemVoucherEvents) processEvents(redeemVoucherEvents, 'RedeemVoucher');
+      console.log('isFetching')
+
+      const showToasts = isInitialized;
+
+      if (earnPointsEvents) processEvents(earnPointsEvents, 'EarnPoints', showToasts);
+      if (redeemVoucherEvents) processEvents(redeemVoucherEvents, 'RedeemVoucher', showToasts);
+
+      if (!isInitialized) {
+        setIsInitialized(true);
+      }
     } catch (error) {
       console.error('Error fetching events:', error);
     }
-  };
+  }, [fetchEvents, processEvents, pauseFetching, isInitialized, account?.address]);
 
   useEffect(() => {
-
     if (account?.address) {
-      checkForNewEvents();
-      const intervalId = setInterval(checkForNewEvents, 10000); // Check every 10 seconds
+      const intervalId = setInterval(() => {
+        checkForNewEvents();
+      }, 10000); // Check every 10 seconds
       return () => clearInterval(intervalId);
     }
-  }, [account?.address]);
+  }, [account?.address, checkForNewEvents]);
 
   return null; // This component doesn't render anything
 };
