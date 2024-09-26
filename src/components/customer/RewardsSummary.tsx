@@ -26,6 +26,7 @@ import { UserProgramDetails } from '@/types/aptrewards';
 import { Skeleton } from "@/components/ui/skeleton";
 import CustomerEventListeners from '@/components/CustomerEventListeners';
 import JoinProgram from './JoinProgram';
+import { calculateExpirationDate } from '@/store/programStore';
 
 const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
     const { account } = useWallet();
@@ -76,7 +77,10 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                     id: voucher?.value.id,
                     name: voucher?.value.name,
                     description: voucher?.value.description,
-                    expirationDate: voucher?.value.expiration_date,
+                    expirationDate: calculateExpirationDate(
+                        voucher?.value.redemption_expiration_timestamps?.data?.find((item: any) => item?.key == account?.address)?.value,
+                        Number(voucher?.value.validity_days)
+                    ),
                     termsAndConditions: voucher?.value.terms_and_conditions,
                     imageUrl: voucher?.value.image_url,
                 })),
@@ -84,7 +88,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                     id: voucher?.value.id,
                     name: voucher?.value.name,
                     description: voucher?.value.description,
-                    expirationDate: voucher?.value.expiration_date,
+                    validityDays: Number(voucher?.value.validity_days),
                     termsAndConditions: voucher?.value.terms_and_conditions,
                     imageUrl: voucher?.value.image_url,
                     pointsRequired: Number(voucher?.value.points_required),
@@ -193,11 +197,6 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
         );
     }
 
-    const redeemableVouchers = userDetails?.allVouchers.filter(voucher =>
-        !userDetails?.ownedVouchers.some(owned => owned.id === voucher.id)
-    );
-
-
     return (
         <div className="space-y-4 md:-mt-4">
             {userDetails && <CustomerEventListeners onUpdate={() => {
@@ -263,7 +262,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                            {redeemableVouchers?.map((voucher, index) => (
+                            {userDetails?.allVouchers?.map((voucher, index) => (
                                 <RedeemableVoucherItem
                                     key={index}
                                     id={voucher.id}
@@ -287,7 +286,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
             </div>
             <div className="space-y-4">
                 {userDetails?.ownedVouchers && userDetails.ownedVouchers.length > 0 ? (
-                    userDetails.ownedVouchers.map((voucher, index) => (
+                    userDetails.ownedVouchers.map((voucher) => (
                         <MyVoucherItem
                             key={voucher.id}
                             id={voucher.id}

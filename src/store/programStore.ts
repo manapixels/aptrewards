@@ -79,13 +79,13 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
 // Add this helper function to determine the customer's tier
 const getTierForCustomer = (program: LoyaltyProgram, points: number): string => {
     if (!program.tiers || program.tiers.length === 0) return 'No Tier';
-    
+
     for (let i = program.tiers.length - 1; i >= 0; i--) {
         if (points >= program.tiers[i].pointsRequired) {
             return program.tiers[i].name;
         }
     }
-    
+
     return 'No Tier';
 };
 
@@ -110,30 +110,30 @@ const fetchUserJoinedPrograms = async (address: string): Promise<UserProgramDeta
 
             // Transform ownedVouchers
             const transformedOwnedVouchers = program.owned_vouchers?.data.map((voucher: any) => ({
-                id: voucher.id,
-                name: voucher.name,
-                pointsRequired: Number(voucher.points_required),
-                description: voucher.description,
-                termsAndConditions: voucher.terms_and_conditions,
-                validityDays: Number(voucher.validity_days),
-                maxRedemptions: Number(voucher.max_redemptions),
-                totalRedemptions: Number(voucher.total_redemptions),
+                id: voucher?.value?.id,
+                name: voucher?.value?.name,
+                pointsRequired: Number(voucher?.value?.points_required),
+                description: voucher?.value?.description,
+                termsAndConditions: voucher?.value?.terms_and_conditions,
+                validityDays: Number(voucher?.value?.validity_days),
+                maxRedemptions: Number(voucher?.value?.max_redemptions),
+                totalRedemptions: Number(voucher?.value?.total_redemptions),
                 expirationDate: calculateExpirationDate(
-                    voucher.redemption_expiration_timestamps[address],
-                    Number(voucher.validity_days)
+                    voucher?.value.redemption_expiration_timestamps?.data?.find((item: any) => item?.key == address)?.value,
+                    Number(voucher?.value?.validity_days)
                 ),
             }));
 
             // Transform allVouchers
             const transformedAllVouchers = program.all_vouchers?.data.map((voucher: any) => ({
-                id: voucher.id,
-                name: voucher.name,
-                pointsRequired: Number(voucher.points_required),
-                description: voucher.description,
-                termsAndConditions: voucher.terms_and_conditions,
-                validityDays: Number(voucher.validity_days),
-                maxRedemptions: Number(voucher.max_redemptions),
-                totalRedemptions: Number(voucher.total_redemptions),
+                id: voucher?.value?.id,
+                name: voucher?.value?.name,
+                pointsRequired: Number(voucher?.value?.points_required),
+                description: voucher?.value?.description,
+                termsAndConditions: voucher?.value?.terms_and_conditions,
+                validityDays: Number(voucher?.value?.validity_days),
+                maxRedemptions: Number(voucher?.value?.max_redemptions),
+                totalRedemptions: Number(voucher?.value?.total_redemptions),
             }));
 
             return {
@@ -157,9 +157,9 @@ const fetchUserJoinedPrograms = async (address: string): Promise<UserProgramDeta
 };
 
 // Helper function to calculate expiration date
-const calculateExpirationDate = (redemptionTimestamp: number, validityDays: number): Date | null => {
+export const calculateExpirationDate = (redemptionTimestamp: number, validityDays: number): Date | null => {
     if (!redemptionTimestamp) return null;
-    const expirationTimestamp = redemptionTimestamp + (validityDays * 24 * 60 * 60 * 1000); // Convert days to milliseconds
+    const expirationTimestamp = Number(redemptionTimestamp) + (Number(validityDays) * 24 * 60 * 60 * 1000); // Convert days to milliseconds
     return new Date(expirationTimestamp);
 };
 
@@ -170,7 +170,7 @@ export const useProgramStore = create<ProgramStore>((set, get) => ({
     fetchPrograms: async (address: string) => {
         try {
             const fetchedPrograms = await getProgramsByAddress(address);
-            
+
             set((state) => {
                 const mergedPrograms = fetchedPrograms.map(fetchedProgram => {
                     const existingProgram = state.programs.find(p => p.id === fetchedProgram.id.toString());
