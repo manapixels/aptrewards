@@ -11,7 +11,7 @@ import { moduleAddress, moduleName } from '@/constants';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Loader2, QrCode } from 'lucide-react';
+import { CornerRightUp, Loader2, QrCode } from 'lucide-react';
 import Html5QrcodePlugin from '@/components/ui/Html5QrCodePlugin';
 
 const AdminFrontend = () => {
@@ -209,6 +209,12 @@ const AdminFrontend = () => {
                                 </TabsContent>
                             </div>
                         </Tabs>
+                    )}
+                    {!scanning && !data && (
+                        <div className="flex justify-center items-center gap-4">
+                            <p className="text-lg flex-1">Scan a QR code<br/> to get started</p>
+                            <CornerRightUp className="w-8 h-8" />
+                        </div>
                     )}
                 </CardContent>
             </Card>
