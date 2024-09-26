@@ -235,10 +235,12 @@ const ProgramTiers = ({ program, isLoading }: { program: LoyaltyProgram, isLoadi
         ];
 
         return (
-            <CustomerTable
-                columns={columns}
-                data={customers || []}
-            />
+            <div className="overflow-hidden">
+                <CustomerTable
+                    columns={columns}
+                    data={customers || []}
+                />
+            </div>
         );
     };
 

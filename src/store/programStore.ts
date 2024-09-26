@@ -46,8 +46,6 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
 
     if (!response) throw new Error("Failed to fetch program details");
 
-    console.log(response)
-
     // Transform the raw data to match the LoyaltyProgram type
     const transformedProgramDetails: LoyaltyProgram = {
         id: response[0]?.toString() || '',
