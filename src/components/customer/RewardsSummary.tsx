@@ -118,7 +118,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
             setUserDetails(userDetails);
         } catch (error) {
             console.error("Error fetching user program details:", error);
-            toast.error("Failed to fetch user program details");
+            // toast.error("Failed to fetch user program details");
             setIsFetchError(true);
         }
     };
@@ -182,9 +182,14 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
 
     if (isFetchError) {
         return (
-            <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <p className="text-gray-600 mb-4">Looks like you're not part of this program yet.</p>
-                <JoinProgram programId={loyaltyProgramId} onJoinSuccess={fetchUserProgramDetails} />
+            <div className="text-center py-8 bg-gray-50 rounded-lg aspect-square pattern-circle-tile flex flex-col items-center justify-center">
+                <div className="bg-white px-4 py-10 rounded-lg">
+                    <h1 className="text-2xl font-bold text-gray-800 mb-4">Start earning points!</h1>
+                    <p className="text-gray-600 mb-4">
+                        Looks like you're not part of this program yet. Join now and start your journey to amazing perks and rewards.
+                    </p>
+                    <JoinProgram programId={loyaltyProgramId} onJoinSuccess={fetchUserProgramDetails} />
+                </div>
             </div>
         );
     }

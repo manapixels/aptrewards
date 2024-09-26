@@ -55,7 +55,7 @@ const JoinProgram = ({ programId, onJoinSuccess }: { programId: string, onJoinSu
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button onClick={() => setIsOpen(true)}>
+                <Button onClick={() => setIsOpen(true)} className="h-auto py-3 px-5 text-md">
                     Join now
                 </Button>
             </DialogTrigger>
@@ -64,8 +64,8 @@ const JoinProgram = ({ programId, onJoinSuccess }: { programId: string, onJoinSu
                     <DialogTitle>Join Program</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={joinProgram}>
-                    <Label htmlFor="name">
-                        Name:
+                    <Label htmlFor="name" className="mb-2">
+                        Enter your name:</Label>
                         <Input
                             type="text"
                             id="name"
@@ -73,8 +73,10 @@ const JoinProgram = ({ programId, onJoinSuccess }: { programId: string, onJoinSu
                             onChange={(e) => setName(e.target.value)}
                             className="mb-2"
                             autoComplete="off"
+                            placeholder="How you want to be known in this program"
                         />
-                    </Label>
+                    
+                    <p className="text-sm text-gray-500 mt-1">This name is specific to this loyalty program and doesn't have to be your real name.</p>
                     <div className="flex justify-end">
                         <Button type="submit" className="mt-2" disabled={transactionInProgress}>
                             {transactionInProgress ? 'Joining...' : 'Join'}
