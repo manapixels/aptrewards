@@ -14,9 +14,8 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Loader2, QrCode } from 'lucide-react';
 import Html5QrcodePlugin from '@/components/ui/Html5QrCodePlugin';
 
-
 const AdminFrontend = () => {
-    const [data, setData] = useState<string | null>(null);
+    const [data, setData] = useState<any | null>(null);
     const [scanning, setScanning] = useState(false);
     const [pointsToIssue, setPointsToIssue] = useState<number>(0);
     const [activeTab, setActiveTab] = useState<string>('issue');
@@ -26,16 +25,10 @@ const AdminFrontend = () => {
     const client = getAptosClient();
 
     const handleScanSuccess = (decodedText: string) => {
-        setData(decodedText);
-        console.log('handleScanSuccess', decodedText);
-
         try {
             const parsedData = JSON.parse(decodedText);
-            if (parsedData.voucherId !== undefined) {
-                setActiveTab('redeem');
-            } else {
-                setActiveTab('issue');
-            }
+            setData(parsedData);
+            setActiveTab(parsedData.voucherId !== undefined ? 'redeem' : 'issue');
         } catch (error) {
             console.error('Failed to parse scanned data:', error);
             toast.error("Invalid QR code data. Please try again.");
@@ -159,42 +152,60 @@ const AdminFrontend = () => {
                             </TabsList>
                             <div className="p-4">
                                 <TabsContent value="issue">
-                                    <div>
-                                        <h2 className="text-lg font-semibold mb-2">Scanned Customer Data:</h2>
-                                        <ScrollArea className="w-full rounded-md border">
-                                            <pre className="p-4">{JSON.stringify(JSON.parse(data), null, 2)}</pre>
-                                            <ScrollBar orientation="horizontal" />
-                                        </ScrollArea>
-                                        <div className="mt-4">
-                                            <label htmlFor="points" className="block text-sm font-medium text-gray-700">
-                                                Points to Issue
-                                            </label>
-                                            <Input
-                                                type="number"
-                                                id="points"
-                                                value={pointsToIssue}
-                                                onChange={(e) => setPointsToIssue(Number(e.target.value))}
-                                                className="mt-1"
-                                            />
+                                    {data.voucherId === undefined && (
+                                        <div>
+                                            <h2 className="text-lg font-semibold mb-2">Customer Data:</h2>
+                                            <ScrollArea className="w-full rounded-md border">
+                                                <pre className="p-4">{JSON.stringify({
+                                                    programId: data.programId,
+                                                    customer: data.customer
+                                                }, null, 2)}</pre>
+                                                <ScrollBar orientation="horizontal" />
+                                            </ScrollArea>
+                                            <div className="mt-4">
+                                                <label htmlFor="points" className="block text-sm font-medium text-gray-700">
+                                                    Points to Issue
+                                                </label>
+                                                <Input
+                                                    type="number"
+                                                    id="points"
+                                                    value={pointsToIssue}
+                                                    onChange={(e) => setPointsToIssue(Number(e.target.value))}
+                                                    className="mt-1"
+                                                />
+                                            </div>
+                                            <Button onClick={handleIssuePoints} className="mt-4 w-full py-4 h-auto" disabled={isFetching}>
+                                                {isFetching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Issue Points
+                                            </Button>
                                         </div>
-                                        <Button onClick={handleIssuePoints} className="mt-4 w-full py-4 h-auto" disabled={isFetching}>
-                                            {isFetching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Issue Points
-                                        </Button>
-                                    </div>
+                                    )}
+                                    {data.voucherId !== undefined && (
+                                        <p>This QR code is for a voucher. Please switch to the "Redeem Voucher" tab.</p>
+                                    )}
                                 </TabsContent>
                                 <TabsContent value="redeem">
-                                    <div>
-                                        <h2 className="text-lg font-semibold mb-2">Scanned Voucher Data:</h2>
-                                        <ScrollArea className="w-full rounded-md border">
-                                            <pre className="p-4">{JSON.stringify(JSON.parse(data), null, 2)}</pre>
-                                            <ScrollBar orientation="horizontal" />
-                                        </ScrollArea>
-                                        <Button onClick={handleRedeemVoucher} className="mt-4 w-full py-4 h-auto" disabled={isFetching}>
-                                            {isFetching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Redeem Voucher
-                                        </Button>
-                                    </div>
+                                    {data.voucherId !== undefined && (
+                                        <div>
+                                            <h2 className="text-lg font-semibold mb-2">Voucher Data:</h2>
+                                            <ScrollArea className="w-full rounded-md border">
+                                                <pre className="p-4">{JSON.stringify({
+                                                    programId: data.programId,
+                                                    customer: data.customer,
+                                                    voucherId: data.voucherId,
+                                                    name: data.name
+                                                }, null, 2)}</pre>
+                                                <ScrollBar orientation="horizontal" />
+                                            </ScrollArea>
+                                            <Button onClick={handleRedeemVoucher} className="mt-4 w-full py-4 h-auto" disabled={isFetching}>
+                                                {isFetching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Redeem Voucher
+                                            </Button>
+                                        </div>
+                                    )}
+                                    {data.voucherId === undefined && (
+                                        <p>This QR code is for issuing points. Please switch to the "Issue Points" tab.</p>
+                                    )}
                                 </TabsContent>
                             </div>
                         </Tabs>
