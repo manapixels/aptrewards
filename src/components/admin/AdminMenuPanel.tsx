@@ -88,7 +88,7 @@ const AdminMenuPanel: React.FC = () => {
     );
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-100 shadow-lg md:hidden z-50 border-t border-gray-400">
+        <div className="sticky bottom-0 left-0 right-0 bg-gray-100 shadow-lg md:hidden z-50 border-t border-gray-400">
             <nav className="grid grid-cols-3 justify-around items-center">
                 <ProgramsDropdown />
                 <Link href="/admin/issue" className={`col-span-1 flex flex-col items-center py-2 px-4 ${pathname === '/admin/issue' ? 'text-[#a7783a] font-bold' : 'text-white'}`}>
