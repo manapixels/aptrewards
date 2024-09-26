@@ -28,6 +28,7 @@ module aptrewards_addr::AptRewardsMain {
     }
 
     struct CustomerData has store, drop, copy {
+        address: address,
         name: String,
         points: u64,
         lifetime_points: u64,
@@ -305,6 +306,7 @@ module aptrewards_addr::AptRewardsMain {
         let now = timestamp::now_seconds();
         if (!simple_map::contains_key(&program.customer_data, &customer)) {
             simple_map::add(&mut program.customer_data, customer, CustomerData {
+                address: customer,
                 name: utf8(b""), // Default empty name
                 points: amount,
                 lifetime_points: amount,
@@ -330,6 +332,7 @@ module aptrewards_addr::AptRewardsMain {
 
         if (!simple_map::contains_key(&program.customer_data, &customer_address)) {
             simple_map::add(&mut program.customer_data, customer_address, CustomerData {
+                address: customer_address,
                 name,
                 points: 0,
                 lifetime_points: 0,
