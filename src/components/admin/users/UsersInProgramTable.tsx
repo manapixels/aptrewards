@@ -40,8 +40,8 @@ const UsersInProgramTable = ({ programId }: { programId: string }) => {
   const filteredAndSortedCustomers = () => {
     if (!currProgram) return [];
 
-    let customers = currProgram.customersWithPoints?.map((customer) => ({
-      address: customer.customer,
+    let customers = currProgram.customerData?.map((customer) => ({
+      address: customer.address,
       points: customer.points,
       tier: getTierForCustomer(currProgram, customer.points),
     }));
