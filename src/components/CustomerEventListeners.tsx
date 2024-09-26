@@ -72,7 +72,6 @@ const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
 
     for (const event of sortedEvents) {
       const eventVersion = BigInt(event.transaction_version);
-      console.log(eventVersion, highestVersion, eventVersion > highestVersion)
       if (eventVersion > highestVersion) {
         if (event.data.customer === account?.address) {
           if (showToasts) {
