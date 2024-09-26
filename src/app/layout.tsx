@@ -28,7 +28,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AutoConnectProvider>
             <WalletProvider>
               {children}
-              <Toaster position="bottom-right" />
+              <Toaster 
+                position="bottom-center"
+                toastOptions={
+                  {
+                    style: {
+                      background: '#333',
+                      color: '#fff',
+                    },
+                  }
+                } />
             </WalletProvider>
           </AutoConnectProvider>
         </ThemeProvider>
