@@ -226,12 +226,10 @@ const ProgramTiers = ({ program, isLoading }: { program: LoyaltyProgram, isLoadi
         ];
 
         return (
-            <ScrollArea className="h-[400px]">
-                <CustomerTable
-                    columns={columns}
-                    data={customers || []}
-                />
-            </ScrollArea>
+            <CustomerTable
+                columns={columns}
+                data={customers || []}
+            />
         );
     };
 

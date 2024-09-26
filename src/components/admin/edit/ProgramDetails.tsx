@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { CustomerTable } from '@/components/admin/users/CustomerTable';
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/utils/aptos';
@@ -202,15 +201,10 @@ const ProgramDetails = ({ program, isLoading }: { program: LoyaltyProgram, isLoa
         if (!customers.length) return null;
 
         return (
-            <ScrollArea className="h-[400px] w-full">
-                <div className="w-full min-w-[600px]">
-                    <CustomerTable
-                        columns={columns}
-                        data={customers}
-                    />
-                </div>
-                <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+            <CustomerTable
+                columns={columns}
+                data={customers}
+            />
         );
     };
 
