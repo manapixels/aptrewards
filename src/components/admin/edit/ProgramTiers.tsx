@@ -188,12 +188,12 @@ const ProgramTiers = ({ program, isLoading }: { program: LoyaltyProgram, isLoadi
     const renderCustomersTable = () => {
         if (!program || !selectedTier) return null;
 
-        console.log(program?.customerData)
-
         const customers = program?.customerData
             ?.map((customer: CustomerData, index: number) => ({
                 address: customer.address,
+                name: customer.name,
                 points: customer.points,
+                lastPointDate: customer.lastPointDate,
                 tier: getTierForCustomer(program, customer.points),
             }))
             ?.filter((customer: { tier: string }) => customer.tier === selectedTier);
@@ -203,6 +203,15 @@ const ProgramTiers = ({ program, isLoading }: { program: LoyaltyProgram, isLoadi
                 accessorKey: 'index',
                 header: '#',
                 cell: info => info.row.index + 1,
+            },
+            {
+                accessorKey: 'name',
+                header: 'Name',
+                cell: ({ row: { original: customer } }) => (
+                  <div className="flex items-center gap-1">
+                    {customer.name}
+                  </div>
+                ),
             },
             {
                 accessorKey: 'address',

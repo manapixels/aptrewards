@@ -23,7 +23,7 @@ const UsersInProgramTable = ({ programId }: { programId: string }) => {
   useEffect(() => {
     setIsLoading(true);
     fetchProgramDetails(programId).then(() => setIsLoading(false));
-}, [programId, fetchProgramDetails]);
+  }, [programId, fetchProgramDetails]);
 
   const handleCopyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
@@ -42,7 +42,9 @@ const UsersInProgramTable = ({ programId }: { programId: string }) => {
 
     let customers = currProgram.customerData?.map((customer) => ({
       address: customer.address,
+      name: customer.name,
       points: customer.points,
+      lastPointDate: customer.lastPointDate,
       tier: getTierForCustomer(currProgram, customer.points),
     }));
 
@@ -66,6 +68,15 @@ const UsersInProgramTable = ({ programId }: { programId: string }) => {
       accessorKey: 'index',
       header: '#',
       cell: info => info.row.index + 1,
+    },
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      cell: ({ row: { original: customer } }) => (
+        <div className="flex items-center gap-1">
+          {customer.name}
+        </div>
+      ),
     },
     {
       accessorKey: 'address',

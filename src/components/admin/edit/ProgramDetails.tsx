@@ -95,7 +95,9 @@ const ProgramDetails = ({ program, isLoading }: { program: LoyaltyProgram, isLoa
 
         let customers = program?.customerData?.map((customer, index) => ({
             address: customer.address,
+            name: customer.name,
             points: customer.points,
+            lastPointDate: customer.lastPointDate,
             tier: getTierForCustomer(program, customer.points),
         }));
 
@@ -119,6 +121,15 @@ const ProgramDetails = ({ program, isLoading }: { program: LoyaltyProgram, isLoa
             accessorKey: 'index',
             header: '#',
             cell: info => info.row.index + 1,
+        },
+        {
+            accessorKey: 'name',
+            header: 'Name',
+            cell: ({ row: { original: customer } }) => (
+                <div className="flex items-center gap-1">
+                    {customer.name}
+                </div>
+            ),
         },
         {
             accessorKey: 'address',
