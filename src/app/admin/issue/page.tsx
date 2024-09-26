@@ -13,6 +13,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Loader2, QrCode } from 'lucide-react';
 import Html5QrcodePlugin from '@/components/ui/Html5QrCodePlugin';
+import { Metadata } from "next";
+import { appName } from "@/constants";
+
+export const metadata: Metadata = {
+    title: `${appName} | Issue Points & Redeem Vouchers`,
+}
 
 const IssuePage = () => {
     const [data, setData] = useState<string | null>(null);

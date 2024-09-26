@@ -6,13 +6,14 @@ import { WalletProvider } from '@/components/onchain/WalletProvider';
 import './globals.css';
 import dotenv from 'dotenv';
 import { Toaster } from 'react-hot-toast';
+import { appName } from "@/constants";
 
 const inter = Inter({ subsets: ['latin'] });
 
 dotenv.config();
 
 export const metadata: Metadata = {
-  title: `AptRewards`,
+  title: appName,
   description: `A loyalty program on Aptos.`,
   icons: {
     icon: '/favicon.png',
