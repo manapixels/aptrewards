@@ -34,4 +34,20 @@ AptRewards offers a range of powerful features for businesses and customers:
 
 1. Run `aptos init` to initialize the Aptos CLI.
 2. Run `npm run aptos:deploy_and_init` to deploy and initialize the package.
-3. (optional) Run `npm run aptos:create_test_program` to create a test program and some dummy data onchain.
+3. (optional) Run `npm run aptos:create_test_program` to create a test program and some dummy data onchain. Requires the following in .env
+
+    ```json
+    APTOS_NETWORK=<testnet or mainnet>
+    PRIVATE_KEY=<your_private_key>
+    PUBLIC_KEY=<your_public_key>
+    CONTRACT_ADDRESS=<your_contract_address> (auto-populated by running create_test_program)
+    CONTRACT_NAME=<your_contract_name> (e.g. AptRewardsMain)
+    ```
+
+4. Run `npm run dev` to start the front-end (Next.js) application. Requires the following in .env
+
+    ```json
+    NEXT_PUBLIC_CONTRACT_ADDRESS=<your_contract_address>
+    NEXT_PUBLIC_CONTRACT_NAME=<your_contract_name> (e.g. AptRewardsMain)
+    NEXT_PUBLIC_NETWORK=<testnet or mainnet>
+    ```
