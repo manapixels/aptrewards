@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { UserProgramDetails } from '@/types/aptrewards';
 import { Skeleton } from "@/components/ui/skeleton";
-import CustomerEventListeners from '@/components/CustomerEventListeners';
+// import CustomerEventListeners from '@/components/CustomerEventListeners';
 import JoinProgram from './JoinProgram';
 
 const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
@@ -197,7 +197,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
 
     return (
         <div className="space-y-4 md:-mt-4">
-            {userDetails && <CustomerEventListeners />}
+            {/* {userDetails && <CustomerEventListeners />} */}
             <div className="relative flex justify-center ">
                 <div className="absolute top-[50%] translate-y-[-50%] left-0 border-t border-gray-200 w-full"></div>
                 <div className="text-sm font-semibold text-gray-400 px-8 py-2 rounded-md tracking-widest bg-white relative z-10 font-mono uppercase">

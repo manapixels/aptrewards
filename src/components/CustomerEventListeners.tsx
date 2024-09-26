@@ -39,7 +39,8 @@ const CustomerEventListeners = () => {
   const fetchEvents = async (eventHandle: string) => {
     if (!account?.address) return;
 
-    const url = `https://fullnode.testnet.aptoslabs.com/v1/accounts/${moduleAddress}/events/${moduleAddress}::AptRewardsEvents::${eventHandle}`;
+    const url = `https://fullnode.testnet.aptoslabs.com/v1/accounts/${moduleAddress}/events/${moduleAddress}::AptRewardsEvents::${eventHandle}/amount`;
+    console.log(url)
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
