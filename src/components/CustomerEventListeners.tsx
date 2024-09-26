@@ -3,6 +3,7 @@ import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import toast from 'react-hot-toast';
 import { getAptosClient } from '@/utils/aptos';
 import { GetEventsResponse } from '@aptos-labs/ts-sdk';
+import { moduleAddress } from '@/constants';
 
 const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
   const { account } = useWallet();
@@ -46,7 +47,7 @@ const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
             _eq: "0",
           },
           indexed_type: {
-            _eq: `0x3e8b6b010d432f652a612db7afdb7b80c42f1b96b05e1e8e2abfbaa1b03f5299::AptRewardsEvents::${eventHandle}`,
+            _eq: `${moduleAddress}::AptRewardsEvents::${eventHandle}`,
           },
           data: {
             _contains: {
@@ -71,6 +72,7 @@ const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
 
     for (const event of sortedEvents) {
       const eventVersion = BigInt(event.transaction_version);
+      console.log(eventVersion, highestVersion, eventVersion > highestVersion)
       if (eventVersion > highestVersion) {
         if (event.data.customer === account?.address) {
           if (showToasts) {
@@ -108,7 +110,7 @@ const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
       const earnPointsEvents = await fetchEvents('EarnPoints');
       const redeemVoucherEvents = await fetchEvents('RedeemVoucher');
 
-      // console.log('isFetching')
+      console.log('isFetching', earnPointsEvents, redeemVoucherEvents)
 
       const showToasts = isInitialized;
 
@@ -127,7 +129,7 @@ const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
     if (account?.address) {
       const intervalId = setInterval(() => {
         checkForNewEvents();
-      }, 10000); // Check every 10 seconds
+      }, 5000); // Check every 5 seconds
       return () => clearInterval(intervalId);
     }
   }, [account?.address, checkForNewEvents]);
