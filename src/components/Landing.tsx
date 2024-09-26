@@ -150,7 +150,7 @@ const Landing = () => {
                                 </>
                             ) : (
                                 <div>
-                                    <div>Connect your wallet to view your programs</div>
+                                    <div className="p-4 text-center">Connect your wallet to view your programs</div>
                                 </div>
                             )}
                         </CardContent>
