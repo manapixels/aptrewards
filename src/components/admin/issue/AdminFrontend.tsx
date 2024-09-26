@@ -58,16 +58,14 @@ const AdminFrontend = () => {
         setIsFetching(true);
 
         try {
-            const customerData = JSON.parse(data);
-
             const response = await signAndSubmitTransaction({
                 sender: account.address,
                 data: {
                     function: `${moduleAddress}::${moduleName}::earn_points`,
                     typeArguments: [],
                     functionArguments: [
-                        customerData.programId,
-                        customerData.customer,
+                        data.programId,
+                        data.customer,
                         pointsToIssue
                     ],
                 },
@@ -75,7 +73,7 @@ const AdminFrontend = () => {
 
             await client.waitForTransaction({ transactionHash: response.hash });
 
-            toast.success(`${pointsToIssue} points have been issued successfully to ${customerData.customer}.`);
+            toast.success(`${pointsToIssue} points have been issued successfully to ${data.customer}.`);
             setData(null);
             setPointsToIssue(0);
         } catch (error) {
