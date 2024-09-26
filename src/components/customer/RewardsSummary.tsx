@@ -203,6 +203,15 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
             {userDetails && <CustomerEventListeners onUpdate={() => {
                 fetchUserProgramDetails();
             }} />}
+
+            <div className="overflow-hidden whitespace-nowrap bg-black text-gray-200 -mx-4 text-sm py-2 uppercase font-mono tracking-wider">
+                <div className="animate-marquee inline-block">
+                    10% additional point bonus until {formatDate(new Date(Date.now() + 10 * 24 * 60 * 60 * 1000))} &nbsp; ... &nbsp;
+                </div>
+                <div className="animate-marquee inline-block">
+                    10% additional point bonus until {formatDate(new Date(Date.now() + 10 * 24 * 60 * 60 * 1000))} &nbsp; ... &nbsp;
+                </div>
+            </div>
             <div className="relative flex justify-center ">
                 <div className="absolute top-[50%] translate-y-[-50%] left-0 border-t border-gray-200 w-full"></div>
                 <div className="text-sm font-semibold text-gray-400 px-8 py-2 rounded-md tracking-widest bg-white relative z-10 font-mono uppercase">
