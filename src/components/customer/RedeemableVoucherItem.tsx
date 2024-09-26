@@ -24,7 +24,7 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
     imageUrl,
     pointsRequired,
     maxRedemptions,
-    redemptions,
+    totalRedemptions,
     onExchangeSuccess,
     programId
 }) => {
@@ -82,7 +82,7 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
                             <h3 className="font-bold text-lg">{name}</h3>
                             <p className="text-sm text-gray-500">Valid for {validityDays} days</p>
                             <p className="text-sm text-gray-500">{pointsRequired.toLocaleString()} points required</p>
-                            <p className="text-sm text-gray-500">Redemptions: {redemptions} / {maxRedemptions}</p>
+                            <p className="text-sm text-gray-500">Redemptions: {totalRedemptions} / {maxRedemptions}</p>
                             <div className="mt-3 flex items-center">
                                 <Dialog open={isExchangeOpen} onOpenChange={setIsExchangeOpen}>
                                     <DialogTrigger asChild>

@@ -202,7 +202,7 @@ export default function ProgramVouchers({ program, isLoading }: { program: Loyal
             </div>
             <VoucherRedemptionsTable
                 vouchers={program?.vouchers}
-                vouchersRedeemed={program?.vouchers?.map(voucher => voucher.redemptions) || []}
+                vouchersRedeemed={program?.vouchers?.map(voucher => voucher.totalRedemptions) || []}
             />
         </div>
     )

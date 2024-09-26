@@ -66,53 +66,55 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
 
             const nextTier = tiers.find((tier: any) => Number(tier.points_required) > Number(points));
 
+            console.log(all_vouchers)
+
             const userDetails: UserProgramDetails = {
                 programId: program_id,
                 programName: program_name,
-                points: parseInt(points),
-                lifetimePoints: parseInt(lifetime_points),
-                pointValidityDays: parseInt(point_validity_days),
+                points: Number(points),
+                lifetimePoints: Number(lifetime_points),
+                pointValidityDays: Number(point_validity_days),
                 ownedVouchers: owned_vouchers?.data.map((voucher: any) => ({
-                    id: voucher.id,
-                    name: voucher.name,
-                    description: voucher.description,
-                    expirationDate: voucher.expiration_date,
-                    termsAndConditions: voucher.terms_and_conditions,
-                    imageUrl: voucher.image_url,
+                    id: voucher?.value.id,
+                    name: voucher?.value.name,
+                    description: voucher?.value.description,
+                    expirationDate: voucher?.value.expiration_date,
+                    termsAndConditions: voucher?.value.terms_and_conditions,
+                    imageUrl: voucher?.value.image_url,
                 })),
                 allVouchers: all_vouchers?.data.map((voucher: any) => ({
-                    id: voucher.id,
-                    name: voucher.name,
-                    description: voucher.description,
-                    expirationDate: voucher.expiration_date,
-                    termsAndConditions: voucher.terms_and_conditions,
-                    imageUrl: voucher.image_url,
-                    pointsRequired: parseInt(voucher.points_required),
-                    maxRedemptions: parseInt(voucher.max_redemptions),
-                    redemptions: parseInt(voucher.redemptions),
+                    id: voucher?.value.id,
+                    name: voucher?.value.name,
+                    description: voucher?.value.description,
+                    expirationDate: voucher?.value.expiration_date,
+                    termsAndConditions: voucher?.value.terms_and_conditions,
+                    imageUrl: voucher?.value.image_url,
+                    pointsRequired: Number(voucher?.value.points_required),
+                    maxRedemptions: Number(voucher?.value.max_redemptions),
+                    totalRedemptions: Number(voucher?.value.total_redemptions),
                 })),
                 tiers: tiers.map((tier: any) => ({
-                    id: parseInt(tier.id),
+                    id: Number(tier.id),
                     name: tier.name,
-                    pointsRequired: parseInt(tier.points_required),
+                    pointsRequired: Number(tier.points_required),
                     benefits: tier.benefits,
                     customerCount: tier.customer_count,
                 })),
                 currentTier: currentTier ? {
-                    id: parseInt(currentTier.id),
+                    id: Number(currentTier.id),
                     name: currentTier.name,
-                    pointsRequired: parseInt(currentTier.points_required),
+                    pointsRequired: Number(currentTier.points_required),
                     benefits: currentTier.benefits,
                     customerCount: currentTier.customer_count,
                 } : null,
                 nextTier: nextTier ? {
-                    id: parseInt(nextTier.id),
+                    id: Number(nextTier.id),
                     name: nextTier.name,
-                    pointsRequired: parseInt(nextTier.points_required),
+                    pointsRequired: Number(nextTier.points_required),
                     benefits: nextTier.benefits,
                     customerCount: nextTier.customer_count,
                 } : null,
-                pointsToNextTier: nextTier ? parseInt(nextTier.points_required) - parseInt(points) : null,
+                pointsToNextTier: nextTier ? Number(nextTier.points_required) - Number(points) : null,
             };
 
             setUserDetails(userDetails);
@@ -147,7 +149,6 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
 
         return JSON.stringify(qrData);
     };
-    
 
     if (!userDetails && !isFetchError) {
         return (
@@ -265,7 +266,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                                     termsAndConditions={voucher.termsAndConditions}
                                     pointsRequired={voucher.pointsRequired}
                                     maxRedemptions={voucher.maxRedemptions}
-                                    redemptions={voucher.redemptions}
+                                    totalRedemptions={voucher.totalRedemptions}
                                     onExchangeSuccess={() => {
                                         fetchUserProgramDetails();
                                         setIsDialogOpen(false);

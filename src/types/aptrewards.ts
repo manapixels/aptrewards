@@ -14,7 +14,7 @@ export type RedeemableVoucher = Voucher & {
     pointsRequired: number;
     validityDays: number;
     maxRedemptions: number;
-    redemptions: number;
+    totalRedemptions: number;
 }
 
 export interface Tier {

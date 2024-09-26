@@ -62,7 +62,7 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
             termsAndConditions: voucher.terms_and_conditions,
             validityDays: Number(voucher.validity_days),
             maxRedemptions: Number(voucher.max_redemptions),
-            redemptions: calculateTotalRedemptions(voucher.user_voucher_counts?.data),
+            totalRedemptions: Number(voucher.total_redemptions),
         })) || [],
         tiers: (response[5] as any[])?.map((tier: any) => ({
             id: Number(tier.id),
@@ -119,7 +119,7 @@ const fetchUserJoinedPrograms = async (address: string): Promise<UserProgramDeta
                 termsAndConditions: voucher.terms_and_conditions,
                 validityDays: Number(voucher.validity_days),
                 maxRedemptions: Number(voucher.max_redemptions),
-                redemptions: calculateTotalRedemptions(voucher.user_voucher_counts),
+                totalRedemptions: Number(voucher.total_redemptions),
                 expirationDate: calculateExpirationDate(
                     voucher.redemption_expiration_timestamps[address],
                     Number(voucher.validity_days)
@@ -135,7 +135,7 @@ const fetchUserJoinedPrograms = async (address: string): Promise<UserProgramDeta
                 termsAndConditions: voucher.terms_and_conditions,
                 validityDays: Number(voucher.validity_days),
                 maxRedemptions: Number(voucher.max_redemptions),
-                redemptions: calculateTotalRedemptions(voucher.user_voucher_counts),
+                totalRedemptions: Number(voucher.total_redemptions),
             }));
 
             return {
@@ -163,12 +163,6 @@ const calculateExpirationDate = (redemptionTimestamp: number, validityDays: numb
     if (!redemptionTimestamp) return null;
     const expirationTimestamp = redemptionTimestamp + (validityDays * 24 * 60 * 60 * 1000); // Convert days to milliseconds
     return new Date(expirationTimestamp);
-};
-
-// Helper function to calculate total redemptions
-const calculateTotalRedemptions = (userVoucherCounts: Record<string, string>): number => {
-    if (!userVoucherCounts) return 0;
-    return Object.values(userVoucherCounts).reduce((sum, count) => sum + Number(count), 0);
 };
 
 export const useProgramStore = create<ProgramStore>((set, get) => ({

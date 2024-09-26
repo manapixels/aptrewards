@@ -15,9 +15,10 @@ module aptrewards_addr::AptRewardsMain {
         points_required: u64,
         validity_days: u64,
         max_redemptions: u64,
+        total_redemptions: u64,
         terms_and_conditions: String,
         redemption_expiration_timestamps: SimpleMap<address, u64>,
-        user_voucher_counts: SimpleMap<address, u64>, // New field to track voucher counts per user
+        user_voucher_counts: SimpleMap<address, u64>,
     }
 
     struct Tier has store, drop, copy {
@@ -186,6 +187,7 @@ module aptrewards_addr::AptRewardsMain {
             points_required,
             validity_days,
             max_redemptions,
+            total_redemptions: 0,
             terms_and_conditions,
             redemption_expiration_timestamps: simple_map::create<address, u64>(),
             user_voucher_counts: simple_map::create<address, u64>(), // Initialize the new field
@@ -377,6 +379,8 @@ module aptrewards_addr::AptRewardsMain {
         } else {
             simple_map::add(&mut voucher.user_voucher_counts, customer, 1);
         };
+
+        voucher.total_redemptions = voucher.total_redemptions + 1;
         
         // Set individual expiration date for the redeemed voucher
         let expiration_timestamp = timestamp::now_seconds() + (voucher.validity_days * 24 * 60 * 60);
@@ -824,6 +828,7 @@ module aptrewards_addr::AptRewardsMain {
         let voucher = simple_map::borrow(&program.vouchers, &0);
         // Check if the user's voucher count is incremented correctly
         assert!(*simple_map::borrow(&voucher.user_voucher_counts, &address_of(customer)) == 1, 1);
+        assert!(voucher.total_redemptions == 1, 2);
     }
 
     #[test(fx = @aptos_framework, owner = @0x123, customer = @0x456)]

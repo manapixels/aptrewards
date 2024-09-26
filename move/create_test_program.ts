@@ -45,7 +45,11 @@ async function main() {
     }
 
     // Fund the admin account
-    await aptos.fundAccount({ accountAddress: admin.accountAddress, amount: 100_000_000 });
+    try {
+        await aptos.fundAccount({ accountAddress: admin.accountAddress, amount: 100_000_000 });
+    } catch (error) {
+        console.error("Failed to fund admin account:", error);
+    }
 
     // Function to generate a random program name
     function generateRandomProgramName(): string {
@@ -176,7 +180,11 @@ async function main() {
     for (let i = 0; i < 5; i++) {
         const customer = Account.generate();
         customers.push(customer);
-        await aptos.fundAccount({ accountAddress: customer.accountAddress, amount: 100_000_000 });
+        try {
+            await aptos.fundAccount({ accountAddress: customer.accountAddress, amount: 100_000_000 });
+        } catch (error) {
+            console.error(`Failed to fund account for Customer ${i + 1} (${customer.accountAddress.toString()}):`, error);
+        }
 
         // Initialize the customer account in the loyalty program
         const setCustomerNameTxn = await aptos.transaction.build.simple({
