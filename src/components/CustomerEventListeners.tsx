@@ -1,10 +1,10 @@
-import { useState, useEffect, useLayoutEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import toast from 'react-hot-toast';
 import { getAptosClient } from '@/utils/aptos';
 import { GetEventsResponse } from '@aptos-labs/ts-sdk';
 
-const CustomerEventListeners = () => {
+const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
   const { account } = useWallet();
   const [lastCheckedVersion, setLastCheckedVersion] = useState<string | null>(null);
   const [pauseFetching, setPauseFetching] = useState(false);
@@ -56,7 +56,8 @@ const CustomerEventListeners = () => {
     return resp as GetEventsResponse;
   };
 
-  const processEvents = (events: GetEventsResponse, eventType: string) => {
+  const processEvents = useCallback((events: GetEventsResponse, eventType: string) => {
+    let hasUpdates = false;
     // Sort events by version in ascending order
     const sortedEvents = events.sort((a, b) => 
       Number(BigInt(a.transaction_version) - BigInt(b.transaction_version))
@@ -67,14 +68,20 @@ const CustomerEventListeners = () => {
         if (event.data.customer === account?.address) {
           if (eventType === 'EarnPoints') {
             toast.success(`You earned ${event.data.amount} points in program ${event.data.program_id}`);
+            hasUpdates = true;
           } else if (eventType === 'RedeemVoucher') {
             toast.success(`You redeemed voucher ${event.data.voucher_id} in program ${event.data.program_id}`);
+            hasUpdates = true;
           }
         }
         setLastCheckedVersion(event.transaction_version);
       }
     }
-  };
+
+    if (hasUpdates) {
+      onUpdate();
+    }
+  }, [lastCheckedVersion, account?.address, onUpdate]);
 
   const checkForNewEvents = async () => {
     if (pauseFetching) return;

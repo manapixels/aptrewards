@@ -2,7 +2,7 @@
 
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { U64, AccountAddress } from '@aptos-labs/ts-sdk';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import { ArrowRight, ArrowRightLeft, Copy } from 'lucide-react';
@@ -193,9 +193,13 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
         !userDetails?.ownedVouchers.some(owned => owned.id === voucher.id)
     );
 
+    const handleUpdate = useCallback(() => {
+        fetchUserProgramDetails();
+    }, [fetchUserProgramDetails]);
+
     return (
         <div className="space-y-4 md:-mt-4">
-            {userDetails && <CustomerEventListeners />}
+            {userDetails && <CustomerEventListeners onUpdate={handleUpdate} />}
             <div className="relative flex justify-center ">
                 <div className="absolute top-[50%] translate-y-[-50%] left-0 border-t border-gray-200 w-full"></div>
                 <div className="text-sm font-semibold text-gray-400 px-8 py-2 rounded-md tracking-widest bg-white relative z-10 font-mono uppercase">
