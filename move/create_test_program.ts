@@ -178,6 +178,24 @@ async function main() {
         customers.push(customer);
         await aptos.fundAccount({ accountAddress: customer.accountAddress, amount: 100_000_000 });
 
+        // Initialize the customer account in the loyalty program
+        const setCustomerNameTxn = await aptos.transaction.build.simple({
+            sender: customer.accountAddress,
+            data: {
+                function: `${MODULE_ADDRESS}::AptRewardsMain::set_customer_name`,
+                typeArguments: [],
+                functionArguments: [programId, `Customer ${i + 1}`]
+            }
+        });
+
+        const setCustomerNameResult = await aptos.signAndSubmitTransaction({
+            signer: customer,
+            transaction: setCustomerNameTxn
+        });
+
+        await aptos.waitForTransaction({ transactionHash: setCustomerNameResult.hash });
+        console.log(`Initialized Customer ${i + 1} (${customer.accountAddress.toString()}) in the loyalty program`);
+
         const points = Math.floor(Math.random() * 50000) + 1000; // Random points between 1000 and 50000
 
         const earnPointsTxn = await aptos.transaction.build.simple({
@@ -308,6 +326,23 @@ async function main() {
     const selectedCustomerIndex = Math.floor(Math.random() * 5); // Randomly select one of the 5 customers
     const selectedCustomerAddress = customers[selectedCustomerIndex].accountAddress.toString();
     const pointsToAward = 30000; // Award 30000 points to the selected customer
+
+    const setCustomerNameTxn = await aptos.transaction.build.simple({
+        sender: admin.accountAddress,
+        data: {
+            function: `${MODULE_ADDRESS}::AptRewardsMain::set_customer_name`,
+            typeArguments: [],
+            functionArguments: [secondProgramId, `Customer ${selectedCustomerIndex + 1}`]
+        }
+    });
+
+    const setCustomerNameResult = await aptos.signAndSubmitTransaction({
+        signer: admin,
+        transaction: setCustomerNameTxn
+    });
+
+    await aptos.waitForTransaction({ transactionHash: setCustomerNameResult.hash });
+    console.log(`Initialized Customer ${selectedCustomerIndex + 1} (${selectedCustomerAddress}) in the second program`);
 
     const earnPointsTxn = await aptos.transaction.build.simple({
         sender: admin.accountAddress,
