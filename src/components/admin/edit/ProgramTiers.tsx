@@ -188,6 +188,8 @@ const ProgramTiers = ({ program, isLoading }: { program: LoyaltyProgram, isLoadi
     const renderCustomersTable = () => {
         if (!program || !selectedTier) return null;
 
+        console.log(program?.customerData)
+
         const customers = program?.customerData
             ?.map((customer: CustomerData, index: number) => ({
                 address: customer.address,

@@ -23,18 +23,20 @@ const VoucherRedemptionsTable = ({ vouchers, vouchersRedeemed }: { vouchers: Red
     <Table>
         <TableHeader>
             <TableRow>
+                <TableHead>Voucher Name</TableHead>
                 <TableHead>Voucher Description</TableHead>
                 <TableHead>Points Required</TableHead>
-                <TableHead>Expiration Date</TableHead>
+                <TableHead>Validity (Days)</TableHead>
                 <TableHead className="text-right">Redemptions</TableHead>
             </TableRow>
         </TableHeader>
         <TableBody>
             {vouchers?.map((voucher, index) => (
                 <TableRow key={voucher.id}>
+                    <TableCell className="font-medium">{voucher.name}</TableCell>
                     <TableCell className="font-medium">{voucher.description}</TableCell>
                     <TableCell>{voucher.pointsRequired.toLocaleString()}</TableCell>
-                    <TableCell>{new Date(parseInt(voucher.expirationDate) * 1000).toLocaleDateString()}</TableCell>
+                    <TableCell>{voucher.validityDays}</TableCell>
                     <TableCell className="text-right">{vouchersRedeemed?.[index] || 0}</TableCell>
                 </TableRow>
             ))}
@@ -49,9 +51,12 @@ export default function ProgramVouchers({ program, isLoading }: { program: Loyal
     const { triggerRefetch, fetchProgramDetails, programs } = useProgramStore();
     const [isAddVoucherDialogOpen, setIsAddVoucherDialogOpen] = useState(false);
     const [newVoucher, setNewVoucher] = useState({
+        name: '',
         description: '',
         pointsRequired: 0,
-        expirationDate: ''
+        validityDays: 0,
+        maxRedemptions: 0,
+        termsAndConditions: ''
     });
 
     const handleAddVoucher = async (e: React.FormEvent) => {
@@ -61,8 +66,6 @@ export default function ProgramVouchers({ program, isLoading }: { program: Loyal
             if (!account) throw new Error("No account connected");
             if (!moduleAddress || !moduleName) throw new Error("No module address or name");
 
-            const expirationTimepoint = Math.floor(new Date(newVoucher.expirationDate).getTime() / 1000);
-
             const response = await signAndSubmitTransaction({
                 sender: account.address,
                 data: {
@@ -70,9 +73,12 @@ export default function ProgramVouchers({ program, isLoading }: { program: Loyal
                     typeArguments: [],
                     functionArguments: [
                         new U64(parseInt(program.id)),
+                        new MoveString(newVoucher.name),
                         new MoveString(newVoucher.description),
                         new U64(newVoucher.pointsRequired),
-                        new U64(expirationTimepoint),
+                        new U64(newVoucher.validityDays),
+                        new U64(newVoucher.maxRedemptions),
+                        new MoveString(newVoucher.termsAndConditions),
                     ],
                 },
             });
@@ -140,6 +146,13 @@ export default function ProgramVouchers({ program, isLoading }: { program: Loyal
                             <DialogTitle>Add New Voucher</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleAddVoucher}>
+                            <Label htmlFor="voucherName">Name</Label>
+                            <Input
+                                id="voucherName"
+                                value={newVoucher.name}
+                                onChange={(e) => setNewVoucher({ ...newVoucher, name: e.target.value })}
+                                className="mb-2"
+                            />
                             <Label htmlFor="voucherDescription">Description</Label>
                             <Input
                                 id="voucherDescription"
@@ -155,12 +168,27 @@ export default function ProgramVouchers({ program, isLoading }: { program: Loyal
                                 onChange={(e) => setNewVoucher({ ...newVoucher, pointsRequired: parseInt(e.target.value) })}
                                 className="mb-2"
                             />
-                            <Label htmlFor="voucherExpirationDate">Expiration Date</Label>
+                            <Label htmlFor="voucherValidityDays">Validity (Days)</Label>
                             <Input
-                                id="voucherExpirationDate"
-                                type="date"
-                                value={newVoucher.expirationDate}
-                                onChange={(e) => setNewVoucher({ ...newVoucher, expirationDate: e.target.value })}
+                                id="voucherValidityDays"
+                                type="number"
+                                value={newVoucher.validityDays}
+                                onChange={(e) => setNewVoucher({ ...newVoucher, validityDays: parseInt(e.target.value) })}
+                                className="mb-2"
+                            />
+                            <Label htmlFor="voucherMaxRedemptions">Max Redemptions</Label>
+                            <Input
+                                id="voucherMaxRedemptions"
+                                type="number"
+                                value={newVoucher.maxRedemptions}
+                                onChange={(e) => setNewVoucher({ ...newVoucher, maxRedemptions: parseInt(e.target.value) })}
+                                className="mb-2"
+                            />
+                            <Label htmlFor="voucherTermsAndConditions">Terms and Conditions</Label>
+                            <Input
+                                id="voucherTermsAndConditions"
+                                value={newVoucher.termsAndConditions}
+                                onChange={(e) => setNewVoucher({ ...newVoucher, termsAndConditions: e.target.value })}
                                 className="mb-2"
                             />
                             <div className="flex justify-end">

@@ -254,9 +254,9 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                                 <RedeemableVoucherItem
                                     key={index}
                                     id={voucher.id}
-                                    name={voucher.description}
-                                    description={`Requires ${voucher.pointsRequired} points`}
-                                    expirationDate={voucher.expirationDate}
+                                    name={voucher.name}
+                                    description={voucher.description}
+                                    validityDays={voucher.validityDays}
                                     termsAndConditions={voucher.termsAndConditions}
                                     pointsRequired={voucher.pointsRequired}
                                     maxRedemptions={voucher.maxRedemptions}

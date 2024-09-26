@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { formatDate } from '@/utils/dateFormatter';
 import { RedeemableVoucher } from '@/types/aptrewards';
 import { moduleAddress, moduleName } from '@/constants';
 import { getAptosClient } from '@/utils/aptos';
@@ -20,7 +19,7 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
     id,
     name,
     description,
-    expirationDate,
+    validityDays,
     termsAndConditions,
     imageUrl,
     pointsRequired,
@@ -81,26 +80,21 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
                         </div>
                         <div className="flex-grow flex flex-col justify-center p-4">
                             <h3 className="font-bold text-lg">{name}</h3>
-                            <p className="text-sm text-gray-500">Valid until {formatDate(expirationDate)}</p>
+                            <p className="text-sm text-gray-500">Valid for {validityDays} days</p>
                             <p className="text-sm text-gray-500">{pointsRequired.toLocaleString()} points required</p>
+                            <p className="text-sm text-gray-500">Redemptions: {redemptions} / {maxRedemptions}</p>
                             <div className="mt-3 flex items-center">
                                 <Dialog open={isExchangeOpen} onOpenChange={setIsExchangeOpen}>
                                     <DialogTrigger asChild>
-                                        <Button variant="secondary" className="border border-gray-400" size="sm">Redeem</Button>
+                                        <Button variant="outline">View Details</Button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[425px]">
+                                    <DialogContent>
                                         <DialogHeader>
                                             <DialogTitle>{name}</DialogTitle>
                                         </DialogHeader>
-                                        <div className="space-y-4">
-                                            {imageUrl && (
-                                                <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-                                                    <img src={imageUrl} alt={name} className="max-w-full max-h-full object-contain" />
-                                                </div>
-                                            )}
-                                            {!imageUrl && <div className="w-full h-48 bg-gray-200"></div>}
+                                        <div className="mt-2">
                                             <p>{description}</p>
-                                            <p className="text-sm text-gray-500">Valid until {formatDate(expirationDate)}</p>
+                                            <p className="text-sm text-gray-500">Valid for {validityDays} days</p>
                                             <Accordion type="single" collapsible>
                                                 <AccordionItem value="terms">
                                                     <AccordionTrigger>Terms and Conditions</AccordionTrigger>
@@ -111,7 +105,7 @@ const RedeemableVoucherItem: React.FC<RedeemableVoucherItemProps> = ({
                                             </Accordion>
                                             <Button 
                                                 onClick={handleExchange} 
-                                                className="w-full py-6"
+                                                className="w-full mt-4 py-2"
                                                 disabled={transactionInProgress}
                                             >
                                                 {transactionInProgress ? 'Exchanging...' : 'Exchange'}

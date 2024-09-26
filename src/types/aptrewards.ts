@@ -1,17 +1,21 @@
-export type MyVoucher = {
+export type Voucher = {
     id: string;
     name: string;
     description: string;
-    expirationDate: string;
     termsAndConditions: string;
     imageUrl?: string;
 };
 
-export type RedeemableVoucher = MyVoucher & {
+export type MyVoucher = Voucher & {
+    expirationDate: string
+};
+
+export type RedeemableVoucher = Voucher & {
     pointsRequired: number;
+    validityDays: number;
     maxRedemptions: number;
     redemptions: number;
-};
+}
 
 export interface Tier {
     id: number;

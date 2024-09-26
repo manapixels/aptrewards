@@ -45,7 +45,9 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
     });
 
     if (!response) throw new Error("Failed to fetch program details");
-    
+
+    console.log(response)
+
     // Transform the raw data to match the LoyaltyProgram type
     const transformedProgramDetails: LoyaltyProgram = {
         id: response[0]?.toString() || '',
@@ -58,9 +60,9 @@ const getProgramDetails = async (programId: string): Promise<LoyaltyProgram> => 
             pointsRequired: Number(voucher.points_required),
             description: voucher.description,
             termsAndConditions: voucher.terms_and_conditions,
-            expirationDate: voucher.expiration_date,
+            validityDays: Number(voucher.validity_days),
             maxRedemptions: Number(voucher.max_redemptions),
-            redemptions: Number(voucher.redemptions),
+            redemptions: calculateTotalRedemptions(voucher.user_voucher_counts?.data),
         })) || [],
         tiers: (response[5] as any[])?.map((tier: any) => ({
             id: Number(tier.id),
@@ -108,14 +110,42 @@ const fetchUserJoinedPrograms = async (address: string): Promise<UserProgramDeta
 
             const nextTier = program.tiers.find((tier: any) => tier.pointsRequired > program.points);
 
+            // Transform ownedVouchers
+            const transformedOwnedVouchers = program.owned_vouchers?.data.map((voucher: any) => ({
+                id: voucher.id,
+                name: voucher.name,
+                pointsRequired: Number(voucher.points_required),
+                description: voucher.description,
+                termsAndConditions: voucher.terms_and_conditions,
+                validityDays: Number(voucher.validity_days),
+                maxRedemptions: Number(voucher.max_redemptions),
+                redemptions: calculateTotalRedemptions(voucher.user_voucher_counts),
+                expirationDate: calculateExpirationDate(
+                    voucher.redemption_expiration_timestamps[address],
+                    Number(voucher.validity_days)
+                ),
+            }));
+
+            // Transform allVouchers
+            const transformedAllVouchers = program.all_vouchers?.data.map((voucher: any) => ({
+                id: voucher.id,
+                name: voucher.name,
+                pointsRequired: Number(voucher.points_required),
+                description: voucher.description,
+                termsAndConditions: voucher.terms_and_conditions,
+                validityDays: Number(voucher.validity_days),
+                maxRedemptions: Number(voucher.max_redemptions),
+                redemptions: calculateTotalRedemptions(voucher.user_voucher_counts),
+            }));
+
             return {
                 programId: program.program_id,
                 programName: program.program_name,
                 points: program.points,
                 lifetimePoints: program.lifetime_points,
                 pointValidityDays: program.point_validity_days,
-                ownedVouchers: program.owned_vouchers,
-                allVouchers: program.all_vouchers,
+                ownedVouchers: transformedOwnedVouchers,
+                allVouchers: transformedAllVouchers,
                 tiers: program.tiers,
                 currentTier,
                 nextTier,
@@ -126,6 +156,19 @@ const fetchUserJoinedPrograms = async (address: string): Promise<UserProgramDeta
         console.error("Error fetching user program details:", error);
         return [];
     }
+};
+
+// Helper function to calculate expiration date
+const calculateExpirationDate = (redemptionTimestamp: number, validityDays: number): Date | null => {
+    if (!redemptionTimestamp) return null;
+    const expirationTimestamp = redemptionTimestamp + (validityDays * 24 * 60 * 60 * 1000); // Convert days to milliseconds
+    return new Date(expirationTimestamp);
+};
+
+// Helper function to calculate total redemptions
+const calculateTotalRedemptions = (userVoucherCounts: Record<string, string>): number => {
+    if (!userVoucherCounts) return 0;
+    return Object.values(userVoucherCounts).reduce((sum, count) => sum + Number(count), 0);
 };
 
 export const useProgramStore = create<ProgramStore>((set, get) => ({
