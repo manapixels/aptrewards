@@ -44,6 +44,16 @@ AptRewards offers a range of powerful features for businesses and customers:
     CONTRACT_NAME=<your_contract_name> (e.g. AptRewardsMain)
     ```
 
+    To try out a deployed version of AptRewards, use the following:
+
+    ```json
+    APTOS_NETWORK=testnet
+    PRIVATE_KEY=<your_private_key>
+    PUBLIC_KEY=<your_public_key>
+    CONTRACT_ADDRESS=0x27b7aa5e8f40fb65cb7740472b85492b09793359b4deb018cd6202a015bbc6b1
+    CONTRACT_NAME=AptRewardsMain
+    ```
+
 4. Run `npm run dev` to start the front-end (Next.js) application. Requires the following in .env
 
     ```json
