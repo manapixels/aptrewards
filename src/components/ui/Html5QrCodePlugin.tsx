@@ -14,6 +14,7 @@ interface Html5QrcodePluginProps {
   verbose?: boolean;
   qrCodeSuccessCallback: (decodedText: string, decodedResult: any) => void;
   qrCodeErrorCallback?: (errorMessage: string, error: any) => void;
+  scanning: boolean; // Add this new prop
 }
 
 // Creates the configuration object for Html5QrcodeScanner.
@@ -45,9 +46,15 @@ const Html5QrcodePlugin = (props: Html5QrcodePluginProps) => {
     }
 
     // Check if a scanner instance already exists
-    if (!scannerRef.current) {
+    if (props.scanning && !scannerRef.current) {
       scannerRef.current = new Html5QrcodeScanner(qrcodeRegionId, config, verbose);
       scannerRef.current.render(props.qrCodeSuccessCallback, props.qrCodeErrorCallback);
+    } else if (!props.scanning && scannerRef.current) {
+      scannerRef.current.clear().catch(error => {
+        console.error("Failed to clear html5QrcodeScanner. ", error);
+        toast.error("Failed to stop QR code scanner. Please try again.");
+      });
+      scannerRef.current = null;
     }
 
     // cleanup function when component will unmount
@@ -55,12 +62,12 @@ const Html5QrcodePlugin = (props: Html5QrcodePluginProps) => {
       if (scannerRef.current) {
         scannerRef.current.clear().catch(error => {
           console.error("Failed to clear html5QrcodeScanner. ", error);
-          toast.error("Failed to scan QR code. Please try again.");
+          toast.error("Failed to clean up QR code scanner. Please refresh the page.");
         });
         scannerRef.current = null;
       }
     };
-  }, [props]);
+  }, [props, props.scanning]); // Add props.scanning to the dependency array
 
   return (
     <div id={qrcodeRegionId} />

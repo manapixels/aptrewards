@@ -146,6 +146,7 @@ const AdminFrontend = () => {
                                 qrbox={250}
                                 disableFlip={false}
                                 qrCodeSuccessCallback={handleScanSuccess}
+                                scanning={scanning}
                             />
                             <Button onClick={() => setScanning(false)} className="mt-2">Cancel</Button>
                         </div>
