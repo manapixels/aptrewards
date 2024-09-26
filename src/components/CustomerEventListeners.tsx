@@ -15,7 +15,6 @@ const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
   const aptos = getAptosClient();
 
   const onVisibilityChange = useCallback(() => {
-    console.log('document.visibilityState', document.visibilityState, pauseFetching)
     if (document.visibilityState === 'visible') {
       console.log("Tab reopened, resume fetching events");
       setPauseFetching(false);
@@ -72,7 +71,6 @@ const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
 
     for (const event of sortedEvents) {
       const eventVersion = BigInt(event.transaction_version);
-      console.log(eventVersion > highestVersion)
       if (eventVersion > highestVersion) {
         if (event.data.customer === account?.address) {
           if (showToasts) {
@@ -102,7 +100,7 @@ const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
 
   const checkForNewEvents = useCallback(async () => {
     if (pauseFetching) {
-      console.log('Fetching paused, skipping this interval');
+      // console.log('Fetching paused, skipping this interval');
       return;
     }
 
@@ -110,7 +108,7 @@ const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
       const earnPointsEvents = await fetchEvents('EarnPoints');
       const redeemVoucherEvents = await fetchEvents('RedeemVoucher');
 
-      console.log('isFetching')
+      // console.log('isFetching')
 
       const showToasts = isInitialized;
 
