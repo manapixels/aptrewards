@@ -109,8 +109,6 @@ const CustomerEventListeners = ({ onUpdate }: { onUpdate: () => void }) => {
       const earnPointsEvents = await fetchEvents('EarnPoints');
       const redeemVoucherEvents = await fetchEvents('RedeemVoucher');
 
-      console.log('isFetching', earnPointsEvents, redeemVoucherEvents)
-
       const showToasts = isInitialized;
 
       if (earnPointsEvents) processEvents(earnPointsEvents, 'EarnPoints', showToasts);
