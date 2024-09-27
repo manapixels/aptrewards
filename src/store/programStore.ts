@@ -119,7 +119,7 @@ const fetchUserJoinedPrograms = async (address: string): Promise<UserProgramDeta
                 maxRedemptions: Number(voucher?.value?.max_redemptions),
                 totalRedemptions: Number(voucher?.value?.total_redemptions),
                 expirationDate: calculateExpirationDate(
-                    voucher?.value.redemption_expiration_timestamps?.data?.find((item: any) => item?.key == address)?.value,
+                    Number(voucher?.value.redemption_expiration_timestamps?.data?.find((item: any) => item?.key == address)?.value),
                     Number(voucher?.value?.validity_days)
                 ),
             }));
@@ -159,8 +159,11 @@ const fetchUserJoinedPrograms = async (address: string): Promise<UserProgramDeta
 // Helper function to calculate expiration date
 export const calculateExpirationDate = (redemptionTimestamp: number, validityDays: number): Date | null => {
     if (!redemptionTimestamp) return null;
-    const expirationTimestamp = Number(redemptionTimestamp) + (Number(validityDays) * 24 * 60 * 60 * 1000); // Convert days to milliseconds
-    return new Date(expirationTimestamp);
+    // Convert redemptionTimestamp from seconds to milliseconds
+    const redemptionDate = new Date(redemptionTimestamp * 1000);
+    const expirationDate = new Date(redemptionDate.getTime() + (validityDays * 24 * 60 * 60 * 1000));
+    
+    return expirationDate;
 };
 
 export const useProgramStore = create<ProgramStore>((set, get) => ({

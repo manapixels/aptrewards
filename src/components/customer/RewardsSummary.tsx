@@ -72,13 +72,15 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 name: voucher?.value.name,
                 description: voucher?.value.description,
                 expirationDate: calculateExpirationDate(
-                    voucher?.value.redemption_expiration_timestamps?.data?.find((item: any) => item?.key == account?.address)?.value,
+                    Number(voucher?.value.redemption_expiration_timestamps?.data?.find((item: any) => item?.key == account?.address)?.value),
                     Number(voucher?.value.validity_days)
                 ),
                 termsAndConditions: voucher?.value.terms_and_conditions,
                 imageUrl: voucher?.value.image_url,
                 userVoucherCounts: voucher?.value.user_voucher_counts?.data?.find((item: any) => item?.key == account?.address)?.value
             })).filter((voucher: any) => voucher.userVoucherCounts !== "0");
+
+            console.log(ownedVouchers, owned_vouchers);
 
             const userDetails: UserProgramDetails = {
                 programId: program_id,
