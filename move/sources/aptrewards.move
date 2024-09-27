@@ -17,7 +17,7 @@ module aptrewards_addr::AptRewardsMain {
         max_redemptions: u64,
         total_redemptions: u64,
         terms_and_conditions: String,
-        redemption_expiration_timestamps: SimpleMap<address, u64>,
+        redemption_expiration_timestamps: SimpleMap<address, vector<u64>>,
         user_voucher_counts: SimpleMap<address, u64>,
     }
 
@@ -189,7 +189,7 @@ module aptrewards_addr::AptRewardsMain {
             max_redemptions,
             total_redemptions: 0,
             terms_and_conditions,
-            redemption_expiration_timestamps: simple_map::create<address, u64>(),
+            redemption_expiration_timestamps: simple_map::create<address, vector<u64>>(),
             user_voucher_counts: simple_map::create<address, u64>(), // Initialize the new field
         };
 
