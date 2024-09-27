@@ -1,7 +1,7 @@
 'use client'
 
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -18,19 +18,38 @@ const Landing = () => {
     const { programs, fetchPrograms, shouldRefetch, userJoinedPrograms, fetchUserJoinedPrograms, fetchProgramDetails } = useProgramStore();
     const pathname = usePathname();
     const [isLoading, setIsLoading] = useState(true);
+    const hasFetchedPrograms = useRef(false);
+
+    const fetchIndividualPrograms = useCallback(async () => {
+        for (const program of programs) {
+            await fetchProgramDetails(program.id);
+        }
+    }, [programs, fetchProgramDetails]);
 
     useEffect(() => {
-        if (account?.address) {
-            setIsLoading(true);
-            fetchPrograms(account.address).then(async () => {
-                for (const program of programs) {
-                    await fetchProgramDetails(program.id);
+        const fetchData = async () => {
+            if (account?.address) {
+                setIsLoading(true);
+                try {
+                    await fetchPrograms(account.address);
+                    await fetchUserJoinedPrograms(account.address);
+                } catch (error) {
+                    console.error("Error fetching programs:", error);
+                } finally {
+                    setIsLoading(false);
                 }
-                setIsLoading(false);
-            });
-            fetchUserJoinedPrograms(account.address);
+            }
+        };
+
+        fetchData();
+    }, [account?.address, shouldRefetch, fetchPrograms, fetchUserJoinedPrograms]);
+
+    useEffect(() => {
+        if (programs.length > 0 && !hasFetchedPrograms.current) {
+            fetchIndividualPrograms();
+            hasFetchedPrograms.current = true;
         }
-    }, [account?.address, shouldRefetch, fetchPrograms, fetchUserJoinedPrograms]);    
+    }, [programs, fetchIndividualPrograms]);
 
     const renderSkeletons = () => (
         <>
@@ -81,7 +100,7 @@ const Landing = () => {
                                         Points Issued
                                     </span>
                                     <span className="text-lg font-bold leading-none sm:text-3xl">
-                                        {program?.totalPointsIssued?.toLocaleString() || 'N/A'}
+                                        {Number(program?.totalPointsIssued)?.toLocaleString() || 'N/A'}
                                     </span>
                                 </div>
                             </div>
@@ -114,7 +133,7 @@ const Landing = () => {
                         >
                             <div>{program.programName}</div>
                             <div className="flex flex-row items-center gap-2 text-[#ae7427] mt-1 mb-2">
-                        <span className="text-lg font-semibold">{program?.points?.toLocaleString()} points</span>
+                        <span className="text-lg font-semibold">{Number(program?.points)?.toLocaleString()} points</span>
                         <div className="w-[1px] h-4 bg-[#ae7427]"></div>
                         <span className="text-lg font-semibold ">{program?.currentTier?.name}</span>
                     </div>

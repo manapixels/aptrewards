@@ -61,8 +61,6 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 tiers
             } = resource[0] as any;
 
-            console.log(owned_vouchers)
-
             const currentTier = tiers.reduce((prev: any, current: any) =>
                 points >= current.points_required ? current : prev
             );
