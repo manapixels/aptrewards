@@ -11,6 +11,8 @@ import { formatDate } from '@/utils/dateFormatter';
 import { MyVoucher } from '@/types/aptrewards';
 
 const MyVoucherItem: React.FC<MyVoucher> = ({
+    userAddress,
+    programId,
     id,
     name,
     description,
@@ -36,8 +38,10 @@ const MyVoucherItem: React.FC<MyVoucher> = ({
     };
 
     const qrCodeData = JSON.stringify({
-        id,
+        programId,
+        customer: userAddress,
         name,
+        voucherId: id,
         expirationDate
     });
 
@@ -55,7 +59,7 @@ const MyVoucherItem: React.FC<MyVoucher> = ({
                         </div>
                         <div className="flex-grow flex flex-col justify-center p-4">
                             <h3 className="font-bold text-lg">{name}</h3>
-                            <p className="text-sm text-gray-500">Valid until {formatDate(Number(expirationDate))}</p>
+                            <p className="text-sm text-gray-500">Valid until {formatDate(expirationDate)}</p>
                             <div className="mt-3 flex items-center">
                                 <Dialog open={isTransferOpen} onOpenChange={setIsTransferOpen}>
                                     <DialogTrigger asChild>

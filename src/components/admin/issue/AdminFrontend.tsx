@@ -92,7 +92,6 @@ const AdminFrontend = () => {
         setIsFetching(true);
 
         try {
-            const voucherData = JSON.parse(data);
 
             const response = await signAndSubmitTransaction({
                 sender: account.address,
@@ -100,16 +99,16 @@ const AdminFrontend = () => {
                     function: `${moduleAddress}::${moduleName}::redeem_voucher`,
                     typeArguments: [],
                     functionArguments: [
-                        voucherData.programId,
-                        voucherData.customer,
-                        voucherData.voucherId
+                        data.programId,
+                        data.customer,
+                        data.voucherId
                     ],
                 },
             });
 
             await client.waitForTransaction({ transactionHash: response.hash });
 
-            toast.success(`Voucher "${voucherData.name}" has been redeemed successfully.`);
+            toast.success(`Voucher "${data.name}" has been redeemed successfully.`);
             setData(null);
         } catch (error) {
             console.error('Failed to redeem voucher:', error);

@@ -61,11 +61,26 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 tiers
             } = resource[0] as any;
 
+            console.log(owned_vouchers)
+
             const currentTier = tiers.reduce((prev: any, current: any) =>
                 points >= current.points_required ? current : prev
             );
 
             const nextTier = tiers.find((tier: any) => Number(tier.points_required) > Number(points));
+
+            const ownedVouchers = owned_vouchers?.data.map((voucher: any) => ({
+                id: voucher?.value.id,
+                name: voucher?.value.name,
+                description: voucher?.value.description,
+                expirationDate: calculateExpirationDate(
+                    voucher?.value.redemption_expiration_timestamps?.data?.find((item: any) => item?.key == account?.address)?.value,
+                    Number(voucher?.value.validity_days)
+                ),
+                termsAndConditions: voucher?.value.terms_and_conditions,
+                imageUrl: voucher?.value.image_url,
+                userVoucherCounts: voucher?.value.user_voucher_counts?.data?.find((item: any) => item?.key == account?.address)?.value
+            })).filter((voucher: any) => voucher.userVoucherCounts !== "0");
 
             const userDetails: UserProgramDetails = {
                 programId: program_id,
@@ -73,17 +88,7 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                 points: Number(points),
                 lifetimePoints: Number(lifetime_points),
                 pointValidityDays: Number(point_validity_days),
-                ownedVouchers: owned_vouchers?.data.map((voucher: any) => ({
-                    id: voucher?.value.id,
-                    name: voucher?.value.name,
-                    description: voucher?.value.description,
-                    expirationDate: calculateExpirationDate(
-                        voucher?.value.redemption_expiration_timestamps?.data?.find((item: any) => item?.key == account?.address)?.value,
-                        Number(voucher?.value.validity_days)
-                    ),
-                    termsAndConditions: voucher?.value.terms_and_conditions,
-                    imageUrl: voucher?.value.image_url,
-                })),
+                ownedVouchers,
                 allVouchers: all_vouchers?.data.map((voucher: any) => ({
                     id: voucher?.value.id,
                     name: voucher?.value.name,
@@ -289,9 +294,11 @@ const RewardsSummary = ({ loyaltyProgramId }: { loyaltyProgramId: string }) => {
                     userDetails.ownedVouchers.map((voucher) => (
                         <MyVoucherItem
                             key={voucher.id}
+                            userAddress={account?.address || ''}
+                            programId={loyaltyProgramId}
                             id={voucher.id}
-                            name={voucher.description}
-                            description="Ready to use"
+                            name={voucher.name}
+                            description={voucher.description}
                             expirationDate={voucher.expirationDate}
                             termsAndConditions={voucher.termsAndConditions}
                         />

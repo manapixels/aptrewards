@@ -7,6 +7,8 @@ export type Voucher = {
 };
 
 export type MyVoucher = Voucher & {
+    programId: string;
+    userAddress: string;
     expirationDate: string
 };
 
